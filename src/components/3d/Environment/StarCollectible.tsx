@@ -24,10 +24,14 @@ export const StarCollectible: React.FC<StarCollectibleProps> = ({
     if (isCollected || !meshRef.current) return;
     const time = state.clock.getElapsedTime();
 
-    // Floating bobbing and continuous spin
-    meshRef.current.position.y = position[1] + Math.sin(time * 3 + position[0]) * 0.15;
-    meshRef.current.rotation.y = time * 2;
-    meshRef.current.rotation.x = Math.sin(time) * 0.1;
+    // Floating bobbing, continuous spin & breathing pulse
+    meshRef.current.position.y = position[1] + Math.sin(time * 3 + position[0]) * 0.18;
+    meshRef.current.rotation.y = time * 2.2;
+    meshRef.current.rotation.x = Math.sin(time * 1.5) * 0.12;
+
+    const baseScale = isBig ? 1.4 : 0.8;
+    const pulse = 1 + Math.sin(time * 4 + position[0]) * 0.08;
+    meshRef.current.scale.set(baseScale * pulse, baseScale * pulse, baseScale * pulse);
 
     // Check distance to player's torso center (playerPos is feet, torso is ~0.8m above)
     const playerPos = gameStore.getState().playerPos;

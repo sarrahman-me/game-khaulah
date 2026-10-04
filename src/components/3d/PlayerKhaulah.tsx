@@ -9,12 +9,29 @@ import { colliders } from '../../state/colliders';
 
 export const PlayerKhaulah: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
+  const modelRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
+  const torsoRef = useRef<THREE.Group>(null);
+  const skirtRef = useRef<THREE.Group>(null);
+  const hijabDrapeRef = useRef<THREE.Group>(null);
+  const leftEyeRef = useRef<THREE.Group>(null);
+  const rightEyeRef = useRef<THREE.Group>(null);
   const leftArmRef = useRef<THREE.Group>(null);
   const rightArmRef = useRef<THREE.Group>(null);
   const leftLegRef = useRef<THREE.Group>(null);
   const rightLegRef = useRef<THREE.Group>(null);
   const wingsRef = useRef<THREE.Group>(null);
+
+  // Advanced Animation State Refs
+  const squashScale = useRef(new THREE.Vector3(1, 1, 1));
+  const targetSquash = useRef(new THREE.Vector3(1, 1, 1));
+  const wasGrounded = useRef(false);
+  const lastVelocityY = useRef(0);
+  const blinkTimer = useRef(2.5);
+  const isBlinking = useRef(false);
+  const blinkDuration = useRef(0);
+  const currentBankAngle = useRef(0);
+  const currentForwardLean = useRef(0);
 
   const activeAccessory = useGameStore((s) => s.activeAccessory);
   const activeEmote = useGameStore((s) => s.activeEmote);
@@ -162,6 +179,7 @@ export const PlayerKhaulah: React.FC = () => {
       coyoteTimer.current = 0;
       jumpBufferTimer.current = 0;
       soundManager.playJump();
+      targetSquash.current.set(0.86, 1.25, 0.86);
     }
 
     // Gravity
@@ -190,6 +208,7 @@ export const PlayerKhaulah: React.FC = () => {
           groundedThisFrame = false;
           soundManager.playTrampoline();
           gameStore.setMessage('WUUUSSHH! Trampolin Super Tinggi! 🚀');
+          targetSquash.current.set(0.75, 1.4, 0.75);
           break;
         }
       }
@@ -217,6 +236,15 @@ export const PlayerKhaulah: React.FC = () => {
       }
     }
 
+    // Landing Impact Detection
+    if (!wasGrounded.current && groundedThisFrame) {
+      const impact = Math.min(Math.abs(lastVelocityY.current) / 14, 1);
+      if (impact > 0.15) {
+        targetSquash.current.set(1 + impact * 0.18, Math.max(0.78, 1 - impact * 0.22), 1 + impact * 0.18);
+      }
+    }
+    wasGrounded.current = groundedThisFrame;
+    lastVelocityY.current = velocityY.current;
     isGrounded.current = groundedThisFrame;
 
     // Respawn if falling
@@ -236,6 +264,45 @@ export const PlayerKhaulah: React.FC = () => {
     // 5. Procedural Animations
     const time = state.clock.getElapsedTime();
 
+    // Procedural Eye Blinking (Every 3-5s, blink for 120ms)
+    blinkTimer.current -= dt;
+    if (blinkTimer.current <= 0) {
+      isBlinking.current = true;
+      blinkDuration.current = 0.13;
+      blinkTimer.current = 2.8 + Math.random() * 2.5;
+    }
+    if (isBlinking.current) {
+      blinkDuration.current -= dt;
+      if (blinkDuration.current <= 0) {
+        isBlinking.current = false;
+      }
+    }
+    const eyeScaleY = isBlinking.current ? 0.08 : 1.0;
+    if (leftEyeRef.current) {
+      leftEyeRef.current.scale.y = THREE.MathUtils.lerp(leftEyeRef.current.scale.y, eyeScaleY, dt * 35);
+    }
+    if (rightEyeRef.current) {
+      rightEyeRef.current.scale.y = THREE.MathUtils.lerp(rightEyeRef.current.scale.y, eyeScaleY, dt * 35);
+    }
+
+    // Body Leaning & Banking
+    const targetForwardLean = isMoving && isGrounded.current ? 0.09 : 0;
+    currentForwardLean.current = THREE.MathUtils.lerp(currentForwardLean.current, targetForwardLean, dt * 10);
+
+    const targetBank = isMoving ? -moveX * 0.12 : 0;
+    currentBankAngle.current = THREE.MathUtils.lerp(currentBankAngle.current, targetBank, dt * 8);
+
+    if (modelRef.current) {
+      modelRef.current.rotation.x = currentForwardLean.current;
+      modelRef.current.rotation.z = currentBankAngle.current;
+
+      // Squash & Stretch Spring Interpolation
+      targetSquash.current.lerp(new THREE.Vector3(1, 1, 1), dt * 7);
+      squashScale.current.lerp(targetSquash.current, dt * 16);
+      modelRef.current.scale.copy(squashScale.current);
+    }
+
+    // Walking / Running Cycle
     if (isMoving && isGrounded.current) {
       const walkCycle = Math.sin(time * 14);
       if (leftArmRef.current) leftArmRef.current.rotation.x = walkCycle * 0.65;
@@ -249,18 +316,65 @@ export const PlayerKhaulah: React.FC = () => {
         soundManager.playFootstep();
         footstepTimer.current = 0;
       }
+
+      // Secondary motion on Skirt & Hijab Drape while moving
+      if (skirtRef.current) {
+        skirtRef.current.rotation.z = Math.sin(time * 14) * 0.08;
+        skirtRef.current.rotation.x = Math.sin(time * 14) * 0.04;
+      }
+      if (hijabDrapeRef.current) {
+        hijabDrapeRef.current.rotation.x = -0.1 + Math.sin(time * 14 - 0.4) * 0.08;
+      }
     } else if (!isGrounded.current) {
-      if (leftArmRef.current) {
-        leftArmRef.current.rotation.x = -Math.PI * 0.65;
-        leftArmRef.current.rotation.z = -0.25;
+      // Multi-Stage Jump & In-Air Physics
+      if (velocityY.current > 2.5) {
+        // Stage 1: Ascent - Joyful hands reaching up, legs tucked back
+        if (leftArmRef.current) {
+          leftArmRef.current.rotation.x = -Math.PI * 0.75 + Math.sin(time * 8) * 0.08;
+          leftArmRef.current.rotation.z = -0.3;
+        }
+        if (rightArmRef.current) {
+          rightArmRef.current.rotation.x = -Math.PI * 0.75 - Math.sin(time * 8) * 0.08;
+          rightArmRef.current.rotation.z = 0.3;
+        }
+        if (leftLegRef.current) leftLegRef.current.rotation.x = -0.25;
+        if (rightLegRef.current) rightLegRef.current.rotation.x = -0.15;
+      } else if (velocityY.current >= -2.5) {
+        // Stage 2: Apex - Gliding / balancing pose at highest point
+        if (leftArmRef.current) {
+          leftArmRef.current.rotation.x = -0.4;
+          leftArmRef.current.rotation.z = -0.65;
+        }
+        if (rightArmRef.current) {
+          rightArmRef.current.rotation.x = -0.4;
+          rightArmRef.current.rotation.z = 0.65;
+        }
+        if (leftLegRef.current) leftLegRef.current.rotation.x = 0.1;
+        if (rightLegRef.current) rightLegRef.current.rotation.x = -0.1;
+      } else {
+        // Stage 3: Descent / Falling - Arms flare for balance, preparing feet
+        if (leftArmRef.current) {
+          leftArmRef.current.rotation.x = -Math.PI * 0.55;
+          leftArmRef.current.rotation.z = -0.45;
+        }
+        if (rightArmRef.current) {
+          rightArmRef.current.rotation.x = -Math.PI * 0.55;
+          rightArmRef.current.rotation.z = 0.45;
+        }
+        if (leftLegRef.current) leftLegRef.current.rotation.x = 0.25;
+        if (rightLegRef.current) rightLegRef.current.rotation.x = -0.2;
       }
-      if (rightArmRef.current) {
-        rightArmRef.current.rotation.x = -Math.PI * 0.65;
-        rightArmRef.current.rotation.z = 0.25;
+
+      // Air flutter on Skirt & Hijab Drape
+      if (skirtRef.current) {
+        skirtRef.current.rotation.x = THREE.MathUtils.clamp(-velocityY.current * 0.02, -0.22, 0.22);
+        skirtRef.current.rotation.z = THREE.MathUtils.lerp(skirtRef.current.rotation.z, 0, dt * 10);
       }
-      if (leftLegRef.current) leftLegRef.current.rotation.x = 0.35;
-      if (rightLegRef.current) rightLegRef.current.rotation.x = -0.35;
+      if (hijabDrapeRef.current) {
+        hijabDrapeRef.current.rotation.x = THREE.MathUtils.clamp(-velocityY.current * 0.025, -0.28, 0.28);
+      }
     } else {
+      // Idle: Gentle breathing, natural eye movement & relaxed posture
       const idle = Math.sin(time * 3);
       if (leftArmRef.current) {
         leftArmRef.current.rotation.x = idle * 0.05;
@@ -272,7 +386,21 @@ export const PlayerKhaulah: React.FC = () => {
       }
       if (leftLegRef.current) leftLegRef.current.rotation.x = 0;
       if (rightLegRef.current) rightLegRef.current.rotation.x = 0;
-      if (headRef.current) headRef.current.rotation.y = Math.sin(time * 1.5) * 0.08;
+      if (headRef.current) {
+        headRef.current.rotation.y = Math.sin(time * 1.4) * 0.08;
+        headRef.current.rotation.z = Math.cos(time * 1.8) * 0.03;
+      }
+
+      // Breathing movement on Torso & Hijab
+      if (torsoRef.current) {
+        torsoRef.current.position.y = 0.96 + Math.sin(time * 2.8) * 0.012;
+      }
+      if (hijabDrapeRef.current) {
+        hijabDrapeRef.current.rotation.x = Math.sin(time * 2.5) * 0.03;
+      }
+      if (skirtRef.current) {
+        skirtRef.current.rotation.set(0, 0, 0);
+      }
     }
 
     if (activeEmote === 'dance') {
@@ -295,19 +423,21 @@ export const PlayerKhaulah: React.FC = () => {
 
   return (
     <group ref={groupRef} position={[0, 2, 0]}>
-      {/* ======================================================== */}
-      {/* 1. HEAD & BEAUTIFUL HIJAB (WAJAH MANIS & JILBAB PUTIH KHAULAH) */}
-      {/* ======================================================== */}
-      <group ref={headRef} position={[0, 1.52, 0]}>
-        {/* Face Base: Kulit Halus Sawo Matang Manis */}
-        <mesh castShadow>
-          <sphereGeometry args={[0.34, 32, 32]} />
-          <meshStandardMaterial color="#F5CEAB" roughness={0.4} />
-        </mesh>
+      {/* Visual Model Root for Squash/Stretch & Banking Leans */}
+      <group ref={modelRef}>
+        {/* ======================================================== */}
+        {/* 1. HEAD & BEAUTIFUL HIJAB (WAJAH MANIS & JILBAB PUTIH KHAULAH) */}
+        {/* ======================================================== */}
+        <group ref={headRef} position={[0, 1.52, 0]}>
+          {/* Face Base: Kulit Halus Sawo Matang Manis */}
+          <mesh castShadow>
+            <sphereGeometry args={[0.34, 32, 32]} />
+            <meshStandardMaterial color="#F5CEAB" roughness={0.4} />
+          </mesh>
 
-        {/* --- DUA MATA BULAT BESAR BERBINAR (LEFT & RIGHT EYES) --- */}
-        {/* MATA KIRI (LEFT EYE) */}
-        <group position={[-0.13, 0.04, 0.312]} rotation={[0, -0.1, 0]}>
+          {/* --- DUA MATA BULAT BESAR BERBINAR (LEFT & RIGHT EYES) --- */}
+          {/* MATA KIRI (LEFT EYE) */}
+          <group ref={leftEyeRef} position={[-0.13, 0.04, 0.312]} rotation={[0, -0.1, 0]}>
           {/* Putih Mata (Sclera) */}
           <mesh>
             <sphereGeometry args={[0.075, 16, 16]} />
@@ -341,7 +471,7 @@ export const PlayerKhaulah: React.FC = () => {
         </group>
 
         {/* MATA KANAN (RIGHT EYE) - IDENTIK DAN JELAS KELIHATAN */}
-        <group position={[0.13, 0.04, 0.312]} rotation={[0, 0.1, 0]}>
+        <group ref={rightEyeRef} position={[0.13, 0.04, 0.312]} rotation={[0, 0.1, 0]}>
           {/* Putih Mata (Sclera) */}
           <mesh>
             <sphereGeometry args={[0.075, 16, 16]} />
@@ -442,10 +572,12 @@ export const PlayerKhaulah: React.FC = () => {
         </mesh>
 
         {/* JILBAB BERGO MENJUTAI KE BAHU (SHOULDER DRAPE) */}
-        <mesh position={[0, -0.22, 0.01]}>
-          <cylinderGeometry args={[0.26, 0.52, 0.38, 32]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.55} />
-        </mesh>
+        <group ref={hijabDrapeRef} position={[0, -0.05, 0.01]}>
+          <mesh position={[0, -0.17, 0]}>
+            <cylinderGeometry args={[0.26, 0.52, 0.38, 32]} />
+            <meshStandardMaterial color="#FFFFFF" roughness={0.55} />
+          </mesh>
+        </group>
 
         {/* --- ACCESSORIES (Bisa Dipakai di Atas Hijab) --- */}
         {activeAccessory === 'princess_crown' && (
@@ -506,7 +638,7 @@ export const PlayerKhaulah: React.FC = () => {
       {/* ======================================================== */}
       {/* 2. TORSO & SERAGAM SEKOLAH (Rompi Biru & Kemeja Putih) */}
       {/* ======================================================== */}
-      <group position={[0, 0.96, 0]}>
+      <group ref={torsoRef} position={[0, 0.96, 0]}>
         {/* Kemeja Putih Dasar */}
         <mesh castShadow>
           <boxGeometry args={[0.56, 0.62, 0.34]} />
@@ -582,7 +714,7 @@ export const PlayerKhaulah: React.FC = () => {
       {/* ======================================================== */}
       {/* 3. ROK LIPIT BIRU (A-Line Pleated Skirt) */}
       {/* ======================================================== */}
-      <group position={[0, 0.62, 0]}>
+      <group ref={skirtRef} position={[0, 0.62, 0]}>
         {/* Bentuk Rok Mengembang Menawan */}
         <mesh castShadow>
           <cylinderGeometry args={[0.31, 0.44, 0.32, 24]} />
@@ -712,6 +844,7 @@ export const PlayerKhaulah: React.FC = () => {
             <meshStandardMaterial color="#333333" />
           </mesh>
         </group>
+      </group>
       </group>
     </group>
   );

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { gameStore } from '../../../state/useGameStore';
@@ -49,7 +49,13 @@ const SingleAnimal: React.FC<AnimalNPCProps> = ({ type, position, name, dialogue
 
     // Gentle breathing or happy excited hopping when greeted
     const isExcited = isJumpingTimer.current > 0;
-    groupRef.current.position.y = position[1] + (isExcited ? Math.abs(Math.sin(time * 8)) * 0.18 : Math.sin(time * 2) * 0.04);
+    const hopY = isExcited ? Math.abs(Math.sin(time * 9)) * 0.25 : Math.sin(time * 2.2) * 0.04;
+    groupRef.current.position.y = position[1] + hopY;
+
+    // Cute bouncy squash & stretch when greeting
+    const bounceY = isExcited ? 1 + Math.sin(time * 18) * 0.12 : 1;
+    const bounceXZ = isExcited ? 1 - Math.sin(time * 18) * 0.06 : 1;
+    groupRef.current.scale.set(bounceXZ, bounceY, bounceXZ);
   });
 
   return (

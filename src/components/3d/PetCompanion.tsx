@@ -12,6 +12,9 @@ export const PetCompanion: React.FC = () => {
   const petPos = useRef(new THREE.Vector3(1.2, 1, 1.2));
   const targetPos = useRef(new THREE.Vector3());
 
+  const lastPlayerPos = useRef(new THREE.Vector3());
+  const idleTimer = useRef(0);
+
   useFrame((state, delta) => {
     if (!groupRef.current || activePet === 'none') return;
     const dt = Math.min(delta, 0.1);
@@ -23,39 +26,64 @@ export const PetCompanion: React.FC = () => {
     const py = playerPosArray[1];
     const pz = playerPosArray[2];
 
-    // Pet hovers or trails behind player
-    if (activePet === 'fairy') {
-      // Fairy floats higher and circles around player shoulder
-      const hoverAngle = time * 2;
-      targetPos.current.set(
-        px + Math.cos(hoverAngle) * 1.2,
-        py + 1.8 + Math.sin(time * 3) * 0.25,
-        pz + Math.sin(hoverAngle) * 1.2
-      );
-      petPos.current.lerp(targetPos.current, dt * 4);
-      groupRef.current.position.copy(petPos.current);
+    const currentP = new THREE.Vector3(px, py, pz);
+    const playerSpeed = currentP.distanceTo(lastPlayerPos.current) / Math.max(dt, 0.001);
+    lastPlayerPos.current.copy(currentP);
 
-      if (wingsRef.current) {
-        wingsRef.current.rotation.y = Math.sin(time * 35) * 0.5;
-      }
+    const isPlayerRunning = playerSpeed > 1.5;
+    if (isPlayerRunning) {
+      idleTimer.current = 0;
     } else {
-      // Ground pet (kitten / puppy) trails behind player with cute hops
-      const offsetDist = 1.3;
-      targetPos.current.set(
-        px - 0.8,
-        py + 0.35 + Math.abs(Math.sin(time * 8)) * 0.12,
-        pz - 0.8
-      );
+      idleTimer.current += dt;
+    }
 
+    if (activePet === 'fairy') {
+      // Fairy floats higher and circles playfully around player shoulder
+      const hoverAngle = time * 2.2;
+      const hoverRadius = 1.25;
+      targetPos.current.set(
+        px + Math.cos(hoverAngle) * hoverRadius,
+        py + 1.8 + Math.sin(time * 3.5) * 0.3,
+        pz + Math.sin(hoverAngle) * hoverRadius
+      );
       petPos.current.lerp(targetPos.current, dt * 5);
       groupRef.current.position.copy(petPos.current);
 
-      // Look towards player
+      if (wingsRef.current) {
+        wingsRef.current.rotation.y = Math.sin(time * 36) * 0.55;
+      }
+      groupRef.current.rotation.y = hoverAngle + Math.PI / 2;
+    } else {
+      // Ground pet (kitten / puppy) trails behind player with lively hops
+      const trailAngle = time * 1.5;
+      const hopFrequency = isPlayerRunning ? 16 : 8;
+      const hopHeight = isPlayerRunning ? 0.22 : 0.08;
+      const verticalHop = Math.abs(Math.sin(time * hopFrequency)) * hopHeight;
+
+      // Position behind player
+      targetPos.current.set(
+        px - 0.85,
+        py + 0.35 + verticalHop,
+        pz - 0.85
+      );
+
+      petPos.current.lerp(targetPos.current, dt * (isPlayerRunning ? 7 : 4));
+      groupRef.current.position.copy(petPos.current);
+
+      // Look towards player smoothly
       groupRef.current.lookAt(px, py + 0.5, pz);
 
-      // Tail wag
+      // Tail wagging speed linked to excitement
       if (tailRef.current) {
-        tailRef.current.rotation.z = Math.sin(time * 16) * 0.4;
+        const wagSpeed = isPlayerRunning ? 22 : 10;
+        tailRef.current.rotation.z = Math.sin(time * wagSpeed) * (isPlayerRunning ? 0.6 : 0.3);
+      }
+
+      // Idle cute head tilt or breathing when player stops
+      if (idleTimer.current > 1.5) {
+        groupRef.current.rotation.z = Math.sin(time * 2) * 0.08;
+      } else {
+        groupRef.current.rotation.z = 0;
       }
     }
   });
