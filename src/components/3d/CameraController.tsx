@@ -112,9 +112,9 @@ export const CameraController: React.FC = () => {
 
       // MacBook Trackpad 2-Finger Swipe (Roblox / Brookhaven camera control):
       // Horizontal swipe controls camera orbit angle
-      // Vertical swipe controls camera elevation / tilt
+      // Vertical swipe controls camera elevation / tilt (inverted to match natural Mac gesture)
       camAngleX.current += e.deltaX * 0.0055;
-      camAngleY.current = Math.max(0.08, Math.min(1.25, camAngleY.current + e.deltaY * 0.004));
+      camAngleY.current = Math.max(0.08, Math.min(1.25, camAngleY.current - e.deltaY * 0.004));
       lastManualInputTime.current = Date.now();
     };
 
