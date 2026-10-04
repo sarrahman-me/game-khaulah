@@ -6,6 +6,9 @@ import { PlayerKhaulah } from './PlayerKhaulah';
 import { PetCompanion } from './PetCompanion';
 import { CameraController } from './CameraController';
 import { GroundIsland } from './Environment/GroundIsland';
+import { RumahKhaulah } from './Environment/RumahKhaulah';
+import { FamilyMembers } from './Environment/FamilyMembers';
+import { SchoolTK } from './Environment/SchoolTK';
 import { ObbyCourse } from './Environment/ObbyCourse';
 import { AnimalFriends } from './Environment/AnimalFriends';
 
@@ -61,33 +64,37 @@ export const GameScene: React.FC = () => {
       <Canvas
         shadows
         camera={{ position: [0, 5, -8], fov: 60 }}
-        gl={{ antialias: true, alpha: false }}
-        dpr={[1, 2]} // Crisp rendering on high-DPI displays (iPad, retina screens)
+        gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+        dpr={[1, 2]} // Crisp rendering on MacBook M2 retina display
       >
         {/* Soft pastel atmosphere */}
         <color attach="background" args={['#BEE1E6']} />
-        <fog attach="fog" args={['#BEE1E6', 45, 130]} />
+        <fog attach="fog" args={['#BEE1E6', 55, 145]} />
 
-        {/* Cheerful Sun and Ambient Lighting */}
-        <ambientLight intensity={0.9} color="#FFF1E6" />
+        {/* Cheerful Sun and Warm Golden Ambient Lighting */}
+        <ambientLight intensity={0.95} color="#FFF3E0" />
         <directionalLight
-          position={[25, 40, 20]}
-          intensity={1.4}
+          position={[30, 45, 20]}
+          intensity={1.45}
           castShadow
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
           shadow-camera-near={0.5}
-          shadow-camera-far={120}
-          shadow-camera-left={-40}
-          shadow-camera-right={40}
-          shadow-camera-top={40}
-          shadow-camera-bottom={-40}
+          shadow-camera-far={140}
+          shadow-camera-left={-45}
+          shadow-camera-right={45}
+          shadow-camera-top={50}
+          shadow-camera-bottom={-50}
+          shadow-bias={-0.0004}
         />
-        <hemisphereLight args={['#FDE2E4', '#C5DEDD', 0.6]} />
+        <hemisphereLight args={['#FDE2E4', '#C5DEDD', 0.65]} />
 
-        {/* 3D Elements */}
+        {/* 3D World Elements */}
         <FloatingClouds />
         <GroundIsland />
+        <RumahKhaulah />
+        <FamilyMembers />
+        <SchoolTK />
         <ObbyCourse />
         <AnimalFriends />
         <PlayerKhaulah />

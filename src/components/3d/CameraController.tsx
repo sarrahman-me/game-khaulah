@@ -8,10 +8,11 @@ export const CameraController: React.FC = () => {
 
   const camDistance = useRef(7.5);
   const camAngleX = useRef(0);
-  const camAngleY = useRef(0.38); // Comfortable tilt down
+  const camAngleY = useRef(0.38); // Comfortable downward tilt
 
   const isDragging = useRef(false);
   const lastPointer = useRef({ x: 0, y: 0 });
+  const lastManualInputTime = useRef<number>(0);
 
   const currentCamPos = useRef(new THREE.Vector3(0, 5, -8));
   const currentTargetPos = useRef(new THREE.Vector3(0, 1.5, 0));
@@ -53,14 +54,17 @@ export const CameraController: React.FC = () => {
   useEffect(() => {
     const canvas = gl.domElement;
 
+    // Roblox behavior:
+    // 1-finger trackpad touch only moves the cursor freely.
+    // Camera drag only engages with right-click, middle-click, or Ctrl+click.
     const handlePointerDown = (e: PointerEvent) => {
-      // Don't drag if clicking UI buttons
-      if (e.clientY < 80) return; // Top HUD
-      if (e.clientX < 150 && e.clientY > window.innerHeight - 180) return; // joystick
-      if (e.clientX > window.innerWidth - 150 && e.clientY > window.innerHeight - 180) return; // jump button
+      if (e.clientY < 75) return; // Top HUD clicks
 
-      isDragging.current = true;
-      lastPointer.current = { x: e.clientX, y: e.clientY };
+      if (e.button === 2 || e.button === 1 || (e.ctrlKey && e.button === 0)) {
+        isDragging.current = true;
+        lastPointer.current = { x: e.clientX, y: e.clientY };
+        lastManualInputTime.current = Date.now();
+      }
     };
 
     const handlePointerMove = (e: PointerEvent) => {
@@ -70,6 +74,7 @@ export const CameraController: React.FC = () => {
         const dy = e.movementY || 0;
         camAngleX.current -= dx * 0.004;
         camAngleY.current = Math.max(0.08, Math.min(1.25, camAngleY.current + dy * 0.003));
+        lastManualInputTime.current = Date.now();
         return;
       }
 
@@ -78,24 +83,43 @@ export const CameraController: React.FC = () => {
       const dy = e.clientY - lastPointer.current.y;
       lastPointer.current = { x: e.clientX, y: e.clientY };
 
-      // Sensitivity adjusted for MacBook trackpad & mouse
       camAngleX.current -= dx * 0.0055;
       camAngleY.current = Math.max(0.08, Math.min(1.25, camAngleY.current + dy * 0.0045));
+      lastManualInputTime.current = Date.now();
     };
 
     const handlePointerUp = () => {
       isDragging.current = false;
     };
 
-    // MacBook Trackpad two-finger scroll / mouse wheel to zoom in/out (like Roblox)
+    // MacBook Trackpad 2-finger swipe & pinch gestures (matching Roblox on Mac):
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
-      const zoomStep = e.deltaY * 0.01;
-      gameStore.zoomCamera(zoomStep);
+
+      // Pinch gesture on MacBook Trackpad (or Ctrl/Meta + wheel):
+      if (e.ctrlKey || e.metaKey) {
+        const zoomStep = e.deltaY * 0.02;
+        gameStore.zoomCamera(zoomStep);
+        return;
+      }
+
+      // Discrete external mouse wheel notch (zooms camera):
+      const isDiscreteWheel = e.deltaMode !== 0 || (Math.abs(e.deltaX) === 0 && Math.abs(e.deltaY) >= 40);
+      if (isDiscreteWheel && !('ontouchstart' in window)) {
+        gameStore.zoomCamera(e.deltaY * 0.01);
+        return;
+      }
+
+      // MacBook Trackpad 2-Finger Swipe (Roblox / Brookhaven camera control):
+      // Horizontal swipe controls camera orbit angle (swiping right turns camera right)
+      // Vertical swipe controls camera elevation / tilt
+      camAngleX.current -= e.deltaX * 0.0055;
+      camAngleY.current = Math.max(0.08, Math.min(1.25, camAngleY.current + e.deltaY * 0.004));
+      lastManualInputTime.current = Date.now();
     };
 
-    // Keyboard shortcuts for camera:
-    // Roblox allows I / O for zoom, < / > for rotate
+    // Roblox standard keyboard shortcuts for camera:
+    // I / O for zoom, < / > for rotate
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'KeyI') {
         gameStore.zoomCamera(-1.0); // zoom in
@@ -103,8 +127,10 @@ export const CameraController: React.FC = () => {
         gameStore.zoomCamera(1.0); // zoom out
       } else if (e.code === 'Comma') {
         camAngleX.current += 0.25; // rotate left
+        lastManualInputTime.current = Date.now();
       } else if (e.code === 'Period') {
         camAngleX.current -= 0.25; // rotate right
+        lastManualInputTime.current = Date.now();
       }
     };
 
@@ -125,7 +151,22 @@ export const CameraController: React.FC = () => {
 
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.1);
-    const playerPos = gameStore.getState().playerPos;
+    const motion = gameStore.getState();
+    const playerPos = motion.playerPos;
+    const isMoving = motion.isPlayerMoving;
+    const facingAngle = motion.playerFacingAngle;
+
+    // Brookhaven Soft Auto-Follow:
+    // When character is walking and no manual trackpad input occurred in the last ~1.2s,
+    // smoothly and gently align camera behind player's moving direction.
+    if (!isShiftLock && isMoving && Date.now() - lastManualInputTime.current > 1200) {
+      let diff = facingAngle - camAngleX.current;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+
+      const followRate = Math.min(dt * 2.2, 1);
+      camAngleX.current += diff * followRate;
+    }
 
     // Smoothly interpolate camera distance
     camDistance.current = THREE.MathUtils.lerp(camDistance.current, targetDistance, dt * 8);
@@ -137,7 +178,7 @@ export const CameraController: React.FC = () => {
     // Camera spherical position offset
     const cosY = Math.cos(camAngleY.current);
     const sinY = Math.sin(camAngleY.current);
-    const offsetX = Math.sin(camAngleX.current) * cosY * camDistance.current;
+    const offsetX = -Math.sin(camAngleX.current) * cosY * camDistance.current;
     const offsetZ = -Math.cos(camAngleX.current) * cosY * camDistance.current;
     const offsetY = sinY * camDistance.current + 0.8;
 

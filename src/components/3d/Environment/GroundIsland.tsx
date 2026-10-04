@@ -15,25 +15,25 @@ const AnimatedTree: React.FC<AnimatedTreeProps> = ({ pos, leafColor, scale, seed
   useFrame((state) => {
     if (!groupRef.current) return;
     const t = state.clock.getElapsedTime();
-    groupRef.current.rotation.z = Math.sin(t * 1.5 + seed) * 0.04;
-    groupRef.current.rotation.x = Math.cos(t * 1.2 + seed) * 0.03;
+    groupRef.current.rotation.z = Math.sin(t * 1.4 + seed) * 0.04;
+    groupRef.current.rotation.x = Math.cos(t * 1.1 + seed) * 0.03;
   });
 
   return (
     <group ref={groupRef} position={pos} scale={scale}>
       {/* Trunk */}
       <mesh position={[0, 1.2, 0]} castShadow>
-        <cylinderGeometry args={[0.25, 0.38, 2.4, 8]} />
-        <meshStandardMaterial color="#9C6644" roughness={0.8} />
+        <cylinderGeometry args={[0.24, 0.38, 2.4, 8]} />
+        <meshStandardMaterial color="#8D5B4C" roughness={0.8} />
       </mesh>
-      {/* Foliage Puff 1 */}
+      {/* Foliage Tier 1 */}
       <mesh position={[0, 2.6, 0]} castShadow>
-        <sphereGeometry args={[1.3, 16, 16]} />
+        <sphereGeometry args={[1.35, 14, 14]} />
         <meshStandardMaterial color={leafColor} roughness={0.5} />
       </mesh>
-      {/* Foliage Puff 2 */}
-      <mesh position={[0, 3.4, 0]} castShadow>
-        <sphereGeometry args={[0.9, 12, 12]} />
+      {/* Foliage Tier 2 */}
+      <mesh position={[0, 3.5, 0]} castShadow>
+        <sphereGeometry args={[0.95, 12, 12]} />
         <meshStandardMaterial color={leafColor} roughness={0.5} />
       </mesh>
     </group>
@@ -57,102 +57,195 @@ const AnimatedFlower: React.FC<AnimatedFlowerProps> = ({ x, z, color, seed }) =>
   });
 
   return (
-    <group ref={flowerRef} position={[x, 0.3, z]}>
+    <group ref={flowerRef} position={[x, 0.25, z]}>
       <mesh position={[0, 0.15, 0]}>
-        <cylinderGeometry args={[0.04, 0.04, 0.3, 6]} />
+        <cylinderGeometry args={[0.03, 0.03, 0.3, 6]} />
         <meshStandardMaterial color="#38B000" />
       </mesh>
       <mesh position={[0, 0.32, 0]}>
-        <sphereGeometry args={[0.16, 8, 8]} />
+        <sphereGeometry args={[0.15, 8, 8]} />
         <meshStandardMaterial color={color} />
       </mesh>
     </group>
   );
 };
 
-const AnimatedPond: React.FC = () => {
+// Village River with animated shimmering water and lily pads
+const AnimatedRiver: React.FC = () => {
   const waterRef = useRef<THREE.Mesh>(null);
+
   useFrame((state) => {
     if (!waterRef.current) return;
     const t = state.clock.getElapsedTime();
-    waterRef.current.position.y = 0.05 + Math.sin(t * 2.5) * 0.015;
-    waterRef.current.rotation.z = Math.sin(t * 1.2) * 0.02;
+    waterRef.current.position.y = 0.06 + Math.sin(t * 2.0) * 0.012;
   });
 
   return (
-    <group position={[6, 0.05, -5]}>
-      {/* Gentle Undulating Water Surface */}
-      <mesh ref={waterRef} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[2.5, 24]} />
-        <meshStandardMaterial color="#48CAE4" roughness={0.1} transparent opacity={0.85} />
+    <group position={[0, 0, 11]}>
+      {/* River Bed Trench */}
+      <mesh position={[0, -0.15, 0]}>
+        <boxGeometry args={[30, 0.5, 4.8]} />
+        <meshStandardMaterial color="#403D39" roughness={0.9} />
       </mesh>
-      {/* Pond Pebble Border */}
-      {Array.from({ length: 12 }).map((_, i) => {
-        const angle = (i / 12) * Math.PI * 2;
-        const px = Math.cos(angle) * 2.5;
-        const pz = Math.sin(angle) * 2.5;
-        return (
-          <mesh key={i} position={[px, 0.05, pz]} scale={[0.3, 0.15, 0.3]}>
-            <sphereGeometry args={[0.5, 8, 8]} />
-            <meshStandardMaterial color="#E9D8A6" roughness={0.7} />
+
+      {/* Crystal Clear River Water */}
+      <mesh ref={waterRef} position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[30, 4.5]} />
+        <meshStandardMaterial color="#48CAE4" roughness={0.1} transparent opacity={0.82} metalness={0.1} />
+      </mesh>
+
+      {/* River Riverbank Pebbles */}
+      {[-12, -9, -6, -3, 3, 6, 9, 12].map((px, idx) => (
+        <React.Fragment key={idx}>
+          <mesh position={[px, 0.1, -2.4]} scale={[0.4, 0.2, 0.4]}>
+            <sphereGeometry args={[0.6, 8, 8]} />
+            <meshStandardMaterial color="#CCC5B9" roughness={0.8} />
           </mesh>
-        );
-      })}
+          <mesh position={[px + 1.2, 0.1, 2.4]} scale={[0.4, 0.2, 0.4]}>
+            <sphereGeometry args={[0.6, 8, 8]} />
+            <meshStandardMaterial color="#CCC5B9" roughness={0.8} />
+          </mesh>
+        </React.Fragment>
+      ))}
+
+      {/* Lily pads floating on water */}
+      {[
+        { x: -5, z: -0.6 },
+        { x: 5, z: 0.8 },
+        { x: -9, z: 0.4 },
+        { x: 8, z: -0.5 },
+      ].map((pad, idx) => (
+        <group key={idx} position={[pad.x, 0.09, pad.z]} rotation={[-Math.PI / 2, 0, idx]}>
+          <circleGeometry args={[0.4, 12]} />
+          <meshStandardMaterial color="#52B788" roughness={0.4} />
+        </group>
+      ))}
+    </group>
+  );
+};
+
+// Wooden Bridge over the River
+const WoodenBridge: React.FC = () => {
+  return (
+    <group position={[0, 0.22, 11]}>
+      {/* Bridge Wooden Floor Planks */}
+      <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
+        <boxGeometry args={[3.6, 0.22, 5.8]} />
+        <meshStandardMaterial color="#B08968" roughness={0.7} />
+      </mesh>
+
+      {/* Bridge Wooden Handrails (Left & Right) */}
+      {[-1.75, 1.75].map((rx, idx) => (
+        <group key={idx} position={[rx, 0.7, 0]}>
+          {/* Top Rail */}
+          <mesh castShadow>
+            <boxGeometry args={[0.15, 0.12, 5.8]} />
+            <meshStandardMaterial color="#7F4F24" />
+          </mesh>
+          {/* Rail Posts */}
+          {[-2.4, -1.2, 0, 1.2, 2.4].map((pz, pi) => (
+            <mesh key={pi} position={[0, -0.35, pz]} castShadow>
+              <cylinderGeometry args={[0.06, 0.06, 0.7, 8]} />
+              <meshStandardMaterial color="#7F4F24" />
+            </mesh>
+          ))}
+        </group>
+      ))}
     </group>
   );
 };
 
 export const GroundIsland: React.FC = () => {
   useEffect(() => {
-    // Register main island ground collider
-    const mainGroundBox = new THREE.Box3(
-      new THREE.Vector3(-15, -1, -15),
-      new THREE.Vector3(15, 0.3, 15)
+    // 1. Home Area Ground (Z: -16 to 8)
+    const homeBox = new THREE.Box3(
+      new THREE.Vector3(-16, -1, -16),
+      new THREE.Vector3(16, 0.25, 8.5)
+    );
+    // 2. Bridge Ground (Z: 8.5 to 13.5)
+    const bridgeBox = new THREE.Box3(
+      new THREE.Vector3(-2.2, -0.5, 8.5),
+      new THREE.Vector3(2.2, 0.5, 13.5)
+    );
+    // 3. School Area Ground (Z: 13.5 to 48)
+    const schoolBox = new THREE.Box3(
+      new THREE.Vector3(-16, -1, 13.5),
+      new THREE.Vector3(16, 0.25, 48)
     );
 
-    const colliderObj = {
-      box: mainGroundBox,
-      type: 'ground' as const,
-    };
-    colliders.push(colliderObj);
+    const c1 = { box: homeBox, type: 'ground' as const };
+    const c2 = { box: bridgeBox, type: 'ground' as const };
+    const c3 = { box: schoolBox, type: 'ground' as const };
+
+    colliders.push(c1, c2, c3);
 
     return () => {
-      const idx = colliders.indexOf(colliderObj);
-      if (idx !== -1) colliders.splice(idx, 1);
+      [c1, c2, c3].forEach((c) => {
+        const idx = colliders.indexOf(c);
+        if (idx !== -1) colliders.splice(idx, 1);
+      });
     };
   }, []);
 
   return (
     <group position={[0, 0, 0]}>
-      {/* --- MAIN ISLAND --- */}
-      {/* Top Grass Cylinder */}
-      <mesh position={[0, -0.1, 0]} receiveShadow>
-        <cylinderGeometry args={[14, 15, 0.8, 32]} />
-        <meshStandardMaterial color="#70E000" roughness={0.6} />
+      {/* ============================================================== */}
+      {/* 1. HOME LAWN TERRAIN (Rumah Khaulah, Z: -16 to 8)              */}
+      {/* ============================================================== */}
+      <mesh position={[0, -0.2, -4]} receiveShadow>
+        <boxGeometry args={[30, 0.9, 24]} />
+        <meshStandardMaterial color="#70E000" roughness={0.7} />
       </mesh>
 
-      {/* Earth / Dirt Base Beneath */}
-      <mesh position={[0, -1.8, 0]}>
-        <cylinderGeometry args={[15, 9, 2.6, 32]} />
-        <meshStandardMaterial color="#9B5DE5" roughness={0.9} />
+      {/* Earth Base Beneath Home Lawn */}
+      <mesh position={[0, -1.8, -4]}>
+        <boxGeometry args={[30.5, 2.3, 24.5]} />
+        <meshStandardMaterial color="#582F0E" roughness={0.9} />
       </mesh>
 
-      {/* Floating Island Underside Crystal Point */}
-      <mesh position={[0, -4.2, 0]}>
-        <coneGeometry args={[9, 3.5, 16]} />
-        <meshStandardMaterial color="#7B2CBF" roughness={0.8} />
+      {/* ============================================================== */}
+      {/* 2. VILLAGE RIVER & WOODEN FOOTBRIDGE (Z: 11)                   */}
+      {/* ============================================================== */}
+      <AnimatedRiver />
+      <WoodenBridge />
+
+      {/* ============================================================== */}
+      {/* 3. SCHOOL TK KARANG TENGAH LAWN TERRAIN (Z: 13.5 to 48)        */}
+      {/* ============================================================== */}
+      <mesh position={[0, -0.2, 30.5]} receiveShadow>
+        <boxGeometry args={[32, 0.9, 35]} />
+        <meshStandardMaterial color="#55A630" roughness={0.65} />
       </mesh>
 
-      {/* --- CUTE MINI POND FOR THE DUCK --- */}
-      <AnimatedPond />
+      {/* Earth Base Beneath School Lawn */}
+      <mesh position={[0, -1.8, 30.5]}>
+        <boxGeometry args={[32.5, 2.3, 35.5]} />
+        <meshStandardMaterial color="#582F0E" roughness={0.9} />
+      </mesh>
 
-      {/* --- CARTOON CANDY TREES (SWAYING IN WIND) --- */}
+      {/* Schoolyard Paved Stone Path from Gate to Doors */}
+      <mesh position={[0, 0.22, 28]} receiveShadow>
+        <boxGeometry args={[3.2, 0.05, 18]} />
+        <meshStandardMaterial color="#D4A373" roughness={0.6} />
+      </mesh>
+
+      {/* ============================================================== */}
+      {/* 4. TREES SWAYING IN THE WIND (Around Village & School)         */}
+      {/* ============================================================== */}
       {[
-        { pos: [-8, 0.3, 5], leafColor: '#FF6B8B', scale: 1.1, seed: 0 },
-        { pos: [-9, 0.3, -4], leafColor: '#FF99C8', scale: 1.3, seed: 1.5 },
-        { pos: [9, 0.3, -8], leafColor: '#38B000', scale: 1.0, seed: 3.2 },
-        { pos: [-3, 0.3, 10], leafColor: '#FFD166', scale: 0.9, seed: 4.8 },
-        { pos: [10, 0.3, 4], leafColor: '#A0C4FF', scale: 1.2, seed: 2.1 },
+        // Near Home
+        { pos: [-10, 0.25, -6], leafColor: '#FF6B8B', scale: 1.2, seed: 0 },
+        { pos: [10, 0.25, -6], leafColor: '#FF99C8', scale: 1.3, seed: 1.5 },
+        { pos: [-11, 0.25, 2], leafColor: '#38B000', scale: 1.1, seed: 2.3 },
+        { pos: [11, 0.25, 3], leafColor: '#FFD166', scale: 1.0, seed: 3.8 },
+        // Near River
+        { pos: [-12, 0.25, 11], leafColor: '#2EC4B6', scale: 1.25, seed: 4.1 },
+        { pos: [12, 0.25, 11], leafColor: '#2EC4B6', scale: 1.25, seed: 5.2 },
+        // Around TK Karang Tengah
+        { pos: [-12, 0.25, 22], leafColor: '#A0C4FF', scale: 1.2, seed: 6.3 },
+        { pos: [12, 0.25, 22], leafColor: '#FFB703', scale: 1.1, seed: 7.1 },
+        { pos: [-12, 0.25, 38], leafColor: '#80ED99', scale: 1.3, seed: 8.4 },
+        { pos: [12, 0.25, 38], leafColor: '#80ED99', scale: 1.3, seed: 9.0 },
       ].map((tree, idx) => (
         <AnimatedTree
           key={idx}
@@ -163,15 +256,20 @@ export const GroundIsland: React.FC = () => {
         />
       ))}
 
-      {/* --- CUTE COLORFUL FLOWERS (SWAYING GENTLY) --- */}
+      {/* ============================================================== */}
+      {/* 5. COLORFUL FLOWERS (Home Yard & School Playground)             */}
+      {/* ============================================================== */}
       {[
-        { x: 3, z: 2, c: '#FF4D6D', seed: 0.2 },
-        { x: 4, z: 2.5, c: '#FFB703', seed: 1.1 },
-        { x: -2, z: 4, c: '#9B5DE5', seed: 2.5 },
-        { x: -4, z: -3, c: '#00BBF9', seed: 3.4 },
-        { x: 1, z: -4, c: '#FF4D6D', seed: 4.1 },
-        { x: -5, z: 7, c: '#F15BB5', seed: 1.9 },
-        { x: 5, z: 8, c: '#FEE440', seed: 5.3 },
+        // Home Yard Flowers
+        { x: -5, z: -2, c: '#FF4D6D', seed: 0.2 },
+        { x: 5, z: -2, c: '#FFB703', seed: 1.1 },
+        { x: -4, z: 4, c: '#9B5DE5', seed: 2.5 },
+        { x: 4, z: 5, c: '#F15BB5', seed: 3.4 },
+        // Schoolyard Flowers
+        { x: -6, z: 20, c: '#FF006E', seed: 4.2 },
+        { x: 6, z: 20, c: '#00F5D4', seed: 5.1 },
+        { x: -5, z: 35, c: '#FEE440', seed: 6.3 },
+        { x: 5, z: 35, c: '#FF70A6', seed: 7.4 },
       ].map((flower, idx) => (
         <AnimatedFlower
           key={idx}
@@ -182,26 +280,25 @@ export const GroundIsland: React.FC = () => {
         />
       ))}
 
-      {/* --- RAINBOW ARCHWAY (Pintu Masuk Obby) --- */}
-      <group position={[0, 0.3, 11]}>
-        {/* Left Post */}
-        <mesh position={[-2.2, 1.6, 0]}>
-          <cylinderGeometry args={[0.3, 0.35, 3.2, 12]} />
+      {/* ============================================================== */}
+      {/* 6. RAINBOW SKYWAY PORTAL ARCHWAY (Behind School, Z: 48)        */}
+      {/* ============================================================== */}
+      <group position={[0, 0.25, 48]}>
+        <mesh position={[-2.4, 2.0, 0]}>
+          <cylinderGeometry args={[0.3, 0.35, 4.0, 12]} />
           <meshStandardMaterial color="#FF9F1C" />
         </mesh>
-        {/* Right Post */}
-        <mesh position={[2.2, 1.6, 0]}>
-          <cylinderGeometry args={[0.3, 0.35, 3.2, 12]} />
+        <mesh position={[2.4, 2.0, 0]}>
+          <cylinderGeometry args={[0.3, 0.35, 4.0, 12]} />
           <meshStandardMaterial color="#FF9F1C" />
         </mesh>
-        {/* Arch Torus */}
-        <mesh position={[0, 3.2, 0]} rotation={[0, 0, 0]}>
-          <torusGeometry args={[2.2, 0.3, 12, 24, Math.PI]} />
+        <mesh position={[0, 4.0, 0]}>
+          <torusGeometry args={[2.4, 0.35, 12, 24, Math.PI]} />
           <meshStandardMaterial color="#FF1493" />
         </mesh>
-        {/* Signpost */}
-        <mesh position={[0, 3.6, 0]}>
-          <boxGeometry args={[2.8, 0.65, 0.1]} />
+        {/* Banner Sign: "Jalur Pelangi Ajaib" */}
+        <mesh position={[0, 4.4, 0]}>
+          <boxGeometry args={[3.2, 0.65, 0.1]} />
           <meshStandardMaterial color="#FFD166" />
         </mesh>
       </group>

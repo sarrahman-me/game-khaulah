@@ -6,6 +6,15 @@ export type AccessoryType = 'none' | 'bunny_ears' | 'fairy_wings' | 'princess_cr
 export type PetType = 'none' | 'puppy' | 'kitten' | 'fairy';
 export type EmoteType = 'none' | 'wave' | 'dance' | 'cheer';
 
+export interface FamilyDialogData {
+  speaker: string;
+  role: string;
+  avatarBg: string;
+  text: string;
+  actionText?: string;
+  actionType?: 'high_five' | 'take_snack' | 'play_ball' | 'cuddle_baby';
+}
+
 export interface GameState {
   stars: number;
   totalStars: number;
@@ -26,13 +35,21 @@ export interface GameState {
   isShiftLock: boolean;
   respawnTrigger: number;
   cameraDistance: number;
+  // Motion tracking for Roblox Brookhaven soft follow camera
+  playerFacingAngle: number;
+  isPlayerMoving: boolean;
+  // New Family & Playground features
+  activeRide: 'none' | 'slide' | 'swing';
+  speedBuffTimeLeft: number;
+  nearbyInteractable: { id: string; title: string; prompt: string } | null;
+  activeDialog: FamilyDialogData | null;
 }
 
 const CHECKPOINTS: [number, number, number][] = [
-  [0, 1, 0],         // Checkpoint 0: Taman Awal (Spawn)
-  [0, 3, 24],        // Checkpoint 1: Awal Jalur Balok Pelangi
-  [0, 6, 48],        // Checkpoint 2: Puncak Awan Gula-Gula
-  [0, 10, 75],       // Checkpoint 3: Kastil Bintang Khaulah
+  [0, 0.8, -4],      // Checkpoint 0: Halaman Rumah Khaulah bersama Abi & Ummi
+  [0, 0.8, 28],      // Checkpoint 1: Gerbang TK Karang Tengah 1 Atap
+  [0, 6.0, 65],      // Checkpoint 2: Puncak Awan Gula-Gula Skyway
+  [0, 10.0, 95],     // Checkpoint 3: Kastil Bintang Khaulah
 ];
 
 let state: GameState = {
@@ -40,14 +57,14 @@ let state: GameState = {
   totalStars: 25,
   collectedStarIds: [],
   checkpointIndex: 0,
-  checkpointPosition: [0, 1, 0],
-  playerPos: [0, 1, 0],
+  checkpointPosition: [0, 0.8, -4],
+  playerPos: [0, 0.8, -4],
   joystickVector: { x: 0, y: 0 },
   isJumpPressed: false,
   activeAccessory: 'none',
   activePet: 'kitten',
   activeEmote: 'none',
-  bubbleMessage: 'Halo Khaulah! Ayo kumpulkan semua bintang pelangi! ✨',
+  bubbleMessage: 'Selamat pagi Khaulah! Ayo sapa Abi, Ummi, dan berangkat ke TK Karang Tengah! 🎒🏡',
   isClosetOpen: false,
   isWelcomeOpen: true,
   isMuted: false,
@@ -55,6 +72,12 @@ let state: GameState = {
   isShiftLock: false,
   respawnTrigger: 0,
   cameraDistance: 7.5,
+  playerFacingAngle: 0,
+  isPlayerMoving: false,
+  activeRide: 'none',
+  speedBuffTimeLeft: 0,
+  nearbyInteractable: null,
+  activeDialog: null,
 };
 
 const listeners = new Set<() => void>();
@@ -87,9 +110,13 @@ export const gameStore = {
   },
 
   setPlayerPos: (pos: [number, number, number]) => {
-    state = { ...state, playerPos: pos };
-    // Not emitting change on high-frequency playerPos to avoid React rerender spam;
-    // playerPos is read directly via getState() in 3D frame loops.
+    state.playerPos = pos;
+  },
+
+  setPlayerMotion: (pos: [number, number, number], facingAngle: number, isMoving: boolean) => {
+    state.playerPos = pos;
+    state.playerFacingAngle = facingAngle;
+    state.isPlayerMoving = isMoving;
   },
 
   collectStar: (starId: string) => {
@@ -231,6 +258,89 @@ export const gameStore = {
     const nextDist = Math.max(3.0, Math.min(15.0, state.cameraDistance + delta));
     state = { ...state, cameraDistance: nextDist };
     emitChange();
+  },
+
+  setNearbyInteractable: (item: { id: string; title: string; prompt: string } | null) => {
+    // Only emit if changed to avoid unnecessary re-renders
+    if (state.nearbyInteractable?.id !== item?.id) {
+      state = { ...state, nearbyInteractable: item };
+      emitChange();
+    }
+  },
+
+  openDialog: (dialog: FamilyDialogData) => {
+    soundManager.playFamilyChord();
+    state = { ...state, activeDialog: dialog };
+    emitChange();
+  },
+
+  closeDialog: () => {
+    state = { ...state, activeDialog: null };
+    emitChange();
+  },
+
+  executeDialogAction: (actionType: 'high_five' | 'take_snack' | 'play_ball' | 'cuddle_baby') => {
+    if (actionType === 'high_five') {
+      soundManager.playHighFive();
+      confetti({ particleCount: 35, spread: 70, origin: { y: 0.7 } });
+      state = {
+        ...state,
+        bubbleMessage: 'Tos hebat sama Abi! "Khaulah anak hebat dan shalihah!" ✋✨',
+        activeDialog: null,
+      };
+      emitChange();
+    } else if (actionType === 'take_snack') {
+      soundManager.playSnackBuff();
+      confetti({ particleCount: 45, spread: 80, origin: { y: 0.7 } });
+      state = {
+        ...state,
+        speedBuffTimeLeft: 18, // 18 seconds of speed buff
+        bubbleMessage: 'Nyam! Bekal Cinta Ummi membuat Khaulah berlari super cepat! 🍰⚡',
+        activeDialog: null,
+      };
+      emitChange();
+    } else if (actionType === 'play_ball') {
+      soundManager.playStarCollect();
+      confetti({ particleCount: 25, spread: 60, origin: { y: 0.8 } });
+      state = {
+        ...state,
+        bubbleMessage: 'Hore! Khaulah dan Khalid asyik bermain bola bersama! ⚽🎉',
+        activeDialog: null,
+      };
+      emitChange();
+    } else if (actionType === 'cuddle_baby') {
+      soundManager.playBabyGiggle();
+      confetti({ particleCount: 25, spread: 60, origin: { y: 0.8 } });
+      state = {
+        ...state,
+        bubbleMessage: 'Adek Faqih tertawa ceria saat dipeluk Mbak Khaulah! 💕👶',
+        activeDialog: null,
+      };
+      emitChange();
+    }
+  },
+
+  setActiveRide: (ride: 'none' | 'slide' | 'swing') => {
+    if (ride !== state.activeRide) {
+      if (ride === 'slide') {
+        soundManager.playSlideWhoosh();
+      } else if (ride === 'swing') {
+        soundManager.playSwingRide();
+      }
+      state = { ...state, activeRide: ride };
+      emitChange();
+    }
+  },
+
+  tickSpeedBuff: (dt: number) => {
+    if (state.speedBuffTimeLeft > 0) {
+      const remaining = Math.max(0, state.speedBuffTimeLeft - dt);
+      state = { ...state, speedBuffTimeLeft: remaining };
+      // Only emit if it expired
+      if (remaining === 0) {
+        emitChange();
+      }
+    }
   }
 };
 

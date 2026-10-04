@@ -55,40 +55,40 @@ export const WelcomeModal: React.FC = () => {
 
         {/* Title */}
         <h1 className="text-2xl sm:text-3xl font-bubble font-bold text-purple-900 mt-3 leading-tight">
-          Dunia Ajaib Khaulah 3D
+          Dunia Bahagia Khaulah 3D
         </h1>
         <p className="text-pink-600 font-bubble text-sm sm:text-base font-semibold mt-1">
-          Petualangan Roblox MacBook Khusus untuk Khaulah! 👧🏻✨
+          Keluarga Tercinta & TK Karang Tengah 1 Atap 🏡🎒✨
         </p>
 
-        {/* MacBook Controls Guide */}
+        {/* Story & Interactive Features */}
         <div className="mt-4 space-y-2 text-left">
           <div className="bg-white/90 p-3 rounded-2xl border border-pink-200 shadow-xs flex items-center gap-3">
-            <span className="text-2xl">⌨️</span>
+            <span className="text-2xl">👨‍👩‍👧‍👦</span>
             <div>
-              <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">Tombol Gerak & Lompat</h4>
+              <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">Keluarga Tercinta di Rumah</h4>
               <p className="text-gray-600 text-[11px] sm:text-xs">
-                Gunakan <b>W A S D</b> atau <b>Tombol Panah</b> untuk jalan, dan <b>Spasi</b> untuk lompat!
+                Sapa <b>Abi</b>, ambil bekal lezat dari <b>Ummi</b>, main bola bareng <b>Khalid</b>, dan cilukba sama <b>Adek Faqih</b>!
               </p>
             </div>
           </div>
 
           <div className="bg-white/90 p-3 rounded-2xl border border-indigo-200 shadow-xs flex items-center gap-3">
-            <span className="text-2xl">🖱️</span>
+            <span className="text-2xl">🛝</span>
             <div>
-              <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">Kamera MacBook Trackpad</h4>
+              <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">TK Karang Tengah 1 Atap</h4>
               <p className="text-gray-600 text-[11px] sm:text-xs">
-                <b>Klik kanan / geser dua jari</b> untuk putar kamera. <b>Scroll</b> untuk zoom dekat/jauh.
+                Lintasi jembatan sungai desa, lihat bendera merah putih, main perosotan & ayunan ceria!
               </p>
             </div>
           </div>
 
           <div className="bg-white/90 p-3 rounded-2xl border border-amber-200 shadow-xs flex items-center gap-3">
-            <span className="text-2xl">🎯</span>
+            <span className="text-2xl">💻</span>
             <div>
-              <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">Fitur Seru Roblox</h4>
+              <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">Kontrol MacBook (Persis Roblox Brookhaven)</h4>
               <p className="text-gray-600 text-[11px] sm:text-xs">
-                Tekan <b>Shift</b> untuk kunci kamera, <b>Q</b> untuk goyang, <b>E</b> untuk sapa, <b>R</b> untuk reset checkpoint.
+                <b>1 Jari Trackpad</b>: Kursor & Klik Orang/Mainan | <b>Swipe 2 Jari</b>: Putar Kamera | <b>W A S D</b>: Jalan (Kamera Ikut Otomatis!) | <b>Spasi</b>: Lompat
               </p>
             </div>
           </div>
@@ -101,7 +101,7 @@ export const WelcomeModal: React.FC = () => {
             className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-600 hover:from-emerald-500 hover:to-teal-600 text-white font-bubble font-bold text-base shadow-xl active:scale-95 transition-all border-2 border-white flex items-center justify-center gap-2"
           >
             <Play className="w-5 h-5 fill-white" />
-            <span>Mulai Main di MacBook, Khaulah! 🚀</span>
+            <span>Mulai Petualangan, Khaulah! 🚀✨</span>
           </button>
         </div>
       </div>

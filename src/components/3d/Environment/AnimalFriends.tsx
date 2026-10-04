@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import { gameStore } from '../../../state/useGameStore';
 import { soundManager } from '../../../sound/audioManager';
@@ -11,8 +12,52 @@ interface AnimalNPCProps {
   dialogue: string;
 }
 
+// Cute fluttering butterflies in the garden
+const FlutteringButterflies: React.FC = () => {
+  const butterflyGroup = useRef<THREE.Group>(null);
+  const wing1 = useRef<THREE.Mesh>(null);
+  const wing2 = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (!butterflyGroup.current) return;
+    const t = state.clock.getElapsedTime();
+    // Path circling around the garden
+    butterflyGroup.current.position.x = -4 + Math.cos(t * 0.8) * 3;
+    butterflyGroup.current.position.z = 2 + Math.sin(t * 0.8) * 3;
+    butterflyGroup.current.position.y = 1.2 + Math.sin(t * 2.5) * 0.35;
+    butterflyGroup.current.rotation.y = -t * 0.8 + Math.PI / 2;
+
+    // Fast wing flapping
+    if (wing1.current && wing2.current) {
+      wing1.current.rotation.y = Math.sin(t * 28) * 0.75;
+      wing2.current.rotation.y = -Math.sin(t * 28) * 0.75;
+    }
+  });
+
+  return (
+    <group ref={butterflyGroup} position={[-4, 1.2, 2]}>
+      {/* Butterfly Body */}
+      <mesh>
+        <cylinderGeometry args={[0.02, 0.02, 0.12, 6]} />
+        <meshBasicMaterial color="#1D2A44" />
+      </mesh>
+      {/* Left Wing */}
+      <mesh ref={wing1} position={[-0.08, 0.02, 0]}>
+        <circleGeometry args={[0.09, 8]} />
+        <meshBasicMaterial color="#FF006E" side={THREE.DoubleSide} />
+      </mesh>
+      {/* Right Wing */}
+      <mesh ref={wing2} position={[0.08, 0.02, 0]}>
+        <circleGeometry args={[0.09, 8]} />
+        <meshBasicMaterial color="#FFBE0B" side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  );
+};
+
 const SingleAnimal: React.FC<AnimalNPCProps> = ({ type, position, name, dialogue }) => {
   const groupRef = useRef<THREE.Group>(null);
+  const tailRef = useRef<THREE.Mesh>(null);
   const isJumpingTimer = useRef(0);
   const cooldownRef = useRef(0);
 
@@ -20,46 +65,76 @@ const SingleAnimal: React.FC<AnimalNPCProps> = ({ type, position, name, dialogue
     if (!groupRef.current) return;
     const time = state.clock.getElapsedTime();
 
-    if (cooldownRef.current > 0) {
-      cooldownRef.current -= delta;
-    }
-    if (isJumpingTimer.current > 0) {
-      isJumpingTimer.current -= delta;
+    if (cooldownRef.current > 0) cooldownRef.current -= delta;
+    if (isJumpingTimer.current > 0) isJumpingTimer.current -= delta;
+
+    let currentPos = [...position];
+
+    // Duck swimming motion in the river
+    if (type === 'duck') {
+      const swimX = Math.sin(time * 0.35) * 4.5;
+      const swimDir = Math.cos(time * 0.35);
+      currentPos[0] = swimX;
+      currentPos[1] = 0.14 + Math.sin(time * 3.0) * 0.015;
+      groupRef.current.position.set(currentPos[0], currentPos[1], currentPos[2]);
+      groupRef.current.rotation.y = swimDir > 0 ? Math.PI / 2 : -Math.PI / 2;
+    } else {
+      groupRef.current.position.set(position[0], position[1], position[2]);
     }
 
     // Distance to player
     const playerPos = gameStore.getState().playerPos;
     const distSq =
-      Math.pow(playerPos[0] - position[0], 2) +
-      Math.pow(playerPos[1] - position[1], 2) +
-      Math.pow(playerPos[2] - position[2], 2);
+      Math.pow(playerPos[0] - currentPos[0], 2) +
+      Math.pow(playerPos[1] - currentPos[1], 2) +
+      Math.pow(playerPos[2] - currentPos[2], 2);
 
-    if (distSq < 9.0) {
-      // Look at player smoothly
-      groupRef.current.lookAt(playerPos[0], position[1], playerPos[2]);
+    if (distSq < 10.0) {
+      if (type !== 'duck') {
+        // Look at player smoothly
+        groupRef.current.lookAt(playerPos[0], currentPos[1], playerPos[2]);
+      }
 
       // Greet if not on cooldown
       if (cooldownRef.current <= 0) {
         soundManager.playAnimalSound(type);
         gameStore.setMessage(`${name}: "${dialogue}" 💕`);
-        cooldownRef.current = 6; // 6s cooldown before re-greeting
-        isJumpingTimer.current = 3.0; // Happy hop for 3 seconds
+        cooldownRef.current = 6;
+        isJumpingTimer.current = 3.0;
       }
     }
 
-    // Gentle breathing or happy excited hopping when greeted
+    // Happy excited hopping or breathing
     const isExcited = isJumpingTimer.current > 0;
-    const hopY = isExcited ? Math.abs(Math.sin(time * 9)) * 0.25 : Math.sin(time * 2.2) * 0.04;
-    groupRef.current.position.y = position[1] + hopY;
+    if (type !== 'duck') {
+      const hopY = isExcited ? Math.abs(Math.sin(time * 9)) * 0.28 : Math.sin(time * 2.2) * 0.04;
+      groupRef.current.position.y = position[1] + hopY;
+    }
 
-    // Cute bouncy squash & stretch when greeting
-    const bounceY = isExcited ? 1 + Math.sin(time * 18) * 0.12 : 1;
-    const bounceXZ = isExcited ? 1 - Math.sin(time * 18) * 0.06 : 1;
-    groupRef.current.scale.set(bounceXZ, bounceY, bounceXZ);
+    // Tail wagging for cat
+    if (tailRef.current && type === 'cat') {
+      tailRef.current.rotation.z = Math.sin(time * 6) * 0.45;
+    }
   });
 
   return (
-    <group ref={groupRef} position={position}>
+    <group
+      ref={groupRef}
+      position={position}
+      onClick={(e) => {
+        e.stopPropagation();
+        soundManager.playAnimalSound(type);
+        gameStore.setMessage(`${name}: "${dialogue}" 💕🐾`);
+        isJumpingTimer.current = 3.0;
+      }}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        document.body.style.cursor = 'pointer';
+      }}
+      onPointerOut={() => {
+        document.body.style.cursor = 'auto';
+      }}
+    >
       {/* 1. DUCK */}
       {type === 'duck' && (
         <group scale={0.7}>
@@ -86,6 +161,11 @@ const SingleAnimal: React.FC<AnimalNPCProps> = ({ type, position, name, dialogue
           <mesh position={[0.12, 0.8, 0.4]}>
             <sphereGeometry args={[0.04, 12, 12]} />
             <meshBasicMaterial color="#000000" />
+          </mesh>
+          {/* Water Ripple Ring beneath duck */}
+          <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.45, 0.65, 16]} />
+            <meshBasicMaterial color="#90E0EF" transparent opacity={0.6} />
           </mesh>
         </group>
       )}
@@ -121,6 +201,11 @@ const SingleAnimal: React.FC<AnimalNPCProps> = ({ type, position, name, dialogue
             <sphereGeometry args={[0.04, 12, 12]} />
             <meshBasicMaterial color="#2B9348" />
           </mesh>
+          {/* Wagging Tail */}
+          <mesh ref={tailRef} position={[0, 0.4, -0.4]} rotation={[-0.4, 0, 0]}>
+            <cylinderGeometry args={[0.05, 0.03, 0.5, 8]} />
+            <meshStandardMaterial color="#FCBF49" />
+          </mesh>
         </group>
       )}
 
@@ -138,18 +223,27 @@ const SingleAnimal: React.FC<AnimalNPCProps> = ({ type, position, name, dialogue
             <meshStandardMaterial color="#FFFFFF" roughness={0.5} />
           </mesh>
           {/* Long Ears */}
-          <mesh position={[-0.12, 1.05, 0.18]}>
-            <cylinderGeometry args={[0.05, 0.07, 0.4, 8]} />
-            <meshStandardMaterial color="#FFB5A7" />
+          <mesh position={[-0.1, 1.05, 0.1]} rotation={[0, 0, -0.1]}>
+            <capsuleGeometry args={[0.06, 0.35, 4, 8]} />
+            <meshStandardMaterial color="#FFFFFF" />
           </mesh>
-          <mesh position={[0.12, 1.05, 0.18]}>
-            <cylinderGeometry args={[0.05, 0.07, 0.4, 8]} />
-            <meshStandardMaterial color="#FFB5A7" />
+          <mesh position={[0.1, 1.05, 0.1]} rotation={[0, 0, 0.1]}>
+            <capsuleGeometry args={[0.06, 0.35, 4, 8]} />
+            <meshStandardMaterial color="#FFFFFF" />
           </mesh>
           {/* Pink Nose */}
-          <mesh position={[0, 0.65, 0.44]}>
-            <sphereGeometry args={[0.035, 12, 12]} />
-            <meshStandardMaterial color="#F43F5E" />
+          <mesh position={[0, 0.65, 0.45]}>
+            <sphereGeometry args={[0.04, 8, 8]} />
+            <meshStandardMaterial color="#FFB5A7" />
+          </mesh>
+          {/* Eyes */}
+          <mesh position={[-0.1, 0.74, 0.4]}>
+            <sphereGeometry args={[0.035, 8, 8]} />
+            <meshBasicMaterial color="#333333" />
+          </mesh>
+          <mesh position={[0.1, 0.74, 0.4]}>
+            <sphereGeometry args={[0.035, 8, 8]} />
+            <meshBasicMaterial color="#333333" />
           </mesh>
         </group>
       )}
@@ -157,45 +251,75 @@ const SingleAnimal: React.FC<AnimalNPCProps> = ({ type, position, name, dialogue
       {/* 4. PANDA */}
       {type === 'panda' && (
         <group scale={0.75}>
-          {/* Body */}
-          <mesh position={[0, 0.45, 0]} castShadow>
-            <boxGeometry args={[0.6, 0.6, 0.55]} />
-            <meshStandardMaterial color="#FFFFFF" roughness={0.4} />
+          {/* White/Black Body */}
+          <mesh position={[0, 0.42, 0]} castShadow>
+            <sphereGeometry args={[0.48, 16, 16]} />
+            <meshStandardMaterial color="#F8F9FA" roughness={0.6} />
           </mesh>
           {/* Black Arms */}
-          <mesh position={[-0.38, 0.5, 0]}>
-            <boxGeometry args={[0.2, 0.5, 0.25]} />
-            <meshStandardMaterial color="#1E1E24" />
+          <mesh position={[-0.38, 0.42, 0.1]} rotation={[0.4, 0, -0.4]}>
+            <cylinderGeometry args={[0.12, 0.1, 0.45, 10]} />
+            <meshStandardMaterial color="#212529" />
           </mesh>
-          <mesh position={[0.38, 0.5, 0]}>
-            <boxGeometry args={[0.2, 0.5, 0.25]} />
-            <meshStandardMaterial color="#1E1E24" />
+          <mesh position={[0.38, 0.42, 0.1]} rotation={[0.4, 0, 0.4]}>
+            <cylinderGeometry args={[0.12, 0.1, 0.45, 10]} />
+            <meshStandardMaterial color="#212529" />
+          </mesh>
+          {/* Bamboo Stalk held in hands */}
+          <mesh position={[0, 0.48, 0.32]} rotation={[0, 0, 0.5]}>
+            <cylinderGeometry args={[0.04, 0.04, 0.8, 8]} />
+            <meshStandardMaterial color="#55A630" />
           </mesh>
           {/* Head */}
-          <mesh position={[0, 0.95, 0.1]} castShadow>
-            <boxGeometry args={[0.55, 0.48, 0.5]} />
-            <meshStandardMaterial color="#FFFFFF" />
+          <mesh position={[0, 0.85, 0.15]} castShadow>
+            <sphereGeometry args={[0.36, 16, 16]} />
+            <meshStandardMaterial color="#F8F9FA" roughness={0.6} />
           </mesh>
           {/* Black Ears */}
-          <mesh position={[-0.26, 1.25, 0.05]}>
-            <sphereGeometry args={[0.12, 12, 12]} />
-            <meshStandardMaterial color="#1E1E24" />
+          <mesh position={[-0.26, 1.15, 0.1]}>
+            <sphereGeometry args={[0.11, 10, 10]} />
+            <meshStandardMaterial color="#212529" />
           </mesh>
-          <mesh position={[0.26, 1.25, 0.05]}>
-            <sphereGeometry args={[0.12, 12, 12]} />
-            <meshStandardMaterial color="#1E1E24" />
+          <mesh position={[0.26, 1.15, 0.1]}>
+            <sphereGeometry args={[0.11, 10, 10]} />
+            <meshStandardMaterial color="#212529" />
           </mesh>
-          {/* Eye patches */}
-          <mesh position={[-0.14, 0.98, 0.36]}>
-            <sphereGeometry args={[0.08, 12, 12]} />
-            <meshStandardMaterial color="#1E1E24" />
+          {/* Black Eye Patches */}
+          <mesh position={[-0.14, 0.9, 0.42]} rotation={[0, 0, 0.3]}>
+            <circleGeometry args={[0.08, 12]} />
+            <meshBasicMaterial color="#212529" />
           </mesh>
-          <mesh position={[0.14, 0.98, 0.36]}>
-            <sphereGeometry args={[0.08, 12, 12]} />
-            <meshStandardMaterial color="#1E1E24" />
+          <mesh position={[0.14, 0.9, 0.42]} rotation={[0, 0, -0.3]}>
+            <circleGeometry args={[0.08, 12]} />
+            <meshBasicMaterial color="#212529" />
+          </mesh>
+          <mesh position={[-0.14, 0.9, 0.43]}>
+            <circleGeometry args={[0.03, 8]} />
+            <meshBasicMaterial color="#FFFFFF" />
+          </mesh>
+          <mesh position={[0.14, 0.9, 0.43]}>
+            <circleGeometry args={[0.03, 8]} />
+            <meshBasicMaterial color="#FFFFFF" />
           </mesh>
         </group>
       )}
+
+      {/* Floating Billboard Name Tag */}
+      <Billboard position={[0, 1.5, 0]}>
+        <mesh>
+          <planeGeometry args={[1.5, 0.4]} />
+          <meshBasicMaterial color="#4A4E69" transparent opacity={0.8} />
+        </mesh>
+        <Text
+          position={[0, 0, 0.02]}
+          fontSize={0.2}
+          color="#FFFFFF"
+          anchorX="center"
+          anchorY="middle"
+        >
+          {name}
+        </Text>
+      </Billboard>
     </group>
   );
 };
@@ -203,36 +327,39 @@ const SingleAnimal: React.FC<AnimalNPCProps> = ({ type, position, name, dialogue
 export const AnimalFriends: React.FC = () => {
   return (
     <group>
-      {/* Bebek di tepi danau kecil */}
+      {/* Butterflies fluttering in the garden */}
+      <FlutteringButterflies />
+
+      {/* Bebek Kuki berenang santai di sungai desa */}
       <SingleAnimal
         type="duck"
-        position={[6, 0.3, -5]}
-        name="Bebek Kuki"
-        dialogue="Kweeeek! Halo Khaulah cilik! Hari ini cerah sekali! 🦆"
+        position={[0, 0.15, 11]}
+        name="Bebek Kuki 🦆"
+        dialogue="Kweeeek! Khaulah mau berangkat ke TK Karang Tengah ya? Selamat bermain! 🦆"
       />
 
-      {/* Kucing di bawah pohon */}
+      {/* Kucing Tomi bermain di halaman TK Karang Tengah */}
       <SingleAnimal
         type="cat"
-        position={[-7, 0.3, 4]}
-        name="Kucing Tomi"
-        dialogue="Miawww! Khaulah hebat sudah melompat tinggi! 🐾"
+        position={[-6, 0.25, 22]}
+        name="Kucing Tomi 🐱"
+        dialogue="Miawww! Kucing Tomi senang melihat Khaulah ceria di TK! 🐾"
       />
 
-      {/* Kelinci di kebun wortel */}
+      {/* Kelinci Cici melompat di taman bunga rumah Khaulah */}
       <SingleAnimal
         type="bunny"
-        position={[-6, 0.3, -6]}
-        name="Kelinci Cici"
-        dialogue="Hoppp! Ayo balapan lompat ke trampolin, Khaulah! 🥕"
+        position={[-5, 0.25, 3]}
+        name="Kelinci Cici 🐰"
+        dialogue="Hoppp! Ayo balapan lari melintasi jembatan kayu, Khaulah! 🥕"
       />
 
-      {/* Panda di dekat jalur obby */}
+      {/* Panda Bobo asyik santai di dekat taman bermain TK */}
       <SingleAnimal
         type="panda"
-        position={[8, 0.3, 6]}
-        name="Panda Bobo"
-        dialogue="Hai Khaulah! Semangat lewati jembatan pelangi ya! 🎋"
+        position={[6, 0.25, 34]}
+        name="Panda Bobo 🐼"
+        dialogue="Hai Khaulah! Semangat belajar dan main perosotan di TK Karang Tengah ya! 🎋"
       />
     </group>
   );

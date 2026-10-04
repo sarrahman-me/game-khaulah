@@ -35,9 +35,10 @@ export const PlayerKhaulah: React.FC = () => {
 
   const activeAccessory = useGameStore((s) => s.activeAccessory);
   const activeEmote = useGameStore((s) => s.activeEmote);
+  const speedBuffTimeLeft = useGameStore((s) => s.speedBuffTimeLeft);
 
   // Character physical state
-  const pos = useRef(new THREE.Vector3(0, 2, 0));
+  const pos = useRef(new THREE.Vector3(0, 1, -4));
   const velocityY = useRef(0);
   const isGrounded = useRef(false);
   const moveSpeed = 9;
@@ -45,6 +46,7 @@ export const PlayerKhaulah: React.FC = () => {
   const trampolineJumpVelocity = 24;
   const gravity = 25;
   const facingAngle = useRef(0);
+  const slideTimer = useRef(0);
 
   // Keyboard input state
   const keys = useRef<{ [key: string]: boolean }>({});
@@ -62,8 +64,53 @@ export const PlayerKhaulah: React.FC = () => {
       } else if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
         gameStore.toggleShiftLock();
       } else if (e.code === 'KeyE') {
-        gameStore.triggerEmote('wave');
-        gameStore.setMessage('Khaulah menyapa teman-teman! 👋✨');
+        const near = gameStore.getState().nearbyInteractable;
+        if (near) {
+          if (near.id === 'abi') {
+            gameStore.openDialog({
+              speaker: 'Abi',
+              role: 'Ayah Hebat',
+              avatarBg: 'bg-blue-600',
+              text: 'Assalamu\'alaikum Khaulah sayang! Semangat belajar dan bermain di TK Karang Tengah ya. Khaulah adalah anak shalihah kebanggaan Abi!',
+              actionText: '✋ Tos Hebat sama Abi!',
+              actionType: 'high_five',
+            });
+          } else if (near.id === 'ummi') {
+            gameStore.openDialog({
+              speaker: 'Ummi',
+              role: 'Ibu Tercinta',
+              avatarBg: 'bg-rose-500',
+              text: 'Khaulah sayang, Ummi sudah siapkan kue pelangi lezat untuk bekal Khaulah. Habiskan ya sayang, supaya Khaulah bertenaga dan lari super cepat!',
+              actionText: '🍰 Ambil Bekal Cinta Ummi (+Speed Boost!)',
+              actionType: 'take_snack',
+            });
+          } else if (near.id === 'khalid') {
+            gameStore.openDialog({
+              speaker: 'Adek Khalid',
+              role: 'Adik Periang',
+              avatarBg: 'bg-amber-500',
+              text: 'Mbak Khaulah! Ayo main bola bareng Khalid! Nanti kita main ayunan bareng di TK ya!',
+              actionText: '⚽ Main Bola Bersama Khalid!',
+              actionType: 'play_ball',
+            });
+          } else if (near.id === 'faqih') {
+            gameStore.openDialog({
+              speaker: 'Adek Faqih',
+              role: 'Adik Bayi Lucu',
+              avatarBg: 'bg-emerald-500',
+              text: 'Ciluk... BAAA! Adek Faqih tersenyum gembira sambil menggoyangkan mainan kerincingan melihat Mbak Khaulah!',
+              actionText: '👶 Peluk Sayang Adek Faqih!',
+              actionType: 'cuddle_baby',
+            });
+          } else if (near.id === 'slide') {
+            gameStore.setActiveRide('slide');
+          } else if (near.id === 'swing') {
+            gameStore.setActiveRide('swing');
+          }
+        } else {
+          gameStore.triggerEmote('wave');
+          gameStore.setMessage('Khaulah menyapa teman-teman! 👋✨');
+        }
       } else if (e.code === 'KeyQ') {
         gameStore.triggerEmote('dance');
         gameStore.setMessage('Hore! Khaulah berjoget ceria! 💃🎶');
@@ -92,6 +139,11 @@ export const PlayerKhaulah: React.FC = () => {
     if (!groupRef.current) return;
     const dt = Math.min(delta, 0.1);
 
+    // Speed Buff Tick
+    gameStore.tickSpeedBuff(dt);
+    const speedBuff = gameStore.getState().speedBuffTimeLeft;
+    const effectiveMoveSpeed = speedBuff > 0 ? 13.5 : moveSpeed;
+
     // Check external respawn trigger (e.g. from R key)
     const currentRespawn = gameStore.getState().respawnTrigger;
     if (currentRespawn !== lastRespawn.current) {
@@ -99,6 +151,86 @@ export const PlayerKhaulah: React.FC = () => {
       const respawnPoint = gameStore.getState().checkpointPosition;
       pos.current.set(respawnPoint[0], respawnPoint[1] + 2, respawnPoint[2]);
       velocityY.current = 0;
+    }
+
+    // Check Active Ride State (Perosotan / Ayunan)
+    const activeRide = gameStore.getState().activeRide;
+    if (activeRide === 'slide') {
+      slideTimer.current += dt * 0.85;
+      if (slideTimer.current < 0.28) {
+        // Climbing ladder
+        const t = slideTimer.current / 0.28;
+        pos.current.set(8, 0.4 + t * 1.9, 27.2 - t * 1.2);
+        facingAngle.current = Math.PI;
+
+        const climb = Math.sin(slideTimer.current * 30);
+        if (leftArmRef.current) leftArmRef.current.rotation.x = climb * 0.7;
+        if (rightArmRef.current) rightArmRef.current.rotation.x = -climb * 0.7;
+        if (leftLegRef.current) leftLegRef.current.rotation.x = -climb * 0.6;
+        if (rightLegRef.current) rightLegRef.current.rotation.x = climb * 0.6;
+      } else if (slideTimer.current < 0.42) {
+        // Sitting at top
+        pos.current.set(8, 2.3, 26);
+        facingAngle.current = 0;
+        if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.5; leftArmRef.current.rotation.z = -0.3; }
+        if (rightArmRef.current) { rightArmRef.current.rotation.x = -0.5; rightArmRef.current.rotation.z = 0.3; }
+        if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.45;
+        if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.45;
+        if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.35;
+      } else if (slideTimer.current < 0.88) {
+        // Sliding down chute wuuush: joyful hands in the air!
+        const t = (slideTimer.current - 0.42) / 0.46;
+        pos.current.set(8, 2.3 - t * 1.9, 26 - t * 4.2);
+        facingAngle.current = 0;
+
+        if (leftArmRef.current) { leftArmRef.current.rotation.x = -Math.PI * 0.85; leftArmRef.current.rotation.z = -0.35; }
+        if (rightArmRef.current) { rightArmRef.current.rotation.x = -Math.PI * 0.85; rightArmRef.current.rotation.z = 0.35; }
+        if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.45;
+        if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.45;
+        if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.35;
+        if (hijabDrapeRef.current) hijabDrapeRef.current.rotation.x = 0.35;
+      } else {
+        // Finished slide!
+        pos.current.set(8, 0.4, 21.6);
+        slideTimer.current = 0;
+        gameStore.setActiveRide('none');
+        gameStore.setMessage('WUUUSSHH! Hore, Khaulah meluncur seru di perosotan TK! 🛝✨');
+      }
+      groupRef.current.position.copy(pos.current);
+      groupRef.current.rotation.y = facingAngle.current;
+      gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, true);
+      return;
+    } else {
+      slideTimer.current = 0;
+    }
+
+    if (activeRide === 'swing') {
+      const time = state.clock.getElapsedTime();
+      const swingPhase = Math.sin(time * 2.5);
+      const swingZ = 26 + swingPhase * 1.3;
+      const swingY = 0.9 + Math.abs(swingPhase) * 0.25;
+      pos.current.set(-6.9, swingY, swingZ);
+      facingAngle.current = 0;
+
+      // Realistic sitting pose holding chains & swinging legs
+      if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.7; leftArmRef.current.rotation.z = -0.15; }
+      if (rightArmRef.current) { rightArmRef.current.rotation.x = -0.7; rightArmRef.current.rotation.z = 0.15; }
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -0.55 + swingPhase * 0.55;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -0.55 + swingPhase * 0.55;
+      if (skirtRef.current) skirtRef.current.rotation.x = -0.45;
+      if (headRef.current) headRef.current.rotation.x = -0.15;
+
+      if (keys.current['Space'] || gameStore.getState().isJumpPressed) {
+        gameStore.setActiveRide('none');
+        velocityY.current = 8;
+        pos.current.z += 1.2;
+        gameStore.setMessage('Hoppp! Khaulah melompat turun dari ayunan! 🎡✨');
+      }
+
+      groupRef.current.position.copy(pos.current);
+      groupRef.current.rotation.y = facingAngle.current;
+      gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, false);
+      return;
     }
 
     // 1. Gather Input
@@ -126,6 +258,7 @@ export const PlayerKhaulah: React.FC = () => {
     camForward.y = 0;
     camForward.normalize();
 
+    // Camera-relative Right vector (screen right)
     const camRight = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), camForward).negate().normalize();
 
     const moveDirection = new THREE.Vector3();
@@ -154,9 +287,9 @@ export const PlayerKhaulah: React.FC = () => {
       facingAngle.current += diff * Math.min(dt * 18, 1);
     }
 
-    // Apply horizontal motion
-    pos.current.x += moveDirection.x * moveSpeed * dt * Math.min(inputLength, 1);
-    pos.current.z += moveDirection.z * moveSpeed * dt * Math.min(inputLength, 1);
+    // Apply horizontal motion with speed buff
+    pos.current.x += moveDirection.x * effectiveMoveSpeed * dt * Math.min(inputLength, 1);
+    pos.current.z += moveDirection.z * effectiveMoveSpeed * dt * Math.min(inputLength, 1);
 
     // 3. Jump Physics with Coyote Time and Jump Buffer
     const jumpRequested = gameStore.getState().isJumpPressed || keys.current['Space'];
@@ -259,7 +392,7 @@ export const PlayerKhaulah: React.FC = () => {
     groupRef.current.position.copy(pos.current);
     groupRef.current.rotation.y = facingAngle.current;
 
-    gameStore.setPlayerPos([pos.current.x, pos.current.y, pos.current.z]);
+    gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, isMoving);
 
     // 5. Procedural Animations
     const time = state.clock.getElapsedTime();
@@ -534,41 +667,36 @@ export const PlayerKhaulah: React.FC = () => {
           <meshStandardMaterial color="#E2A984" roughness={0.5} />
         </mesh>
 
-        {/* SENYUM LEBAR MANIS BERGIGI RAPI (PERSIS SENYUM DI FOTO KHAULAH) */}
-        <group position={[0, -0.09, 0.325]}>
-          {/* Mulut Terbuka Merah Ceria */}
-          <mesh>
-            <boxGeometry args={[0.16, 0.08, 0.02]} />
+        {/* SENYUM MANIS BERGIGI RAPI & CERIA */}
+        <group position={[0, -0.095, 0.325]}>
+          {/* Sweet Open Smile with Soft Curved Shape */}
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.08, 0.08, 0.02, 16, 1, false, Math.PI, Math.PI]} />
             <meshBasicMaterial color="#B71C1C" />
           </mesh>
-          {/* Deretan Gigi Putih Rapi di Bagian Atas */}
-          <mesh position={[0, 0.022, 0.008]}>
-            <boxGeometry args={[0.13, 0.035, 0.012]} />
+          {/* Gigi Putih Rapi di Bagian Atas */}
+          <mesh position={[0, 0.018, 0.008]}>
+            <boxGeometry args={[0.11, 0.022, 0.012]} />
             <meshBasicMaterial color="#FFFFFF" />
-          </mesh>
-          {/* Lidah Merah Muda Manis di Bagian Bawah */}
-          <mesh position={[0, -0.022, 0.008]}>
-            <boxGeometry args={[0.1, 0.025, 0.012]} />
-            <meshBasicMaterial color="#FF8DA1" />
           </mesh>
         </group>
 
-        {/* CIPUT HITAM DI DAHI KHAULAH (INNER HIJAB) */}
-        <mesh position={[0, 0.2, 0.26]}>
-          <boxGeometry args={[0.42, 0.12, 0.12]} />
-          <meshStandardMaterial color="#1E1E22" roughness={0.6} />
+        {/* CIPUT HITAM DI DAHI KHAULAH (INNER CIPUT MELENGKUNG RAPI) */}
+        <mesh position={[0, 0.16, 0.06]} rotation={[0.3, 0, 0]}>
+          <cylinderGeometry args={[0.33, 0.35, 0.14, 32, 1, true, -Math.PI * 0.45, Math.PI * 0.9]} />
+          <meshStandardMaterial color="#1E1E22" roughness={0.7} side={THREE.DoubleSide} />
         </mesh>
 
         {/* JILBAB PUTIH BAGIAN ATAS & BELAKANG (OUTER HIJAB HOOD) */}
-        <mesh position={[0, 0.04, -0.06]} castShadow>
-          <sphereGeometry args={[0.38, 32, 28]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.55} />
+        <mesh position={[0, 0.04, -0.05]} castShadow>
+          <sphereGeometry args={[0.375, 32, 28]} />
+          <meshStandardMaterial color="#FFFFFF" roughness={0.5} />
         </mesh>
 
-        {/* JILBAB PUTIH DI ATAS CIPUT */}
-        <mesh position={[0, 0.28, 0.16]}>
-          <boxGeometry args={[0.46, 0.12, 0.2]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.55} />
+        {/* BINGKAI BERGO MELENGKUNG LEMBUT DI SEKELILING WAJAH */}
+        <mesh position={[0, 0.06, 0.08]} rotation={[0.22, 0, 0]}>
+          <torusGeometry args={[0.335, 0.045, 16, 32, Math.PI * 1.5]} />
+          <meshStandardMaterial color="#FFFFFF" roughness={0.5} />
         </mesh>
 
         {/* JILBAB BERGO MENJUTAI KE BAHU (SHOULDER DRAPE) */}
@@ -846,6 +974,17 @@ export const PlayerKhaulah: React.FC = () => {
         </group>
       </group>
       </group>
+
+      {/* Bekal Cinta Ummi: Magical Speed Boost Sparkle Ring */}
+      {speedBuffTimeLeft > 0 && (
+        <group position={[0, 0.04, 0]}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.45, 0.65, 24]} />
+            <meshBasicMaterial color="#FFD166" transparent opacity={0.7} side={THREE.DoubleSide} />
+          </mesh>
+          <pointLight color="#FFD166" intensity={1.5} distance={4} />
+        </group>
+      )}
     </group>
   );
 };
