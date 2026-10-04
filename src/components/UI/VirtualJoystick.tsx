@@ -188,7 +188,7 @@ export const VirtualJoystick: React.FC = () => {
       </div>
 
       {/* --- BOTTOM CENTER: MACBOOK ROBLOX CONTROL DOCK --- */}
-      <div className="hidden lg:flex absolute bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/75 backdrop-blur-md px-5 py-2.5 rounded-full text-white text-xs gap-4 pointer-events-none items-center border border-white/20 shadow-2xl">
+      <div className="hidden lg:flex absolute bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/75 backdrop-blur-md px-5 py-2.5 rounded-full text-white text-xs gap-3 pointer-events-none items-center border border-white/20 shadow-2xl">
         <div className="flex items-center gap-1.5">
           <kbd className="px-2 py-0.5 bg-white/20 rounded font-mono text-[11px] font-bold">W A S D</kbd>
           <span className="text-white/80">Jalan</span>
@@ -200,18 +200,23 @@ export const VirtualJoystick: React.FC = () => {
         </div>
         <span className="text-white/30">•</span>
         <div className="flex items-center gap-1.5">
-          <kbd className="px-2 py-0.5 bg-white/20 rounded font-mono text-[11px] font-bold">Klik Kanan / 2 Jari</kbd>
-          <span className="text-white/80">Putar Kamera</span>
+          <kbd className="px-2 py-0.5 bg-pink-500/80 rounded font-mono text-[11px] font-bold text-white">E</kbd>
+          <span className="text-white/80">Aksi / Skuter</span>
         </div>
         <span className="text-white/30">•</span>
         <div className="flex items-center gap-1.5">
-          <kbd className="px-2 py-0.5 bg-white/20 rounded font-mono text-[11px] font-bold">Scroll</kbd>
-          <span className="text-white/80">Zoom</span>
+          <kbd className="px-2 py-0.5 bg-amber-500/80 rounded font-mono text-[11px] font-bold text-white">H</kbd>
+          <span className="text-white/80">Bel</span>
+        </div>
+        <span className="text-white/30">•</span>
+        <div className="flex items-center gap-1.5">
+          <kbd className="px-2 py-0.5 bg-white/20 rounded font-mono text-[11px] font-bold">2 Jari</kbd>
+          <span className="text-white/80">Kamera</span>
         </div>
         <span className="text-white/30">•</span>
         <div className="flex items-center gap-1.5">
           <kbd className="px-2 py-0.5 bg-indigo-500/80 rounded font-mono text-[11px] font-bold text-white">Shift</kbd>
-          <span className="text-white/80">Shift Lock</span>
+          <span className="text-white/80">Kunci</span>
         </div>
         <span className="text-white/30">•</span>
         <div className="flex items-center gap-1.5">

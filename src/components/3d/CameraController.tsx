@@ -72,8 +72,8 @@ export const CameraController: React.FC = () => {
         // Shift lock mode: mouse movement directly controls camera
         const dx = e.movementX || 0;
         const dy = e.movementY || 0;
-        camAngleX.current -= dx * 0.004;
-        camAngleY.current = Math.max(0.08, Math.min(1.25, camAngleY.current + dy * 0.003));
+        camAngleX.current -= dx * 0.0022;
+        camAngleY.current = Math.max(0.08, Math.min(1.25, camAngleY.current + dy * 0.0018));
         lastManualInputTime.current = Date.now();
         return;
       }
@@ -83,8 +83,8 @@ export const CameraController: React.FC = () => {
       const dy = e.clientY - lastPointer.current.y;
       lastPointer.current = { x: e.clientX, y: e.clientY };
 
-      camAngleX.current -= dx * 0.0055;
-      camAngleY.current = Math.max(0.08, Math.min(1.25, camAngleY.current + dy * 0.0045));
+      camAngleX.current -= dx * 0.0028;
+      camAngleY.current = Math.max(0.08, Math.min(1.25, camAngleY.current + dy * 0.0022));
       lastManualInputTime.current = Date.now();
     };
 
@@ -98,7 +98,7 @@ export const CameraController: React.FC = () => {
 
       // Pinch gesture on MacBook Trackpad (or Ctrl/Meta + wheel):
       if (e.ctrlKey || e.metaKey) {
-        const zoomStep = e.deltaY * 0.02;
+        const zoomStep = e.deltaY * 0.01;
         gameStore.zoomCamera(zoomStep);
         return;
       }
@@ -106,15 +106,14 @@ export const CameraController: React.FC = () => {
       // Discrete external mouse wheel notch (zooms camera):
       const isDiscreteWheel = e.deltaMode !== 0 || (Math.abs(e.deltaX) === 0 && Math.abs(e.deltaY) >= 40);
       if (isDiscreteWheel && !('ontouchstart' in window)) {
-        gameStore.zoomCamera(e.deltaY * 0.01);
+        gameStore.zoomCamera(e.deltaY * 0.006);
         return;
       }
 
       // MacBook Trackpad 2-Finger Swipe (Roblox / Brookhaven camera control):
-      // Horizontal swipe controls camera orbit angle
-      // Vertical swipe controls camera elevation / tilt (inverted to match natural Mac gesture)
-      camAngleX.current += e.deltaX * 0.0055;
-      camAngleY.current = Math.max(0.08, Math.min(1.25, camAngleY.current - e.deltaY * 0.004));
+      // Reduced sensitivity (~65% gentler) so gentle 2-finger swipes feel precise, buttery smooth, and comfortable
+      camAngleX.current += e.deltaX * 0.0018;
+      camAngleY.current = Math.max(0.08, Math.min(1.25, camAngleY.current - e.deltaY * 0.0014));
       lastManualInputTime.current = Date.now();
     };
 

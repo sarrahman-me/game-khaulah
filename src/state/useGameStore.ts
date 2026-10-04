@@ -12,7 +12,7 @@ export interface FamilyDialogData {
   avatarBg: string;
   text: string;
   actionText?: string;
-  actionType?: 'high_five' | 'take_snack' | 'play_ball' | 'cuddle_baby' | 'play_drumband' | 'play_toycar';
+  actionType?: 'high_five' | 'take_snack' | 'play_ball' | 'cuddle_baby' | 'play_drumband' | 'play_toycar' | 'complete_quest';
 }
 
 export interface GameState {
@@ -43,6 +43,18 @@ export interface GameState {
   speedBuffTimeLeft: number;
   nearbyInteractable: { id: string; title: string; prompt: string } | null;
   activeDialog: FamilyDialogData | null;
+  // Time of Day
+  timeOfDay: 'day' | 'sunset' | 'night';
+  // Scooter vehicle
+  isRidingScooter: boolean;
+  scooterPos: [number, number, number];
+  // School prep quest
+  schoolQuest: {
+    backpack: boolean;
+    waterBottle: boolean;
+    drawingBook: boolean;
+    completed: boolean;
+  };
 }
 
 const CHECKPOINTS: [number, number, number][] = [
@@ -78,6 +90,15 @@ let state: GameState = {
   speedBuffTimeLeft: 0,
   nearbyInteractable: null,
   activeDialog: null,
+  timeOfDay: 'day',
+  isRidingScooter: false,
+  scooterPos: [3.2, 0.2, -4.0],
+  schoolQuest: {
+    backpack: false,
+    waterBottle: false,
+    drawingBook: false,
+    completed: false,
+  },
 };
 
 const listeners = new Set<() => void>();
@@ -279,7 +300,7 @@ export const gameStore = {
     emitChange();
   },
 
-  executeDialogAction: (actionType: 'high_five' | 'take_snack' | 'play_ball' | 'cuddle_baby' | 'play_drumband' | 'play_toycar') => {
+  executeDialogAction: (actionType: 'high_five' | 'take_snack' | 'play_ball' | 'cuddle_baby' | 'play_drumband' | 'play_toycar' | 'complete_quest') => {
     if (actionType === 'high_five') {
       soundManager.playHighFive();
       soundManager.playKeyboardTyping();
@@ -319,6 +340,8 @@ export const gameStore = {
         activeDialog: null,
       };
       emitChange();
+    } else if (actionType === 'complete_quest') {
+      gameStore.completeSchoolQuest();
     }
   },
 
@@ -343,7 +366,130 @@ export const gameStore = {
         emitChange();
       }
     }
-  }
+  },
+
+  // --- TIME OF DAY CONTROLS ---
+  setTimeOfDay: (time: 'day' | 'sunset' | 'night') => {
+    const messages = {
+      day: 'Matahari pagi ceria bersinar hangat! Selamat beraktivitas Khaulah! ☀️🏡',
+      sunset: 'Senja jingga keemasan yang indah di desa Karang Tengah! 🌇✨',
+      night: 'Malam berbintang ajaib! Kunang-kunang dan lentera mulai menyala! 🌙✨🕯️',
+    };
+    state = {
+      ...state,
+      timeOfDay: time,
+      bubbleMessage: messages[time],
+    };
+    emitChange();
+  },
+
+  cycleTimeOfDay: () => {
+    const next: Record<'day' | 'sunset' | 'night', 'day' | 'sunset' | 'night'> = {
+      day: 'sunset',
+      sunset: 'night',
+      night: 'day',
+    };
+    gameStore.setTimeOfDay(next[state.timeOfDay]);
+  },
+
+  // --- SCOOTER VEHICLE CONTROLS ---
+  mountScooter: () => {
+    soundManager.playBicycleBell();
+    confetti({ particleCount: 30, spread: 60, origin: { y: 0.8 } });
+    state = {
+      ...state,
+      isRidingScooter: true,
+      bubbleMessage: 'Ngebuuut! Khaulah naik Skuter Pink kesayangan! 🛴💨✨ (Tekan [E] untuk turun, [H] untuk bel)',
+    };
+    emitChange();
+  },
+
+  dismountScooter: () => {
+    soundManager.playBicycleBell();
+    const currentFeet = [state.playerPos[0], 0.2, state.playerPos[2]] as [number, number, number];
+    state = {
+      ...state,
+      isRidingScooter: false,
+      scooterPos: currentFeet,
+      bubbleMessage: 'Khaulah memarkir skuter pink dengan rapi! 🛴🌸',
+    };
+    emitChange();
+  },
+
+  toggleScooter: () => {
+    if (state.isRidingScooter) {
+      gameStore.dismountScooter();
+    } else {
+      gameStore.mountScooter();
+    }
+  },
+
+  ringBell: () => {
+    soundManager.playBicycleBell();
+    state = {
+      ...state,
+      bubbleMessage: 'Kring.. kring.. kring! Permisi, Khaulah mau lewat! 🔔🛴✨',
+    };
+    emitChange();
+  },
+
+  // --- SCHOOL PREP QUEST CONTROLS ---
+  collectQuestItem: (item: 'backpack' | 'waterBottle' | 'drawingBook') => {
+    if (state.schoolQuest[item]) return;
+    soundManager.playQuestItemCollect();
+    confetti({ particleCount: 35, spread: 70, origin: { y: 0.75 } });
+
+    const newQuest = {
+      ...state.schoolQuest,
+      [item]: true,
+    };
+
+    const count = (newQuest.backpack ? 1 : 0) + (newQuest.waterBottle ? 1 : 0) + (newQuest.drawingBook ? 1 : 0);
+    const itemNames = {
+      backpack: 'Tas Ransel TK Karang Tengah 🎒',
+      waterBottle: 'Botol Minum Lucu 🍼',
+      drawingBook: 'Buku Gambar Ceria 🎨',
+    };
+
+    let msg = `Alhamdulillah! Khaulah menemukan ${itemNames[item]}! (${count}/3) ✨`;
+    if (count === 3) {
+      msg = 'Hore! Semua perlengkapan sekolah lengkap (3/3)! Ayo bawa ke Ibu Santi di gerbang TK! 🎒🎉';
+    }
+
+    state = {
+      ...state,
+      schoolQuest: newQuest,
+      bubbleMessage: msg,
+    };
+    emitChange();
+  },
+
+  completeSchoolQuest: () => {
+    if (state.schoolQuest.completed) return;
+    soundManager.playQuestComplete();
+    confetti({
+      particleCount: 100,
+      spread: 90,
+      origin: { y: 0.6 },
+      colors: ['#FFD700', '#FF69B4', '#00FFFF', '#FF6347', '#7B68EE'],
+    });
+
+    // Award 3 bonus golden stars!
+    const bonusStars = 3;
+    const nextStars = state.stars + bonusStars;
+
+    state = {
+      ...state,
+      stars: nextStars,
+      schoolQuest: {
+        ...state.schoolQuest,
+        completed: true,
+      },
+      activeDialog: null,
+      bubbleMessage: 'MasyaAllah Khaulah murid teladan! Mendapat 3 Bintang Emas dari Ibu Santi! 🌟🏅🎒',
+    };
+    emitChange();
+  },
 };
 
 export function useGameStore<T>(selector: (state: GameState) => T): T {

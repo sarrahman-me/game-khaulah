@@ -36,6 +36,7 @@ export const PlayerKhaulah: React.FC = () => {
   const activeAccessory = useGameStore((s) => s.activeAccessory);
   const activeEmote = useGameStore((s) => s.activeEmote);
   const speedBuffTimeLeft = useGameStore((s) => s.speedBuffTimeLeft);
+  const isRidingScooter = useGameStore((s) => s.isRidingScooter);
 
   // Character physical state
   const pos = useRef(new THREE.Vector3(0, 1, -4));
@@ -63,10 +64,50 @@ export const PlayerKhaulah: React.FC = () => {
         gameStore.setJumpPressed(true);
       } else if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
         gameStore.toggleShiftLock();
+      } else if (e.code === 'KeyH') {
+        gameStore.ringBell();
       } else if (e.code === 'KeyE') {
+        if (gameStore.getState().isRidingScooter) {
+          gameStore.dismountScooter();
+          return;
+        }
+
         const near = gameStore.getState().nearbyInteractable;
         if (near) {
-          if (near.id === 'abi') {
+          if (near.id === 'scooter') {
+            gameStore.mountScooter();
+          } else if (near.id === 'bu_guru') {
+            const quest = gameStore.getState().schoolQuest;
+            const allCollected = quest.backpack && quest.waterBottle && quest.drawingBook;
+            if (quest.completed) {
+              gameStore.openDialog({
+                speaker: 'Ibu Santi',
+                role: 'Guru TK Karang Tengah 1 Atap 👩‍🏫',
+                avatarBg: 'bg-emerald-600',
+                text: 'Assalamu\'alaikum Khaulah bidadari shalihah! MasyaAllah, Khaulah selalu rajin dan ceria di sekolah. Ayo belajar, bernyanyi, dan bermain bersama teman-teman! 🌸🎒',
+              });
+            } else if (allCollected) {
+              gameStore.openDialog({
+                speaker: 'Ibu Santi',
+                role: 'Guru TK Karang Tengah 1 Atap 👩‍🏫',
+                avatarBg: 'bg-emerald-600',
+                text: 'MasyaAllah Khaulah hebat sekali! Tas Ransel TK, Botol Minum, dan Buku Gambar semuanya sudah lengkap dibawa! Khaulah murid teladan TK Karang Tengah 1 Atap! Ini 3 Bintang Emas untuk Khaulah!',
+                actionText: '🌟 Terima 3 Bintang Emas Penghargaan! 🏅',
+                actionType: 'complete_quest',
+              });
+            } else {
+              const missing: string[] = [];
+              if (!quest.backpack) missing.push('Tas Ransel TK 🎒');
+              if (!quest.waterBottle) missing.push('Botol Minum 🍼');
+              if (!quest.drawingBook) missing.push('Buku Gambar 🎨');
+              gameStore.openDialog({
+                speaker: 'Ibu Santi',
+                role: 'Guru TK Karang Tengah 1 Atap 👩‍🏫',
+                avatarBg: 'bg-emerald-600',
+                text: `Assalamu'alaikum Khaulah sayang! Sebelum mulai belajar, ayo cari perlengkapan yang belum lengkap dulu ya: ${missing.join(', ')}. Ada di sekitar teras rumah dan taman!`,
+              });
+            }
+          } else if (near.id === 'abi') {
             gameStore.openDialog({
               speaker: 'Abi',
               role: 'Ayah Tercinta 💻',
@@ -139,10 +180,16 @@ export const PlayerKhaulah: React.FC = () => {
     if (!groupRef.current) return;
     const dt = Math.min(delta, 0.1);
 
-    // Speed Buff Tick
+    // Speed Buff & Scooter Speed Tick
     gameStore.tickSpeedBuff(dt);
     const speedBuff = gameStore.getState().speedBuffTimeLeft;
-    const effectiveMoveSpeed = speedBuff > 0 ? 13.5 : moveSpeed;
+    const ridingScooter = gameStore.getState().isRidingScooter;
+    let effectiveMoveSpeed = moveSpeed;
+    if (ridingScooter) {
+      effectiveMoveSpeed = speedBuff > 0 ? 21.0 : 16.0;
+    } else if (speedBuff > 0) {
+      effectiveMoveSpeed = 13.5;
+    }
 
     // Check external respawn trigger (e.g. from R key)
     const currentRespawn = gameStore.getState().respawnTrigger;
@@ -435,8 +482,33 @@ export const PlayerKhaulah: React.FC = () => {
       modelRef.current.scale.copy(squashScale.current);
     }
 
-    // Walking / Running Cycle
-    if (isMoving && isGrounded.current) {
+    // Scooter Riding Stance OR Walking / Running Cycle
+    if (isRidingScooter) {
+      if (leftArmRef.current) {
+        leftArmRef.current.rotation.x = -0.75;
+        leftArmRef.current.rotation.y = 0.2;
+        leftArmRef.current.rotation.z = -0.22;
+      }
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x = -0.75;
+        rightArmRef.current.rotation.y = -0.2;
+        rightArmRef.current.rotation.z = 0.22;
+      }
+      if (leftLegRef.current) {
+        leftLegRef.current.rotation.x = -0.1;
+        leftLegRef.current.rotation.z = 0;
+      }
+      if (rightLegRef.current) {
+        rightLegRef.current.rotation.x = isMoving ? Math.sin(time * 12) * 0.45 : 0;
+        rightLegRef.current.rotation.z = 0;
+      }
+      if (skirtRef.current) {
+        skirtRef.current.rotation.x = isMoving ? -0.15 : 0;
+      }
+      if (hijabDrapeRef.current) {
+        hijabDrapeRef.current.rotation.x = isMoving ? 0.15 : 0;
+      }
+    } else if (isMoving && isGrounded.current) {
       const walkCycle = Math.sin(time * 14);
       if (leftArmRef.current) leftArmRef.current.rotation.x = walkCycle * 0.65;
       if (rightArmRef.current) rightArmRef.current.rotation.x = -walkCycle * 0.65;
@@ -973,6 +1045,97 @@ export const PlayerKhaulah: React.FC = () => {
             <meshBasicMaterial color="#FFD166" transparent opacity={0.7} side={THREE.DoubleSide} />
           </mesh>
           <pointLight color="#FFD166" intensity={1.5} distance={4} />
+        </group>
+      )}
+
+      {/* ======================================================== */}
+      {/* 6. SKUTER PINK KHAULAH (KENDARAAN KETIKA DIKENDARAI)     */}
+      {/* ======================================================== */}
+      {isRidingScooter && (
+        <group position={[0, 0.02, 0]}>
+          {/* Deck (Pijakan Kaki Pink) */}
+          <mesh position={[0, 0.06, 0]} castShadow>
+            <boxGeometry args={[0.3, 0.05, 0.96]} />
+            <meshStandardMaterial color="#FF2A85" roughness={0.3} metalness={0.1} />
+          </mesh>
+          {/* Sparkle Grip Tape */}
+          <mesh position={[0, 0.09, 0]}>
+            <planeGeometry args={[0.22, 0.82]} />
+            <meshStandardMaterial color="#FFD166" roughness={0.6} />
+          </mesh>
+
+          {/* Rear Wheel */}
+          <group position={[0, 0.06, 0.42]} rotation={[0, 0, Math.PI / 2]}>
+            <mesh castShadow>
+              <cylinderGeometry args={[0.1, 0.1, 0.07, 14]} />
+              <meshStandardMaterial color="#2B2D42" roughness={0.8} />
+            </mesh>
+            <mesh>
+              <cylinderGeometry args={[0.06, 0.06, 0.075, 14]} />
+              <meshStandardMaterial color="#06D6A0" metalness={0.5} />
+            </mesh>
+          </group>
+
+          {/* Front Wheel */}
+          <group position={[0, 0.06, -0.42]} rotation={[0, 0, Math.PI / 2]}>
+            <mesh castShadow>
+              <cylinderGeometry args={[0.1, 0.1, 0.07, 14]} />
+              <meshStandardMaterial color="#2B2D42" roughness={0.8} />
+            </mesh>
+            <mesh>
+              <cylinderGeometry args={[0.06, 0.06, 0.075, 14]} />
+              <meshStandardMaterial color="#06D6A0" metalness={0.5} />
+            </mesh>
+          </group>
+
+          {/* Steering Stem & Handlebars */}
+          <group position={[0, 0.06, -0.38]}>
+            {/* Lower Stem */}
+            <mesh position={[0, 0.38, 0]} rotation={[0.08, 0, 0]} castShadow>
+              <cylinderGeometry args={[0.022, 0.022, 0.72, 10]} />
+              <meshStandardMaterial color="#FFFFFF" metalness={0.6} roughness={0.2} />
+            </mesh>
+
+            {/* Handlebars */}
+            <group position={[0, 0.72, -0.04]}>
+              {/* Crossbar */}
+              <mesh rotation={[0, 0, Math.PI / 2]} castShadow>
+                <cylinderGeometry args={[0.018, 0.018, 0.54, 10]} />
+                <meshStandardMaterial color="#06D6A0" roughness={0.4} />
+              </mesh>
+              {/* Grips */}
+              <mesh position={[-0.23, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.028, 0.028, 0.09, 8]} />
+                <meshStandardMaterial color="#FF69B4" roughness={0.5} />
+              </mesh>
+              <mesh position={[0.23, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.028, 0.028, 0.09, 8]} />
+                <meshStandardMaterial color="#FF69B4" roughness={0.5} />
+              </mesh>
+              {/* Bell on Left */}
+              <group position={[-0.13, 0.038, 0.01]}>
+                <mesh castShadow>
+                  <sphereGeometry args={[0.03, 10, 10]} />
+                  <meshStandardMaterial color="#FFD700" metalness={0.8} roughness={0.2} />
+                </mesh>
+              </group>
+              {/* Headlight on Front */}
+              <group position={[0, 0, -0.05]}>
+                <mesh rotation={[Math.PI / 2, 0, 0]}>
+                  <cylinderGeometry args={[0.032, 0.032, 0.03, 10]} />
+                  <meshStandardMaterial color="#333333" />
+                </mesh>
+                <mesh position={[0, 0, -0.016]}>
+                  <circleGeometry args={[0.03, 10]} />
+                  <meshStandardMaterial color="#FFF9A6" emissive="#FFF9A6" emissiveIntensity={0.8} />
+                </mesh>
+                <pointLight color="#FFF9A6" intensity={1.6} distance={4.5} position={[0, 0, -0.2]} />
+              </group>
+            </group>
+          </group>
+
+          {/* Sparkle Tail Trail behind scooter rear */}
+          <pointLight color="#FF007F" intensity={0.9} distance={2.5} position={[0, 0.1, 0.48]} />
         </group>
       )}
     </group>

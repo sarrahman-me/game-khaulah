@@ -74,11 +74,21 @@ export const WelcomeModal: React.FC = () => {
           </div>
 
           <div className="bg-white/90 p-3 rounded-2xl border border-indigo-200 shadow-xs flex items-center gap-3">
-            <span className="text-2xl">🛝</span>
+            <span className="text-2xl">🎒</span>
             <div>
-              <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">TK Karang Tengah 1 Atap</h4>
+              <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">Misi TK & Ibu Santi</h4>
               <p className="text-gray-600 text-[11px] sm:text-xs">
-                Lintasi jembatan sungai desa, lihat bendera merah putih, main perosotan & ayunan ceria!
+                Cari <b>Tas Ransel</b>, <b>Botol Minum</b>, dan <b>Buku Gambar</b> di sekitar rumah, lalu temui <b>Ibu Santi</b> di gerbang TK untuk dapat 3 Bintang Emas!
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white/90 p-3 rounded-2xl border border-rose-200 shadow-xs flex items-center gap-3">
+            <span className="text-2xl">🛴</span>
+            <div>
+              <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">Skuter Pink & Waktu Ajaib</h4>
+              <p className="text-gray-600 text-[11px] sm:text-xs">
+                Naiki <b>Skuter Pink Khaulah</b> untuk ngebut (bunyikan bel <b>[H]</b> "kring-kring!"), dan ganti suasana langit ke <b>Senja 🌇</b> atau <b>Malam Kunang-Kunang 🌙</b>!
               </p>
             </div>
           </div>
@@ -86,9 +96,9 @@ export const WelcomeModal: React.FC = () => {
           <div className="bg-white/90 p-3 rounded-2xl border border-amber-200 shadow-xs flex items-center gap-3">
             <span className="text-2xl">💻</span>
             <div>
-              <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">Kontrol MacBook (Persis Roblox Brookhaven)</h4>
+              <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">Kontrol MacBook (Persis Roblox)</h4>
               <p className="text-gray-600 text-[11px] sm:text-xs">
-                <b>1 Jari Trackpad</b>: Kursor & Klik Orang/Mainan | <b>Swipe 2 Jari</b>: Putar Kamera | <b>W A S D</b>: Jalan (Kamera Ikut Otomatis!) | <b>Spasi</b>: Lompat
+                <b>W A S D</b>: Jalan | <b>Spasi</b>: Lompat | <b>E</b>: Aksi & Naik Skuter | <b>H</b>: Bel Kring | <b>Q</b>: Joget | <b>R</b>: Checkpoint
               </p>
             </div>
           </div>

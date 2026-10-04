@@ -558,6 +558,109 @@ class SoundEngine {
     this.bgmInterval = window.setInterval(playNextNote, 280);
   }
 
+  // Realistic cute double bicycle bell "Kring.. kring!"
+  public playBicycleBell() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const rings = [0, 0.09, 0.22, 0.31];
+
+    rings.forEach((ringT) => {
+      if (!this.ctx) return;
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc1.type = 'sine';
+      osc2.type = 'triangle';
+
+      osc1.frequency.setValueAtTime(1975.53, now + ringT); // B6
+      osc2.frequency.setValueAtTime(2637.02, now + ringT); // E7
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.setValueAtTime(0.18, now + ringT);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + ringT + 0.08);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc1.start(now + ringT);
+      osc1.stop(now + ringT + 0.09);
+      osc2.start(now + ringT);
+      osc2.stop(now + ringT + 0.09);
+    });
+  }
+
+  // Sparkling crystal tone for picking up quest items (backpack, bottle, book)
+  public playQuestItemCollect() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const notes = [659.25, 830.61, 987.77, 1318.51]; // E5, G#5, B5, E6 sparkle
+
+    notes.forEach((freq, idx) => {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      const noteStart = now + idx * 0.06;
+      osc.frequency.setValueAtTime(freq, noteStart);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.setValueAtTime(0.22, noteStart);
+      gain.gain.exponentialRampToValueAtTime(0.0001, noteStart + 0.3);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(noteStart);
+      osc.stop(noteStart + 0.32);
+    });
+  }
+
+  // Triumphant orchestral celebration when completing school quest with Bu Guru
+  public playQuestComplete() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const chords = [
+      { f: [523.25, 659.25, 783.99], t: 0, d: 0.18 },
+      { f: [587.33, 739.99, 880.00], t: 0.18, d: 0.18 },
+      { f: [659.25, 830.61, 987.77], t: 0.36, d: 0.22 },
+      { f: [783.99, 987.77, 1174.66, 1567.98], t: 0.58, d: 0.7 },
+    ];
+
+    chords.forEach((chord) => {
+      chord.f.forEach((freq) => {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        const start = now + chord.t;
+        osc.frequency.setValueAtTime(freq, start);
+
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.setValueAtTime(0.16, start);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + chord.d);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(start);
+        osc.stop(start + chord.d + 0.05);
+      });
+    });
+  }
+
   public stopBgm() {
     this.bgmPlaying = false;
     if (this.bgmInterval !== null) {

@@ -29,14 +29,30 @@ Game web 3D interaktif yang dibuat dengan teknologi modern (React 18, Three.js, 
    - Sungai kecil dengan air berkilau jernih, bunga teratai, dan Bebek Kuki yang berenang santai.
    - Jembatan kayu melengkung yang menghubungkan rumah Khaulah menuju gerbang TK.
 
-4. **🌈 Jalur Pelangi Ajaib ke Istana Bintang**:
-   - Di balik sekolah TK terdapat gerbang portal pelangi menuju balok-balok angkasa, trampolin pantul super tinggi, pulau awan gula-gula, dan Istana Bintang Khaulah di puncak langit!
-   - 25 bintang ajaib tersebar di halaman rumah, jembatan sungai, taman bermain TK, dan jalur pelangi.
+4. **🛴 Skuter Pink Khaulah & Bel Kring**:
+   - Di dekat teras rumah terparkir skuter pink lucu dengan keranjang bunga, lampu bulat, dan bel emas!
+   - Khaulah bisa menaiki skuter (`E`) untuk ngebut 16–21 km/jam melintasi desa dengan jejak partikel glitter pink.
+   - Tekan `H` untuk membunyikan bel *"Kring.. kring.. kring!"* yang merdu.
 
-5. **🎮 Kontrol MacBook M2 yang Ramah Anak**:
-   - `W` / `A` / `S` / `D` atau Tombol Panah: Berjalan.
+5. **🎒 Misi Persiapan TK & Ibu Santi**:
+   - Cari 3 perlengkapan sekolah: **Tas Ransel TK** di teras, **Botol Minum Lucu** di kebun bunga, dan **Buku Gambar Ceria** di tepi sungai!
+   - Temui **Ibu Santi** di depan gerbang TK Karang Tengah untuk menyelesaikan misi dan mendapatkan **3 Bintang Emas Penghargaan**!
+
+6. **🌅 Mode Waktu Ajaib (Siang ☀️, Senja 🌇, Malam Berbintang 🌙)**:
+   - Tombol pengubah waktu di pojok atas:
+     - **Pagi Ceria ☀️**: Langit biru pastel dengan awan putih mengapung.
+     - **Senja Hangat 🌇**: Semburat jingga keemasan yang syahdu di desa.
+     - **Malam Berbintang 🌙**: Langit malam bertabur ribuan bintang, lentera hangat di jembatan dan gerbang menyala, serta kunang-kunang (*fireflies*) hijau bercahaya beterbangan di atas sungai!
+
+7. **🌈 Jalur Pelangi Ajaib ke Istana Bintang**:
+   - Di balik sekolah TK terdapat gerbang portal pelangi menuju balok-balok angkasa, trampolin pantul super tinggi, pulau awan gula-gula, dan Istana Bintang Khaulah di puncak langit!
+   - 28 bintang ajaib (25 bintang alam + 3 bintang prestasi Ibu Santi).
+
+8. **🎮 Kontrol MacBook M2 yang Ramah Anak**:
+   - `W` / `A` / `S` / `D` atau Tombol Panah: Berjalan / Mengendarai Skuter.
    - `Spasi`: Melompat (*dengan coyote-time & jump buffer*).
-   - `E`: Bicara dengan keluarga (Abi, Ummi, Khalid, Faqih) atau Main perosotan & ayunan!
+   - `E`: Bicara dengan keluarga & Ibu Santi, Main perosotan/ayunan, atau Naik/Turun Skuter!
+   - `H`: Bel klakson skuter *"Kring.. kring!"* 🔔
    - `Trackpad 2 Jari / Klik Kanan`: Putar kamera 360°.
    - `Scroll Trackpad`: Zoom in / zoom out kamera.
    - `Shift`: Mengaktifkan *Shift Lock*.

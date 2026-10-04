@@ -1,6 +1,21 @@
 import React from 'react';
 import { useGameStore, gameStore } from '../../state/useGameStore';
-import { Star, Shirt, Volume2, VolumeX, Music, HelpCircle, Heart, Flag, Sparkles, X } from 'lucide-react';
+import {
+  Star,
+  Shirt,
+  Volume2,
+  VolumeX,
+  Music,
+  HelpCircle,
+  Heart,
+  Flag,
+  Sparkles,
+  X,
+  Sun,
+  Sunset,
+  Moon,
+  Bell,
+} from 'lucide-react';
 
 const ZONE_NAMES = [
   'Rumah Hangat Khaulah 🏡',
@@ -21,11 +36,46 @@ export const HUD: React.FC = () => {
   const nearbyInteractable = useGameStore((s) => s.nearbyInteractable);
   const activeDialog = useGameStore((s) => s.activeDialog);
   const activeRide = useGameStore((s) => s.activeRide);
+  const timeOfDay = useGameStore((s) => s.timeOfDay);
+  const isRidingScooter = useGameStore((s) => s.isRidingScooter);
+  const schoolQuest = useGameStore((s) => s.schoolQuest);
 
   const handleInteract = () => {
     if (!nearbyInteractable) return;
     const id = nearbyInteractable.id;
-    if (id === 'abi') {
+    if (id === 'scooter') {
+      gameStore.mountScooter();
+    } else if (id === 'bu_guru') {
+      const allCollected = schoolQuest.backpack && schoolQuest.waterBottle && schoolQuest.drawingBook;
+      if (schoolQuest.completed) {
+        gameStore.openDialog({
+          speaker: 'Ibu Santi',
+          role: 'Guru TK Karang Tengah 1 Atap 👩‍🏫',
+          avatarBg: 'bg-emerald-600',
+          text: 'Assalamu\'alaikum Khaulah bidadari shalihah! MasyaAllah, Khaulah murid teladan TK Karang Tengah 1 Atap! Selamat belajar dan bermain ya sayang! 🌸🎒',
+        });
+      } else if (allCollected) {
+        gameStore.openDialog({
+          speaker: 'Ibu Santi',
+          role: 'Guru TK Karang Tengah 1 Atap 👩‍🏫',
+          avatarBg: 'bg-emerald-600',
+          text: 'MasyaAllah Khaulah hebat sekali! Tas Ransel TK, Botol Minum, dan Buku Gambar semuanya sudah lengkap dibawa! Khaulah murid teladan TK Karang Tengah 1 Atap! Ini 3 Bintang Emas untuk Khaulah!',
+          actionText: '🌟 Terima 3 Bintang Emas Penghargaan! 🏅',
+          actionType: 'complete_quest',
+        });
+      } else {
+        const missing: string[] = [];
+        if (!schoolQuest.backpack) missing.push('Tas Ransel TK 🎒');
+        if (!schoolQuest.waterBottle) missing.push('Botol Minum 🍼');
+        if (!schoolQuest.drawingBook) missing.push('Buku Gambar 🎨');
+        gameStore.openDialog({
+          speaker: 'Ibu Santi',
+          role: 'Guru TK Karang Tengah 1 Atap 👩‍🏫',
+          avatarBg: 'bg-emerald-600',
+          text: `Assalamu'alaikum Khaulah sayang! Sebelum mulai belajar, ayo cari perlengkapan yang belum lengkap dulu ya: ${missing.join(', ')}. Ada di sekitar teras rumah dan taman!`,
+        });
+      }
+    } else if (id === 'abi') {
       gameStore.openDialog({
         speaker: 'Abi',
         role: 'Ayah Tercinta 💻',
@@ -133,6 +183,40 @@ export const HUD: React.FC = () => {
             <span>{ZONE_NAMES[checkpointIndex] || `Zona ${checkpointIndex + 1}`}</span>
           </div>
 
+          {/* School Prep Quest Pill */}
+          <div className="pointer-events-auto bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border-2 border-emerald-300 shadow-md flex items-center gap-2 text-xs font-bubble font-bold text-emerald-800">
+            {schoolQuest.completed ? (
+              <div className="flex items-center gap-1.5 text-emerald-700">
+                <span>🏅</span>
+                <span>Siswa Teladan TK! ⭐</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <span>🎒</span>
+                <span>
+                  Perlengkapan TK (
+                  {(schoolQuest.backpack ? 1 : 0) +
+                    (schoolQuest.waterBottle ? 1 : 0) +
+                    (schoolQuest.drawingBook ? 1 : 0)}
+                  /3)
+                </span>
+                <span className="flex items-center gap-0.5 ml-0.5 text-sm">
+                  <span className={schoolQuest.backpack ? 'opacity-100' : 'opacity-25'}>🎒</span>
+                  <span className={schoolQuest.waterBottle ? 'opacity-100' : 'opacity-25'}>🍼</span>
+                  <span className={schoolQuest.drawingBook ? 'opacity-100' : 'opacity-25'}>🎨</span>
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Scooter Active Pill */}
+          {isRidingScooter && (
+            <div className="pointer-events-auto bg-gradient-to-r from-pink-500 to-rose-400 text-white px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 animate-pulse border-2 border-white text-xs font-bubble font-bold">
+              <span>🛴</span>
+              <span>Skuter Pink ⚡</span>
+            </div>
+          )}
+
           {/* Speed Buff Pill (Bekal Cinta Ummi) */}
           {speedBuffTimeLeft > 0 && (
             <div className="pointer-events-auto bg-gradient-to-r from-amber-400 to-pink-500 text-white px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 animate-pulse border-2 border-white text-xs font-bubble font-bold">
@@ -144,6 +228,33 @@ export const HUD: React.FC = () => {
 
         {/* Right: Menu & Audio Controls */}
         <div className="flex items-center gap-2 pointer-events-auto">
+          {/* Time of Day Toggle */}
+          <button
+            onClick={() => gameStore.cycleTimeOfDay()}
+            title={
+              timeOfDay === 'day'
+                ? 'Ganti ke Senja Hangat 🌇'
+                : timeOfDay === 'sunset'
+                ? 'Ganti ke Malam Berbintang 🌙'
+                : 'Ganti ke Pagi Ceria ☀️'
+            }
+            className={`w-11 h-11 rounded-2xl flex items-center justify-center border-2 border-white shadow-md active:scale-90 transition-transform ${
+              timeOfDay === 'night'
+                ? 'bg-indigo-900 text-yellow-300'
+                : timeOfDay === 'sunset'
+                ? 'bg-orange-500 text-yellow-100'
+                : 'bg-amber-300 text-amber-900'
+            }`}
+          >
+            {timeOfDay === 'night' ? (
+              <Moon className="w-5 h-5 fill-yellow-300" />
+            ) : timeOfDay === 'sunset' ? (
+              <Sunset className="w-5 h-5" />
+            ) : (
+              <Sun className="w-5 h-5" />
+            )}
+          </button>
+
           {/* Background Music Toggle */}
           <button
             onClick={() => gameStore.toggleBgm()}
@@ -185,6 +296,25 @@ export const HUD: React.FC = () => {
 
       {/* Bottom Center: Interactive Prompts & Speech Bubbles */}
       <div className="w-full flex flex-col items-center gap-3 pb-24 sm:pb-8">
+        {/* Scooter Riding Controls (Bell & Dismount) */}
+        {isRidingScooter && (
+          <div className="pointer-events-auto flex items-center gap-2 sm:gap-3 animate-fade-in">
+            <button
+              onClick={() => gameStore.ringBell()}
+              className="bg-amber-400 hover:bg-amber-500 text-amber-950 px-4 sm:px-5 py-2.5 rounded-full font-bubble font-bold text-xs sm:text-sm border-2 border-white shadow-xl flex items-center gap-1.5 active:scale-90 transition-transform"
+            >
+              <Bell className="w-4 h-4 fill-amber-900" />
+              <span>Bel Kring! [H]</span>
+            </button>
+            <button
+              onClick={() => gameStore.dismountScooter()}
+              className="bg-rose-500 hover:bg-rose-600 text-white px-4 sm:px-5 py-2.5 rounded-full font-bubble font-bold text-xs sm:text-sm border-2 border-white shadow-xl flex items-center gap-1.5 active:scale-90 transition-transform"
+            >
+              <span>🛴 Turun Skuter [E]</span>
+            </button>
+          </div>
+        )}
+
         {/* Swing Exit Prompt */}
         {activeRide === 'swing' && (
           <div className="pointer-events-auto bg-amber-400 text-amber-950 px-5 py-2 rounded-full font-bubble font-bold text-sm sm:text-base border-2 border-white shadow-xl animate-bounce">
@@ -193,7 +323,7 @@ export const HUD: React.FC = () => {
         )}
 
         {/* Nearby Interactable Action Button */}
-        {nearbyInteractable && activeRide === 'none' && !activeDialog && (
+        {nearbyInteractable && activeRide === 'none' && !activeDialog && !isRidingScooter && (
           <button
             onClick={handleInteract}
             className="pointer-events-auto bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 text-white px-6 py-3 rounded-full font-bubble font-bold text-sm sm:text-base border-3 border-white shadow-2xl active:scale-95 transition-transform flex items-center gap-2 animate-bounce-slow"
@@ -232,6 +362,7 @@ export const HUD: React.FC = () => {
               {activeDialog.speaker.includes('Ummi') && '🧕🧹'}
               {activeDialog.speaker.includes('Khalid') && '👦🥁'}
               {activeDialog.speaker.includes('Faqih') && '👶🚗'}
+              {(activeDialog.speaker.includes('Bu Guru') || activeDialog.speaker.includes('Santi')) && '👩‍🏫🎒'}
             </div>
 
             {/* Speaker Name & Role */}
