@@ -272,6 +272,11 @@ const BuGuruTeacher: React.FC<{ position: [number, number, number] }> = ({ posit
       if (headRef.current) {
         headRef.current.rotation.x = Math.sin(time * 1.5) * 0.03;
       }
+
+      const current = gameStore.getState().nearbyInteractable;
+      if (current?.id === 'bu_guru') {
+        gameStore.setNearbyInteractable(null);
+      }
     }
   });
 

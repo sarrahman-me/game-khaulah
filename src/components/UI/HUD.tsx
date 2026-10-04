@@ -112,9 +112,17 @@ export const HUD: React.FC = () => {
         actionType: 'play_toycar',
       });
     } else if (id === 'slide') {
-      gameStore.setActiveRide('slide');
+      const playerPos = gameStore.getState().playerPos;
+      const distSq = Math.pow(playerPos[0] - 8, 2) + Math.pow(playerPos[2] - 25.5, 2);
+      if (distSq < 16.0) {
+        gameStore.setActiveRide('slide');
+      }
     } else if (id === 'swing') {
-      gameStore.setActiveRide('swing');
+      const playerPos = gameStore.getState().playerPos;
+      const distSq = Math.pow(playerPos[0] - (-8), 2) + Math.pow(playerPos[2] - 26, 2);
+      if (distSq < 16.0) {
+        gameStore.setActiveRide('swing');
+      }
     }
   };
 

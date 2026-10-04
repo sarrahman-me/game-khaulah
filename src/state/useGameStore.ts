@@ -283,7 +283,7 @@ export const gameStore = {
 
   setNearbyInteractable: (item: { id: string; title: string; prompt: string } | null) => {
     // Only emit if changed to avoid unnecessary re-renders
-    if (state.nearbyInteractable?.id !== item?.id) {
+    if (state.nearbyInteractable?.id !== item?.id || state.nearbyInteractable?.prompt !== item?.prompt) {
       state = { ...state, nearbyInteractable: item };
       emitChange();
     }
@@ -352,7 +352,11 @@ export const gameStore = {
       } else if (ride === 'swing') {
         soundManager.playSwingRide();
       }
-      state = { ...state, activeRide: ride };
+      state = {
+        ...state,
+        activeRide: ride,
+        nearbyInteractable: ride !== 'none' ? null : state.nearbyInteractable,
+      };
       emitChange();
     }
   },
@@ -399,6 +403,7 @@ export const gameStore = {
     state = {
       ...state,
       isRidingScooter: true,
+      nearbyInteractable: null,
       bubbleMessage: 'Ngebuuut! Khaulah naik Skuter Pink kesayangan! 🛴💨✨ (Tekan [E] untuk turun, [H] untuk bel)',
     };
     emitChange();

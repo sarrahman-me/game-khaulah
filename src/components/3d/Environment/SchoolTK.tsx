@@ -90,6 +90,11 @@ export const SchoolTK: React.FC = () => {
         title: 'Ayunan Ceria TK Karang Tengah',
         prompt: 'Tekan [E] atau Sentuh Tombol untuk Naik Ayunan! 🎡',
       });
+    } else {
+      const current = gameStore.getState().nearbyInteractable;
+      if (current?.id === 'slide' || current?.id === 'swing') {
+        gameStore.setNearbyInteractable(null);
+      }
     }
   });
 
@@ -353,7 +358,13 @@ export const SchoolTK: React.FC = () => {
         position={[8, 0.2, 26]}
         onClick={(e) => {
           e.stopPropagation();
-          gameStore.setActiveRide('slide');
+          const playerPos = gameStore.getState().playerPos;
+          const distSq = Math.pow(playerPos[0] - 8, 2) + Math.pow(playerPos[2] - 25.5, 2);
+          if (distSq < 16.0) {
+            gameStore.setActiveRide('slide');
+          } else {
+            gameStore.setMessage('Ayo berjalan mendekat ke perosotan dulu ya! 🛝🏃‍♀️');
+          }
         }}
         onPointerOver={(e) => {
           e.stopPropagation();
@@ -428,7 +439,13 @@ export const SchoolTK: React.FC = () => {
         position={[-8, 0.2, 26]}
         onClick={(e) => {
           e.stopPropagation();
-          gameStore.setActiveRide('swing');
+          const playerPos = gameStore.getState().playerPos;
+          const distSq = Math.pow(playerPos[0] - (-8), 2) + Math.pow(playerPos[2] - 26, 2);
+          if (distSq < 16.0) {
+            gameStore.setActiveRide('swing');
+          } else {
+            gameStore.setMessage('Ayo berjalan mendekat ke ayunan dulu ya! 🎡🏃‍♀️');
+          }
         }}
         onPointerOver={(e) => {
           e.stopPropagation();

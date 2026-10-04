@@ -12,7 +12,13 @@ export const ScooterVehicle: React.FC = () => {
   const wheelsRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
-    if (isRidingScooter || !groupRef.current) return;
+    if (isRidingScooter || !groupRef.current) {
+      const current = gameStore.getState().nearbyInteractable;
+      if (current?.id === 'scooter') {
+        gameStore.setNearbyInteractable(null);
+      }
+      return;
+    }
     const time = state.clock.getElapsedTime();
 
     // Gentle floating highlight aura for parked scooter
@@ -29,6 +35,11 @@ export const ScooterVehicle: React.FC = () => {
         title: 'Skuter Pink Khaulah 🛴',
         prompt: 'Tekan [E] atau Tombol Skuter untuk Mengendarai! 💨✨',
       });
+    } else {
+      const current = gameStore.getState().nearbyInteractable;
+      if (current?.id === 'scooter') {
+        gameStore.setNearbyInteractable(null);
+      }
     }
   });
 

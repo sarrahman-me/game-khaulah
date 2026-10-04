@@ -144,9 +144,15 @@ export const PlayerKhaulah: React.FC = () => {
               actionType: 'play_toycar',
             });
           } else if (near.id === 'slide') {
-            gameStore.setActiveRide('slide');
+            const distSq = Math.pow(pos.current.x - 8, 2) + Math.pow(pos.current.z - 25.5, 2);
+            if (distSq < 16.0) {
+              gameStore.setActiveRide('slide');
+            }
           } else if (near.id === 'swing') {
-            gameStore.setActiveRide('swing');
+            const distSq = Math.pow(pos.current.x - (-8), 2) + Math.pow(pos.current.z - 26, 2);
+            if (distSq < 16.0) {
+              gameStore.setActiveRide('swing');
+            }
           }
         } else {
           gameStore.triggerEmote('wave');
