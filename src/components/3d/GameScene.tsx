@@ -15,6 +15,12 @@ import { ScooterVehicle } from './Environment/ScooterVehicle';
 import { SchoolQuest } from './Environment/SchoolQuest';
 import { NightFireflies } from './Environment/NightFireflies';
 
+import { PettingFarm } from './Environment/PettingFarm';
+import { SunnyBeachLake } from './Environment/SunnyBeachLake';
+import { TownStreet } from './Environment/TownStreet';
+import { CarnivalThemePark } from './Environment/CarnivalThemePark';
+import { VillageTrain } from './Environment/VillageTrain';
+
 // Cute floating cartoon clouds in the sky
 const FloatingClouds: React.FC = () => {
   const cloudsRef = useRef<THREE.Group>(null);
@@ -27,11 +33,13 @@ const FloatingClouds: React.FC = () => {
   });
 
   const cloudPositions: [number, number, number][] = [
-    [-20, 18, 10],
-    [25, 22, -15],
-    [-15, 25, 45],
-    [30, 20, 60],
-    [-25, 24, 75],
+    [-40, 20, 10],
+    [40, 22, 10],
+    [-35, 24, 32],
+    [35, 22, 32],
+    [0, 24, -15],
+    [-20, 22, 50],
+    [20, 24, 60],
     [0, 28, 90],
   ];
 
@@ -71,11 +79,11 @@ export const GameScene: React.FC = () => {
   const env = {
     day: {
       bg: '#BEE1E6',
-      fogNear: 55,
-      fogFar: 145,
+      fogNear: 80,
+      fogFar: 220,
       ambientColor: '#FFF3E0',
       ambientIntensity: 0.95,
-      sunPos: [30, 45, 20] as [number, number, number],
+      sunPos: [45, 55, 30] as [number, number, number],
       sunColor: '#FFF9EB',
       sunIntensity: 1.45,
       hemiSky: '#FDE2E4',
@@ -84,11 +92,11 @@ export const GameScene: React.FC = () => {
     },
     sunset: {
       bg: '#F8AD9D',
-      fogNear: 50,
-      fogFar: 135,
+      fogNear: 70,
+      fogFar: 200,
       ambientColor: '#FFE0B2',
       ambientIntensity: 0.85,
-      sunPos: [45, 22, 15] as [number, number, number],
+      sunPos: [55, 28, 20] as [number, number, number],
       sunColor: '#FF8800',
       sunIntensity: 1.6,
       hemiSky: '#FFB703',
@@ -97,11 +105,11 @@ export const GameScene: React.FC = () => {
     },
     night: {
       bg: '#0F172A',
-      fogNear: 40,
-      fogFar: 125,
+      fogNear: 55,
+      fogFar: 180,
       ambientColor: '#312E81',
       ambientIntensity: 0.5,
-      sunPos: [15, 35, 10] as [number, number, number],
+      sunPos: [20, 45, 15] as [number, number, number],
       sunColor: '#93C5FD',
       sunIntensity: 0.65,
       hemiSky: '#4338CA',
@@ -132,11 +140,11 @@ export const GameScene: React.FC = () => {
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
           shadow-camera-near={0.5}
-          shadow-camera-far={140}
-          shadow-camera-left={-45}
-          shadow-camera-right={45}
-          shadow-camera-top={50}
-          shadow-camera-bottom={-50}
+          shadow-camera-far={200}
+          shadow-camera-left={-75}
+          shadow-camera-right={75}
+          shadow-camera-top={75}
+          shadow-camera-bottom={-75}
           shadow-bias={-0.0004}
         />
         <hemisphereLight args={[env.hemiSky, env.hemiGround, env.hemiIntensity]} />
@@ -150,6 +158,11 @@ export const GameScene: React.FC = () => {
         <SchoolTK />
         <SchoolQuest />
         <ScooterVehicle />
+        <PettingFarm />
+        <SunnyBeachLake />
+        <TownStreet />
+        <CarnivalThemePark />
+        <VillageTrain />
         <ObbyCourse />
         <AnimalFriends />
         <PlayerKhaulah />

@@ -5,6 +5,7 @@ import { soundManager } from '../sound/audioManager';
 export type AccessoryType = 'none' | 'bunny_ears' | 'fairy_wings' | 'princess_crown' | 'cat_ears' | 'star_halo';
 export type PetType = 'none' | 'puppy' | 'kitten' | 'fairy';
 export type EmoteType = 'none' | 'wave' | 'dance' | 'cheer';
+export type RideType = 'none' | 'slide' | 'swing' | 'carousel' | 'ferris' | 'train' | 'boat' | 'firetruck';
 
 export interface FamilyDialogData {
   speaker: string;
@@ -12,7 +13,7 @@ export interface FamilyDialogData {
   avatarBg: string;
   text: string;
   actionText?: string;
-  actionType?: 'high_five' | 'take_snack' | 'play_ball' | 'cuddle_baby' | 'play_drumband' | 'play_toycar' | 'complete_quest';
+  actionType?: 'high_five' | 'take_snack' | 'play_ball' | 'cuddle_baby' | 'play_drumband' | 'play_toycar' | 'complete_quest' | 'feed_animal' | 'buy_icecream' | 'scan_grocery';
 }
 
 export interface GameState {
@@ -39,7 +40,7 @@ export interface GameState {
   playerFacingAngle: number;
   isPlayerMoving: boolean;
   // New Family & Playground features
-  activeRide: 'none' | 'slide' | 'swing';
+  activeRide: RideType;
   speedBuffTimeLeft: number;
   nearbyInteractable: { id: string; title: string; prompt: string } | null;
   activeDialog: FamilyDialogData | null;
@@ -62,11 +63,15 @@ const CHECKPOINTS: [number, number, number][] = [
   [0, 0.8, 28],      // Checkpoint 1: Gerbang TK Karang Tengah 1 Atap
   [0, 6.0, 65],      // Checkpoint 2: Puncak Awan Gula-Gula Skyway
   [0, 10.0, 95],     // Checkpoint 3: Kastil Bintang Khaulah
+  [-34, 0.8, -2],    // Checkpoint 4: Peternakan & Kebun Hewan
+  [-34, 0.8, 28],    // Checkpoint 5: Danau Bebek & Pantai Pasir
+  [34, 0.8, -2],     // Checkpoint 6: Desa Pertokoan Cilik
+  [34, 0.8, 28],     // Checkpoint 7: Alun-Alun Karnaval & Theme Park
 ];
 
 let state: GameState = {
   stars: 0,
-  totalStars: 25,
+  totalStars: 45,
   collectedStarIds: [],
   checkpointIndex: 0,
   checkpointPosition: [0, 0.8, -4],
@@ -300,7 +305,7 @@ export const gameStore = {
     emitChange();
   },
 
-  executeDialogAction: (actionType: 'high_five' | 'take_snack' | 'play_ball' | 'cuddle_baby' | 'play_drumband' | 'play_toycar' | 'complete_quest') => {
+  executeDialogAction: (actionType: 'high_five' | 'take_snack' | 'play_ball' | 'cuddle_baby' | 'play_drumband' | 'play_toycar' | 'complete_quest' | 'feed_animal' | 'buy_icecream' | 'scan_grocery') => {
     if (actionType === 'high_five') {
       soundManager.playHighFive();
       soundManager.playKeyboardTyping();
@@ -340,17 +345,53 @@ export const gameStore = {
         activeDialog: null,
       };
       emitChange();
+    } else if (actionType === 'feed_animal') {
+      soundManager.playAnimalSound('bunny');
+      confetti({ particleCount: 30, spread: 60, origin: { y: 0.8 } });
+      state = {
+        ...state,
+        bubbleMessage: 'Nyam.. nyam! Kelinci dan domba senang sekali diberi makan oleh Khaulah! 🐰🥕🐑',
+        activeDialog: null,
+      };
+      emitChange();
+    } else if (actionType === 'buy_icecream') {
+      soundManager.playSnackBuff();
+      confetti({ particleCount: 40, spread: 70, origin: { y: 0.8 } });
+      state = {
+        ...state,
+        speedBuffTimeLeft: 20.0,
+        bubbleMessage: 'Slurp! Gulali pelangi dan es krim lezat memberikan energi kilau bintang untuk Khaulah! 🍦🍭✨',
+        activeDialog: null,
+      };
+      emitChange();
+    } else if (actionType === 'scan_grocery') {
+      soundManager.playCashRegister();
+      confetti({ particleCount: 35, spread: 60, origin: { y: 0.8 } });
+      state = {
+        ...state,
+        bubbleMessage: 'Tiiit! Kasir berbunyi: Belanjaan susu kotak dan kue Khaulah sudah beres! 🛒🍓✨',
+        activeDialog: null,
+      };
+      emitChange();
     } else if (actionType === 'complete_quest') {
       gameStore.completeSchoolQuest();
     }
   },
 
-  setActiveRide: (ride: 'none' | 'slide' | 'swing') => {
+  setActiveRide: (ride: RideType) => {
     if (ride !== state.activeRide) {
       if (ride === 'slide') {
         soundManager.playSlideWhoosh();
       } else if (ride === 'swing') {
         soundManager.playSwingRide();
+      } else if (ride === 'carousel' || ride === 'ferris') {
+        soundManager.playCarnivalTune();
+      } else if (ride === 'train') {
+        soundManager.playTrainWhistle();
+      } else if (ride === 'boat') {
+        soundManager.playWaterSplash();
+      } else if (ride === 'firetruck') {
+        soundManager.playFireSiren();
       }
       state = {
         ...state,

@@ -157,30 +157,66 @@ const WoodenBridge: React.FC = () => {
 
 export const GroundIsland: React.FC = () => {
   useEffect(() => {
-    // 1. Home Area Ground (Z: -16 to 8)
+    // 1. Home Area Ground (Z: -16 to 8.5)
     const homeBox = new THREE.Box3(
       new THREE.Vector3(-16, -1, -16),
       new THREE.Vector3(16, 0.25, 8.5)
     );
-    // 2. Bridge Ground (Z: 8.5 to 13.5)
+    // 2. Central Bridge Ground (Z: 8.5 to 13.5)
     const bridgeBox = new THREE.Box3(
-      new THREE.Vector3(-2.2, -0.5, 8.5),
-      new THREE.Vector3(2.2, 0.5, 13.5)
+      new THREE.Vector3(-2.4, -0.5, 8.5),
+      new THREE.Vector3(2.4, 0.5, 13.5)
     );
     // 3. School Area Ground (Z: 13.5 to 48)
     const schoolBox = new THREE.Box3(
       new THREE.Vector3(-16, -1, 13.5),
       new THREE.Vector3(16, 0.25, 48)
     );
+    // 4. West Farm & Orchard Ground (X: -56 to -15, Z: -16 to 10)
+    const westFarmBox = new THREE.Box3(
+      new THREE.Vector3(-56, -1, -16),
+      new THREE.Vector3(-15, 0.25, 10)
+    );
+    // 5. West Lake & Sandy Beach Ground (X: -56 to -15, Z: 9 to 48)
+    const westBeachBox = new THREE.Box3(
+      new THREE.Vector3(-56, -1, 9),
+      new THREE.Vector3(-15, 0.25, 48)
+    );
+    // 6. West Connecting Bridge (X: -26 to -18, Z: 8.5 to 13.5)
+    const westBridgeBox = new THREE.Box3(
+      new THREE.Vector3(-26, -0.5, 8.5),
+      new THREE.Vector3(-18, 0.5, 13.5)
+    );
+    // 7. East Town Street Ground (X: 15 to 56, Z: -16 to 10)
+    const eastTownBox = new THREE.Box3(
+      new THREE.Vector3(15, -1, -16),
+      new THREE.Vector3(56, 0.25, 10)
+    );
+    // 8. East Carnival Plaza Ground (X: 15 to 56, Z: 9 to 48)
+    const eastCarnivalBox = new THREE.Box3(
+      new THREE.Vector3(15, -1, 9),
+      new THREE.Vector3(56, 0.25, 48)
+    );
+    // 9. East Connecting Avenue Bridge (X: 18 to 26, Z: 8.5 to 13.5)
+    const eastBridgeBox = new THREE.Box3(
+      new THREE.Vector3(18, -0.5, 8.5),
+      new THREE.Vector3(26, 0.5, 13.5)
+    );
 
     const c1 = { box: homeBox, type: 'ground' as const };
     const c2 = { box: bridgeBox, type: 'ground' as const };
     const c3 = { box: schoolBox, type: 'ground' as const };
+    const c4 = { box: westFarmBox, type: 'ground' as const };
+    const c5 = { box: westBeachBox, type: 'ground' as const };
+    const c6 = { box: westBridgeBox, type: 'ground' as const };
+    const c7 = { box: eastTownBox, type: 'ground' as const };
+    const c8 = { box: eastCarnivalBox, type: 'ground' as const };
+    const c9 = { box: eastBridgeBox, type: 'ground' as const };
 
-    colliders.push(c1, c2, c3);
+    colliders.push(c1, c2, c3, c4, c5, c6, c7, c8, c9);
 
     return () => {
-      [c1, c2, c3].forEach((c) => {
+      [c1, c2, c3, c4, c5, c6, c7, c8, c9].forEach((c) => {
         const idx = colliders.indexOf(c);
         if (idx !== -1) colliders.splice(idx, 1);
       });
@@ -204,10 +240,26 @@ export const GroundIsland: React.FC = () => {
       </mesh>
 
       {/* ============================================================== */}
-      {/* 2. VILLAGE RIVER & WOODEN FOOTBRIDGE (Z: 11)                   */}
+      {/* 2. VILLAGE RIVER & WOODEN FOOTBRIDGES                          */}
       {/* ============================================================== */}
       <AnimatedRiver />
       <WoodenBridge />
+
+      {/* West River Extension Bridge */}
+      <group position={[-22, 0.22, 11]}>
+        <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
+          <boxGeometry args={[4.2, 0.22, 5.8]} />
+          <meshStandardMaterial color="#B08968" roughness={0.7} />
+        </mesh>
+      </group>
+
+      {/* East Avenue Stone Bridge */}
+      <group position={[22, 0.22, 11]}>
+        <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
+          <boxGeometry args={[4.2, 0.22, 5.8]} />
+          <meshStandardMaterial color="#E0AAFF" roughness={0.5} />
+        </mesh>
+      </group>
 
       {/* ============================================================== */}
       {/* 3. SCHOOL TK KARANG TENGAH LAWN TERRAIN (Z: 13.5 to 48)        */}
@@ -227,6 +279,52 @@ export const GroundIsland: React.FC = () => {
       <mesh position={[0, 0.22, 28]} receiveShadow>
         <boxGeometry args={[3.2, 0.05, 18]} />
         <meshStandardMaterial color="#D4A373" roughness={0.6} />
+      </mesh>
+
+      {/* ============================================================== */}
+      {/* 4. WEST ZONE BASE TERRAINS (Petting Zoo & Lake Beach)          */}
+      {/* ============================================================== */}
+      {/* West Farm Lawn */}
+      <mesh position={[-35, -0.2, -3]} receiveShadow>
+        <boxGeometry args={[40, 0.9, 26]} />
+        <meshStandardMaterial color="#7CB518" roughness={0.7} />
+      </mesh>
+      <mesh position={[-35, -1.8, -3]}>
+        <boxGeometry args={[40.5, 2.3, 26.5]} />
+        <meshStandardMaterial color="#582F0E" roughness={0.9} />
+      </mesh>
+
+      {/* West Lake Beach Sandy Grass Lawn */}
+      <mesh position={[-35, -0.2, 29]} receiveShadow>
+        <boxGeometry args={[40, 0.9, 38]} />
+        <meshStandardMaterial color="#A7C957" roughness={0.7} />
+      </mesh>
+      <mesh position={[-35, -1.8, 29]}>
+        <boxGeometry args={[40.5, 2.3, 38.5]} />
+        <meshStandardMaterial color="#582F0E" roughness={0.9} />
+      </mesh>
+
+      {/* ============================================================== */}
+      {/* 5. EAST ZONE BASE TERRAINS (Town Street & Carnival Plaza)      */}
+      {/* ============================================================== */}
+      {/* East Town Street Base */}
+      <mesh position={[35, -0.2, -3]} receiveShadow>
+        <boxGeometry args={[40, 0.9, 26]} />
+        <meshStandardMaterial color="#CED4DA" roughness={0.6} />
+      </mesh>
+      <mesh position={[35, -1.8, -3]}>
+        <boxGeometry args={[40.5, 2.3, 26.5]} />
+        <meshStandardMaterial color="#582F0E" roughness={0.9} />
+      </mesh>
+
+      {/* East Carnival Plaza Base */}
+      <mesh position={[35, -0.2, 29]} receiveShadow>
+        <boxGeometry args={[40, 0.9, 38]} />
+        <meshStandardMaterial color="#FFCAD4" roughness={0.5} />
+      </mesh>
+      <mesh position={[35, -1.8, 29]}>
+        <boxGeometry args={[40.5, 2.3, 38.5]} />
+        <meshStandardMaterial color="#582F0E" roughness={0.9} />
       </mesh>
 
       {/* ============================================================== */}

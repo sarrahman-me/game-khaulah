@@ -144,7 +144,7 @@ class SoundEngine {
   }
 
   // Animal friendly squeak/happy sound
-  public playAnimalSound(type: 'duck' | 'cat' | 'bunny' | 'panda') {
+  public playAnimalSound(type: 'duck' | 'cat' | 'bunny' | 'panda' | 'sheep' | 'horse') {
     if (this.isMuted) return;
     this.initCtx();
     if (!this.ctx) return;
@@ -176,6 +176,29 @@ class SoundEngine {
       gain.connect(this.ctx.destination);
       osc.start(now);
       osc.stop(now + 0.2);
+    } else if (type === 'sheep') {
+      // Baaa: warm vibrato pulse
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(280, now);
+      osc.frequency.linearRampToValueAtTime(260, now + 0.35);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    } else if (type === 'horse') {
+      // Friendly neigh/whinny pitch jump
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(450, now);
+      osc.frequency.linearRampToValueAtTime(700, now + 0.18);
+      osc.frequency.linearRampToValueAtTime(550, now + 0.35);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.38);
     } else {
       // Bunny / Panda: cute high pop
       osc.type = 'sine';
@@ -659,6 +682,161 @@ class SoundEngine {
         osc.stop(start + chord.d + 0.05);
       });
     });
+  }
+
+  // Choo-Choo train whistle: melodic two-tone toot-toot!
+  public playTrainWhistle() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const toots = [
+      { f1: 587.33, f2: 739.99, start: 0.0, dur: 0.28 },
+      { f1: 587.33, f2: 739.99, start: 0.36, dur: 0.45 },
+    ];
+
+    toots.forEach(({ f1, f2, start, dur }) => {
+      [f1, f2].forEach((freq) => {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        const t = now + start;
+        osc.frequency.setValueAtTime(freq, t);
+
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.setValueAtTime(0.18, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(t);
+        osc.stop(t + dur + 0.02);
+      });
+    });
+  }
+
+  // Friendly Fire Truck siren: upbeat alternating two-tone niu-niu!
+  public playFireSiren() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const tones = [
+      { f: 880, start: 0.0, dur: 0.18 },
+      { f: 659, start: 0.19, dur: 0.18 },
+      { f: 880, start: 0.38, dur: 0.18 },
+      { f: 659, start: 0.57, dur: 0.22 },
+    ];
+
+    tones.forEach(({ f, start, dur }) => {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      const t = now + start;
+      osc.frequency.setValueAtTime(f, t);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + dur + 0.02);
+    });
+  }
+
+  // Festive Carnival Music Box snippet
+  public playCarnivalTune() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    // C, E, G, A, G, E, C melody
+    const notes = [523.25, 659.25, 783.99, 880.00, 783.99, 659.25, 523.25];
+    notes.forEach((freq, idx) => {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      const t = now + idx * 0.12;
+      osc.frequency.setValueAtTime(freq, t);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.setValueAtTime(0.18, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + 0.18);
+    });
+  }
+
+  // Cash register / shopping scanner: cheerful Ka-Ching beep!
+  public playCashRegister() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    // Beep then metallic ring
+    const osc1 = this.ctx.createOscillator();
+    const gain1 = this.ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(1400, now);
+    gain1.gain.setValueAtTime(0.2, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    osc1.connect(gain1);
+    gain1.connect(this.ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.08);
+
+    const osc2 = this.ctx.createOscillator();
+    const gain2 = this.ctx.createGain();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(2093, now + 0.08); // C7
+    gain2.gain.setValueAtTime(0.0001, now);
+    gain2.gain.setValueAtTime(0.22, now + 0.08);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc2.connect(gain2);
+    gain2.connect(this.ctx.destination);
+    osc2.start(now + 0.08);
+    osc2.stop(now + 0.36);
+  }
+
+  // Gentle water splash for pedal boat & beach
+  public playWaterSplash() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(350, now);
+    osc.frequency.exponentialRampToValueAtTime(120, now + 0.28);
+
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.3);
   }
 
   public stopBgm() {

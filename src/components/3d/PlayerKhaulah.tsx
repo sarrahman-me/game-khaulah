@@ -4,6 +4,9 @@ import * as THREE from 'three';
 import { gameStore, useGameStore } from '../../state/useGameStore';
 import { soundManager } from '../../sound/audioManager';
 import { colliders } from '../../state/colliders';
+import { SwanBoatModel } from './Environment/SunnyBeachLake';
+import { MiniFireTruckModel } from './Environment/TownStreet';
+import { getTrainTrackPose } from './Environment/VillageTrain';
 
 
 
@@ -37,6 +40,7 @@ export const PlayerKhaulah: React.FC = () => {
   const activeEmote = useGameStore((s) => s.activeEmote);
   const speedBuffTimeLeft = useGameStore((s) => s.speedBuffTimeLeft);
   const isRidingScooter = useGameStore((s) => s.isRidingScooter);
+  const activeRide = useGameStore((s) => s.activeRide);
 
   // Character physical state
   const pos = useRef(new THREE.Vector3(0, 1, -4));
@@ -65,8 +69,34 @@ export const PlayerKhaulah: React.FC = () => {
       } else if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
         gameStore.toggleShiftLock();
       } else if (e.code === 'KeyH') {
-        gameStore.ringBell();
+        const ride = gameStore.getState().activeRide;
+        if (ride === 'train') {
+          soundManager.playTrainWhistle();
+          gameStore.setMessage('Tuut.. tuuut! Kereta Mini Khaulah melaju riang! 🚂💨✨');
+        } else if (ride === 'firetruck') {
+          soundManager.playFireSiren();
+          gameStore.setMessage('Niu.. niu.. niu! Pasukan Damkar Cilik Khaulah siap menolong! 🚒🚨✨');
+        } else if (ride === 'boat') {
+          soundManager.playWaterSplash();
+          gameStore.setMessage('Kecipak kecipuk! Perahu bebek Khaulah mendayung santai! 🦢🌊✨');
+        } else {
+          gameStore.ringBell();
+        }
       } else if (e.code === 'KeyE') {
+        const ride = gameStore.getState().activeRide;
+        if (ride !== 'none') {
+          gameStore.setActiveRide('none');
+          if (ride === 'boat') {
+            pos.current.set(-23, 0.4, 20);
+          } else if (ride === 'carousel') {
+            pos.current.set(28, 0.4, 17);
+          } else if (ride === 'ferris') {
+            pos.current.set(43, 0.4, 27);
+          }
+          gameStore.setMessage('Hore! Khaulah selesai bermain wahana! ✨');
+          return;
+        }
+
         if (gameStore.getState().isRidingScooter) {
           gameStore.dismountScooter();
           return;
@@ -153,6 +183,43 @@ export const PlayerKhaulah: React.FC = () => {
             if (distSq < 16.0) {
               gameStore.setActiveRide('swing');
             }
+          } else if (near.id === 'farm_bunny') {
+            gameStore.executeDialogAction('feed_animal');
+          } else if (near.id === 'farm_sheep') {
+            soundManager.playAnimalSound('sheep');
+            gameStore.setMessage('Mbaaa~ Domba berbulu awan kapas dielus lembut oleh Khaulah! 🐑💖');
+          } else if (near.id === 'pak_tani') {
+            gameStore.openDialog({
+              speaker: 'Pak Tani Ceria',
+              role: 'Sahabat Hewan & Kebun 👨‍🌾',
+              avatarBg: 'bg-emerald-600',
+              text: 'Assalamu\'alaikum Khaulah sayang! Senang sekali Khaulah berkunjung ke peternakan desa. Hewan-hewan jinak ini suka sekali makan wortel segar dan apel manis! Ayo beri makan kelinci lucunya ya!',
+              actionText: '🥕 Beri Wortel Segar ke Kelinci! ✨',
+              actionType: 'feed_animal',
+            });
+          } else if (near.id === 'swan_boat') {
+            gameStore.setActiveRide('boat');
+          } else if (near.id === 'mart_cashier') {
+            gameStore.executeDialogAction('scan_grocery');
+          } else if (near.id === 'bakery_cake') {
+            gameStore.openDialog({
+              speaker: 'Chef Bakery Ceria',
+              role: 'Pembuat Kue Manis 🧁',
+              avatarBg: 'bg-rose-500',
+              text: 'Assalamu\'alaikum Khaulah bidadari manis! Ini Chef baru saja memanggang donat meses pelangi dan kue ulang tahun lezat! Mau cicipi donatnya?',
+              actionText: '🍩 Cicipi Donat Pelangi! (+Speed Boost ⚡)',
+              actionType: 'buy_icecream',
+            });
+          } else if (near.id === 'firetruck') {
+            gameStore.setActiveRide('firetruck');
+          } else if (near.id === 'carousel') {
+            gameStore.setActiveRide('carousel');
+          } else if (near.id === 'ferris_wheel') {
+            gameStore.setActiveRide('ferris');
+          } else if (near.id === 'carnival_candy') {
+            gameStore.executeDialogAction('buy_icecream');
+          } else if (near.id === 'village_train') {
+            gameStore.setActiveRide('train');
           }
         } else {
           gameStore.triggerEmote('wave');
@@ -190,9 +257,14 @@ export const PlayerKhaulah: React.FC = () => {
     gameStore.tickSpeedBuff(dt);
     const speedBuff = gameStore.getState().speedBuffTimeLeft;
     const ridingScooter = gameStore.getState().isRidingScooter;
+    const activeRide = gameStore.getState().activeRide;
     let effectiveMoveSpeed = moveSpeed;
     if (ridingScooter) {
       effectiveMoveSpeed = speedBuff > 0 ? 21.0 : 16.0;
+    } else if (activeRide === 'firetruck') {
+      effectiveMoveSpeed = speedBuff > 0 ? 20.0 : 15.0;
+    } else if (activeRide === 'boat') {
+      effectiveMoveSpeed = 7.5;
     } else if (speedBuff > 0) {
       effectiveMoveSpeed = 13.5;
     }
@@ -207,7 +279,6 @@ export const PlayerKhaulah: React.FC = () => {
     }
 
     // Check Active Ride State (Perosotan / Ayunan)
-    const activeRide = gameStore.getState().activeRide;
     if (activeRide === 'slide') {
       slideTimer.current += dt * 0.85;
       if (slideTimer.current < 0.28) {
@@ -283,6 +354,84 @@ export const PlayerKhaulah: React.FC = () => {
       groupRef.current.position.copy(pos.current);
       groupRef.current.rotation.y = facingAngle.current;
       gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, false);
+      return;
+    }
+
+    // Carousel ride
+    if (activeRide === 'carousel') {
+      const time = state.clock.getElapsedTime();
+      const angle = time * 0.45;
+      const r = 2.8;
+      pos.current.set(28 + Math.cos(angle) * r, 1.2 + Math.sin(time * 3) * 0.2, 22 + Math.sin(angle) * r);
+      facingAngle.current = -angle + Math.PI / 2;
+
+      if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.7; leftArmRef.current.rotation.z = -0.2; }
+      if (rightArmRef.current) { rightArmRef.current.rotation.x = -Math.PI * 0.7 + Math.sin(time * 6) * 0.3; rightArmRef.current.rotation.z = 0.4; }
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.4;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.4;
+      if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.3;
+
+      if (keys.current['Space'] || gameStore.getState().isJumpPressed) {
+        gameStore.setActiveRide('none');
+        pos.current.set(28, 0.4, 17);
+        velocityY.current = 6;
+      }
+
+      groupRef.current.position.copy(pos.current);
+      groupRef.current.rotation.y = facingAngle.current;
+      gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, false);
+      return;
+    }
+
+    // Ferris Wheel ride
+    if (activeRide === 'ferris') {
+      const time = state.clock.getElapsedTime();
+      const angle = time * 0.22;
+      const r = 5.2;
+      pos.current.set(43 + Math.cos(angle) * r, 7.0 + Math.sin(angle) * r - 0.2, 32);
+      facingAngle.current = Math.PI / 2;
+
+      if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.5; leftArmRef.current.rotation.z = -0.2; }
+      if (rightArmRef.current) { rightArmRef.current.rotation.x = -0.5; rightArmRef.current.rotation.z = 0.2; }
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.4;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.4;
+      if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.3;
+
+      if (keys.current['Space'] || gameStore.getState().isJumpPressed) {
+        gameStore.setActiveRide('none');
+        pos.current.set(43, 0.4, 27);
+        velocityY.current = 6;
+      }
+
+      groupRef.current.position.copy(pos.current);
+      groupRef.current.rotation.y = facingAngle.current;
+      gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, false);
+      return;
+    }
+
+    // Village Train ride
+    if (activeRide === 'train') {
+      const time = state.clock.getElapsedTime();
+      const trainProgress = (time * 0.025) % 1;
+      const trainPose = getTrainTrackPose(trainProgress);
+      pos.current.set(trainPose.pos.x, 0.9, trainPose.pos.z);
+      facingAngle.current = trainPose.heading;
+
+      if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.6; leftArmRef.current.rotation.z = -0.2; }
+      if (rightArmRef.current) { rightArmRef.current.rotation.x = -Math.PI * 0.75 + Math.sin(time * 5) * 0.25; rightArmRef.current.rotation.z = 0.35; }
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.35;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.35;
+      if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.25;
+
+      if (keys.current['Space'] || gameStore.getState().isJumpPressed) {
+        gameStore.setActiveRide('none');
+        velocityY.current = 6;
+        pos.current.y += 0.5;
+      }
+
+      groupRef.current.position.copy(pos.current);
+      groupRef.current.rotation.y = facingAngle.current;
+      gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, true);
       return;
     }
 
@@ -368,12 +517,19 @@ export const PlayerKhaulah: React.FC = () => {
       targetSquash.current.set(0.86, 1.25, 0.86);
     }
 
-    // Gravity
-    velocityY.current -= gravity * dt;
-    pos.current.y += velocityY.current * dt;
-
-    // 4. Ground Collision Detection
+    // 4. Ground Collision Detection & Buoyancy
     let groundedThisFrame = false;
+
+    // Gravity & Boat lake water buoyancy
+    if (activeRide === 'boat') {
+      pos.current.y = 0.2 + Math.sin(state.clock.getElapsedTime() * 2.5) * 0.04;
+      velocityY.current = 0;
+      groundedThisFrame = true;
+    } else {
+      velocityY.current -= gravity * dt;
+      pos.current.y += velocityY.current * dt;
+    }
+
     const playerFeet = pos.current.y;
     const playerRadius = 0.55;
 
@@ -488,8 +644,22 @@ export const PlayerKhaulah: React.FC = () => {
       modelRef.current.scale.copy(squashScale.current);
     }
 
-    // Scooter Riding Stance OR Walking / Running Cycle
-    if (isRidingScooter) {
+    // Vehicle Stance: Boat / Fire Truck OR Scooter Riding Stance OR Walking / Running Cycle
+    if (activeRide === 'boat' || activeRide === 'firetruck') {
+      if (leftArmRef.current) {
+        leftArmRef.current.rotation.x = -0.7;
+        leftArmRef.current.rotation.y = 0.25;
+        leftArmRef.current.rotation.z = -0.15;
+      }
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x = -0.7;
+        rightArmRef.current.rotation.y = -0.25;
+        rightArmRef.current.rotation.z = 0.15;
+      }
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.4;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.4;
+      if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.3;
+    } else if (isRidingScooter) {
       if (leftArmRef.current) {
         leftArmRef.current.rotation.x = -0.75;
         leftArmRef.current.rotation.y = 0.2;
@@ -1142,6 +1312,24 @@ export const PlayerKhaulah: React.FC = () => {
 
           {/* Sparkle Tail Trail behind scooter rear */}
           <pointLight color="#FF007F" intensity={0.9} distance={2.5} position={[0, 0.1, 0.48]} />
+        </group>
+      )}
+
+      {/* ======================================================== */}
+      {/* 7. PERAHU BEBEK KAYUH KETIKA DIKENDARAI                  */}
+      {/* ======================================================== */}
+      {activeRide === 'boat' && (
+        <group position={[0, -0.15, 0]}>
+          <SwanBoatModel isRiding />
+        </group>
+      )}
+
+      {/* ======================================================== */}
+      {/* 8. MOBIL DAMKAR CILIK KETIKA DIKENDARAI                  */}
+      {/* ======================================================== */}
+      {activeRide === 'firetruck' && (
+        <group position={[0, -0.2, 0]}>
+          <MiniFireTruckModel isRiding />
         </group>
       )}
     </group>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useGameStore, gameStore } from '../../state/useGameStore';
+import { soundManager } from '../../sound/audioManager';
 import {
   Star,
   Shirt,
@@ -22,6 +23,10 @@ const ZONE_NAMES = [
   'TK Karang Tengah 1 Atap 🎒',
   'Puncak Awan Gula-Gula ☁️',
   'Istana Bintang Khaulah 🏰',
+  'Taman Hewan & Peternakan 🐑',
+  'Danau Bebek & Pantai Pasir 🏖️',
+  'Desa Pertokoan & Damkar 🛒',
+  'Alun-Alun Karnaval Ceria 🎡',
 ];
 
 export const HUD: React.FC = () => {
@@ -123,6 +128,43 @@ export const HUD: React.FC = () => {
       if (distSq < 16.0) {
         gameStore.setActiveRide('swing');
       }
+    } else if (id === 'farm_bunny') {
+      gameStore.executeDialogAction('feed_animal');
+    } else if (id === 'farm_sheep') {
+      soundManager.playAnimalSound('sheep');
+      gameStore.setMessage('Mbaaa~ Domba berbulu awan kapas dielus lembut oleh Khaulah! 🐑💖');
+    } else if (id === 'pak_tani') {
+      gameStore.openDialog({
+        speaker: 'Pak Tani Ceria',
+        role: 'Sahabat Hewan & Kebun 👨‍🌾',
+        avatarBg: 'bg-emerald-600',
+        text: 'Assalamu\'alaikum Khaulah sayang! Senang sekali Khaulah berkunjung ke peternakan desa. Hewan-hewan jinak ini suka sekali makan wortel segar dan apel manis! Ayo beri makan kelinci lucunya ya!',
+        actionText: '🥕 Beri Wortel Segar ke Kelinci! ✨',
+        actionType: 'feed_animal',
+      });
+    } else if (id === 'swan_boat') {
+      gameStore.setActiveRide('boat');
+    } else if (id === 'mart_cashier') {
+      gameStore.executeDialogAction('scan_grocery');
+    } else if (id === 'bakery_cake') {
+      gameStore.openDialog({
+        speaker: 'Chef Bakery Ceria',
+        role: 'Pembuat Kue Manis 🧁',
+        avatarBg: 'bg-rose-500',
+        text: 'Assalamu\'alaikum Khaulah bidadari manis! Ini Chef baru saja memanggang donat meses pelangi dan kue ulang tahun lezat! Mau cicipi donatnya?',
+        actionText: '🍩 Cicipi Donat Pelangi! (+Speed Boost ⚡)',
+        actionType: 'buy_icecream',
+      });
+    } else if (id === 'firetruck') {
+      gameStore.setActiveRide('firetruck');
+    } else if (id === 'carousel') {
+      gameStore.setActiveRide('carousel');
+    } else if (id === 'ferris_wheel') {
+      gameStore.setActiveRide('ferris');
+    } else if (id === 'carnival_candy') {
+      gameStore.executeDialogAction('buy_icecream');
+    } else if (id === 'village_train') {
+      gameStore.setActiveRide('train');
     }
   };
 
@@ -323,10 +365,52 @@ export const HUD: React.FC = () => {
           </div>
         )}
 
-        {/* Swing Exit Prompt */}
-        {activeRide === 'swing' && (
-          <div className="pointer-events-auto bg-amber-400 text-amber-950 px-5 py-2 rounded-full font-bubble font-bold text-sm sm:text-base border-2 border-white shadow-xl animate-bounce">
-            Tekan [SPASI] untuk Lompat Turun dari Ayunan! 🎡
+        {/* Universal Active Ride Exit & Controls Prompt */}
+        {activeRide !== 'none' && activeRide !== 'slide' && (
+          <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-2.5 animate-bounce-slow">
+            {(activeRide === 'train' || activeRide === 'firetruck' || activeRide === 'boat') && (
+              <button
+                onClick={() => {
+                  if (activeRide === 'train') {
+                    soundManager.playTrainWhistle();
+                    gameStore.setMessage('Tuut.. tuuut! Kereta Mini Khaulah berangkat! 🚂💨');
+                  } else if (activeRide === 'firetruck') {
+                    soundManager.playFireSiren();
+                    gameStore.setMessage('Niu.. niu.. niu! Pasukan Damkar Cilik Khaulah siap menolong! 🚒🚨');
+                  } else if (activeRide === 'boat') {
+                    soundManager.playWaterSplash();
+                    gameStore.setMessage('Kecipak kecipuk! Perahu bebek Khaulah mendayung riang! 🦢🌊');
+                  }
+                }}
+                className="bg-amber-400 hover:bg-amber-500 text-amber-950 px-4 sm:px-5 py-2.5 rounded-full font-bubble font-bold text-xs sm:text-sm border-2 border-white shadow-xl flex items-center gap-1.5 active:scale-90 transition-transform"
+              >
+                <span>
+                  {activeRide === 'train'
+                    ? '🔔 Peluit Kereta [H]'
+                    : activeRide === 'firetruck'
+                    ? '🚨 Sirine Damkar [H]'
+                    : '🌊 Ciprat Air [H]'}
+                </span>
+              </button>
+            )}
+            <button
+              onClick={() => gameStore.setActiveRide('none')}
+              className="bg-rose-500 hover:bg-rose-600 text-white px-5 sm:px-6 py-2.5 rounded-full font-bubble font-bold text-xs sm:text-sm border-2 border-white shadow-xl flex items-center gap-1.5 active:scale-90 transition-transform"
+            >
+              <span>
+                {activeRide === 'swing'
+                  ? 'Turun dari Ayunan [SPASI / E]'
+                  : activeRide === 'carousel'
+                  ? '🎠 Turun Komedi Putar [E]'
+                  : activeRide === 'ferris'
+                  ? '🎡 Turun Bianglala [E]'
+                  : activeRide === 'train'
+                  ? '🚂 Turun Kereta [E]'
+                  : activeRide === 'boat'
+                  ? '🦢 Turun Perahu [E]'
+                  : '🚒 Turun Damkar [E]'}
+              </span>
+            </button>
           </div>
         )}
 

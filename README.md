@@ -27,37 +27,67 @@ Game web 3D interaktif yang dibuat dengan teknologi modern (React 18, Three.js, 
 3. **🌉 Lanskap Desa yang Asri & Jembatan Kayu**:
    - Teras rumah Khaulah dengan atap terakota, bangku taman kayu, dan jalan setapak bebatuan.
    - Sungai kecil dengan air berkilau jernih, bunga teratai, dan Bebek Kuki yang berenang santai.
-   - Jembatan kayu melengkung yang menghubungkan rumah Khaulah menuju gerbang TK.
+   - Jembatan kayu melengkung yang menghubungkan rumah Khaulah menuju gerbang TK, dan jembatan ke area barat & timur.
 
-4. **🛴 Skuter Pink Khaulah & Bel Kring**:
+4. **🐑 Taman Hewan & Kebun Buah Ceria (Petting Farm)**:
+   - **Kandang Kelinci**: Kelinci-kelinci lucu melompat riang, Khaulah bisa memberi makan wortel segar (`E`).
+   - **Domba Berbulu Awan**: Domba jinak yang bisa dielus lembut (`E`) dengan suara *"Mbaaa~"*.
+   - **Kandang Kuda Poni**: Kuda poni karamel dengan pelana pink manis di kandang beratap kayu.
+   - **Kebun Buah Apel & Jeruk**: Pohon buah rimbun siap panen bersama Pak Tani Ceria.
+
+5. **🏖️ Danau Bebek Kayuh & Pantai Pasir Emas (Sunny Beach & Lake)**:
+   - **Perahu Bebek Kayuh (Swan Boat)**: Khaulah bisa menaiki perahu bebek (`E`) untuk mendayung mengarungi danau berkilau dengan efek cipratan air!
+   - **Istana Pasir Raksasa (Walk-Through)**: Istana pasir megah dengan 4 menara dan lorong rahasia tempat bintang emas bersembunyi.
+   - **Payung Pantai & Kerang Mutiara**: Tempat bersantai ceria dengan kerang mutiara yang berkilauan.
+
+6. **🛒 Desa Pertokoan Cilik & Pos Damkar (Town Street)**:
+   - **Khaulah Mart**: Minimarket ramah anak dengan rak susu stroberi, jus, dan mesin kasir yang berbunyi *"Tiiit!"* saat belanja (`E`).
+   - **Toko Roti & Kue Manis (Bakery)**: Etalase kue ulang tahun dan donat pelangi lezat (+speed boost!).
+   - **Mobil Pemadam Mini Merah (Mini Fire Truck)**: Khaulah bisa mengendarai mobil damkar (`E`) keliling jalan aspal desa dan membunyikan sirine *"Niu.. niu.. niu!"* (`H`)!
+
+7. **🎡 Pasar Malam & Karnaval Ceria (Funfair Theme Park)**:
+   - **Komedi Putar (Carousel)**: 4 kuda poni kayu warna-warni yang berputar dan naik-turun dengan musik karnaval merdu (`E`).
+   - **Bianglala Mini (Ferris Wheel)**: 6 gondola pastel yang berputar membawa Khaulah naik tinggi ke langit melihat pemandangan seluruh pulau (`E`).
+   - **Stan Gulali & Es Krim Pelangi**: Stan manis dengan lolipop raksasa yang memberikan efek lari kilau bintang.
+   - **Kolam Pancing Bebek**: Kolam bebek mengapung berhadiah bintang prestasi.
+
+8. **🚂 Kereta Mini Keliling Desa (Choo-Choo Train)**:
+   - Rel kereta api lengkap mengitari batas pulau menghubungkan 4 stasiun:
+     1. *Stasiun Rumah Khaulah 🏡*
+     2. *Stasiun Kebun & Danau 🐑🏖️*
+     3. *Stasiun TK Karang Tengah 🎒🏫*
+     4. *Stasiun Karnaval & Kota 🎡🛒*
+   - Lokomotif uap biru mengepulkan asap putih, Khaulah bisa naik menjadi masinis (`E`) dan meniup peluit *"Tuut.. tuuut!"* (`H`)!
+
+9. **🛴 Skuter Pink Khaulah & Bel Kring**:
    - Di dekat teras rumah terparkir skuter pink lucu dengan keranjang bunga, lampu bulat, dan bel emas!
    - Khaulah bisa menaiki skuter (`E`) untuk ngebut 16–21 km/jam melintasi desa dengan jejak partikel glitter pink.
    - Tekan `H` untuk membunyikan bel *"Kring.. kring.. kring!"* yang merdu.
 
-5. **🎒 Misi Persiapan TK & Ibu Santi**:
-   - Cari 3 perlengkapan sekolah: **Tas Ransel TK** di teras, **Botol Minum Lucu** di kebun bunga, dan **Buku Gambar Ceria** di tepi sungai!
-   - Temui **Ibu Santi** di depan gerbang TK Karang Tengah untuk menyelesaikan misi dan mendapatkan **3 Bintang Emas Penghargaan**!
+10. **🎒 Misi Persiapan TK & Ibu Santi**:
+    - Cari 3 perlengkapan sekolah: **Tas Ransel TK** di teras, **Botol Minum Lucu** di kebun bunga, dan **Buku Gambar Ceria** di tepi sungai!
+    - Temui **Ibu Santi** di depan gerbang TK Karang Tengah untuk menyelesaikan misi dan mendapatkan **3 Bintang Emas Penghargaan**!
 
-6. **🌅 Mode Waktu Ajaib (Siang ☀️, Senja 🌇, Malam Berbintang 🌙)**:
-   - Tombol pengubah waktu di pojok atas:
-     - **Pagi Ceria ☀️**: Langit biru pastel dengan awan putih mengapung.
-     - **Senja Hangat 🌇**: Semburat jingga keemasan yang syahdu di desa.
-     - **Malam Berbintang 🌙**: Langit malam bertabur ribuan bintang, lentera hangat di jembatan dan gerbang menyala, serta kunang-kunang (*fireflies*) hijau bercahaya beterbangan di atas sungai!
+11. **🌅 Mode Waktu Ajaib (Siang ☀️, Senja 🌇, Malam Berbintang 🌙)**:
+    - Tombol pengubah waktu di pojok atas:
+      - **Pagi Ceria ☀️**: Langit biru pastel dengan awan putih mengapung.
+      - **Senja Hangat 🌇**: Semburat jingga keemasan yang syahdu di desa, lentera jalan menyala hangat.
+      - **Malam Berbintang 🌙**: Langit malam bertabur ribuan bintang, lentera hangat di jembatan dan gerbang menyala, serta kunang-kunang (*fireflies*) hijau bercahaya beterbangan di atas sungai!
 
-7. **🌈 Jalur Pelangi Ajaib ke Istana Bintang**:
-   - Di balik sekolah TK terdapat gerbang portal pelangi menuju balok-balok angkasa, trampolin pantul super tinggi, pulau awan gula-gula, dan Istana Bintang Khaulah di puncak langit!
-   - 28 bintang ajaib (25 bintang alam + 3 bintang prestasi Ibu Santi).
+12. **🌈 Jalur Pelangi Ajaib ke Istana Bintang**:
+    - Di balik sekolah TK terdapat gerbang portal pelangi menuju balok-balok angkasa, trampolin pantul super tinggi, pulau awan gula-gula, dan Istana Bintang Khaulah di puncak langit!
+    - 45 Bintang Ajaib yang tersebar di seluruh pulau untuk dikumpulkan!
 
-8. **🎮 Kontrol MacBook M2 yang Ramah Anak**:
-   - `W` / `A` / `S` / `D` atau Tombol Panah: Berjalan / Mengendarai Skuter.
-   - `Spasi`: Melompat (*dengan coyote-time & jump buffer*).
-   - `E`: Bicara dengan keluarga & Ibu Santi, Main perosotan/ayunan, atau Naik/Turun Skuter!
-   - `H`: Bel klakson skuter *"Kring.. kring!"* 🔔
-   - `Trackpad 2 Jari / Klik Kanan`: Putar kamera 360°.
-   - `Scroll Trackpad`: Zoom in / zoom out kamera.
-   - `Shift`: Mengaktifkan *Shift Lock*.
-   - `Q`: Berjoget ceria 💃
-   - `R`: Kembali ke checkpoint aman 🔄
+13. **🎮 Kontrol MacBook M2 yang Ramah Anak**:
+    - `W` / `A` / `S` / `D` atau Tombol Panah: Berjalan / Mengendarai Skuter / Mengemudi Damkar / Perahu.
+    - `Spasi`: Melompat (*dengan coyote-time & jump buffer*) / Turun dari wahana.
+    - `E`: Interaksi belanja, memberi makan hewan, naik/turun wahana (Kereta, Komedi Putar, Bianglala, Perahu, Skuter, Damkar).
+    - `H`: Klakson & Bunyi Khas (Bel Skuter *"Kring"*, Peluit Kereta *"Tuut"*, Sirine Damkar *"Niu-niu"*, Ciprat Air Perahu).
+    - `Trackpad 2 Jari / Klik Kanan`: Putar kamera 360°.
+    - `Scroll Trackpad`: Zoom in / zoom out kamera.
+    - `Shift`: Mengaktifkan *Shift Lock*.
+    - `Q`: Berjoget ceria 💃
+    - `R`: Kembali ke checkpoint aman 🔄
 
 ---
 
