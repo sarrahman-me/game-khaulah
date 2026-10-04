@@ -69,38 +69,38 @@ export const PlayerKhaulah: React.FC = () => {
           if (near.id === 'abi') {
             gameStore.openDialog({
               speaker: 'Abi',
-              role: 'Ayah Hebat',
+              role: 'Ayah Tercinta 💻',
               avatarBg: 'bg-blue-600',
-              text: 'Assalamu\'alaikum Khaulah sayang! Semangat belajar dan bermain di TK Karang Tengah ya. Khaulah adalah anak shalihah kebanggaan Abi!',
-              actionText: '✋ Tos Hebat sama Abi!',
+              text: 'Assalamu\'alaikum Khaulah putri shalihah Abi! Abi sedang fokus menyelesaikan pekerjaan dan coding di laptop untuk keluarga. Tapi melihat senyum ceria Khaulah membuat lelah Abi langsung hilang! Semangat selalu ya nak!',
+              actionText: '💻 Tos Semangat sama Abi! ✨',
               actionType: 'high_five',
             });
           } else if (near.id === 'ummi') {
             gameStore.openDialog({
               speaker: 'Ummi',
-              role: 'Ibu Tercinta',
+              role: 'Ibu Tercinta Bercadar 🧕',
               avatarBg: 'bg-rose-500',
-              text: 'Khaulah sayang, Ummi sudah siapkan kue pelangi lezat untuk bekal Khaulah. Habiskan ya sayang, supaya Khaulah bertenaga dan lari super cepat!',
-              actionText: '🍰 Ambil Bekal Cinta Ummi (+Speed Boost!)',
+              text: 'Assalamu\'alaikum Khaulah bidadari kecil Ummi! Kebersihan itu sebagian dari iman, nak. Ummi sedang menyapu teras agar rumah kita selalu asri dan rapi. Ummi sudah siapkan bekal cinta terenak untuk Khaulah, ayo ambil sayang!',
+              actionText: '🧹 Ambil Bekal Berkah Ummi! (+Speed Boost ⚡)',
               actionType: 'take_snack',
             });
           } else if (near.id === 'khalid') {
             gameStore.openDialog({
               speaker: 'Adek Khalid',
-              role: 'Adik Periang',
+              role: 'Pemain Drumband Cilik 👦🥁',
               avatarBg: 'bg-amber-500',
-              text: 'Mbak Khaulah! Ayo main bola bareng Khalid! Nanti kita main ayunan bareng di TK ya!',
-              actionText: '⚽ Main Bola Bersama Khalid!',
-              actionType: 'play_ball',
+              text: 'Mbak Khaulah lihat nih! Khalid lagi latihan drumband! Dum-tak-tak-dum ratatat! Nanti pas pawai drum band di TK, Khalid mau main paling hebat bareng Mbak Khaulah!',
+              actionText: '🥁 Main Drumband Bareng Khalid! 🎶',
+              actionType: 'play_drumband',
             });
           } else if (near.id === 'faqih') {
             gameStore.openDialog({
               speaker: 'Adek Faqih',
-              role: 'Adik Bayi Lucu',
+              role: 'Adik Gemas Balap Mobilan 👶🚗',
               avatarBg: 'bg-emerald-500',
-              text: 'Ciluk... BAAA! Adek Faqih tersenyum gembira sambil menggoyangkan mainan kerincingan melihat Mbak Khaulah!',
-              actionText: '👶 Peluk Sayang Adek Faqih!',
-              actionType: 'cuddle_baby',
+              text: 'Ngeeeng! Brum brum pip pip! Adek Faqih lagi seru banget ngebutin mobil-mobilan di karpet lintasan! Mbak Khaulah ayo balapan mobilan bareng Faqih!',
+              actionText: '🚗 Balapan Mobilan bareng Faqih! 💨',
+              actionType: 'play_toycar',
             });
           } else if (near.id === 'slide') {
             gameStore.setActiveRide('slide');
@@ -562,150 +562,140 @@ export const PlayerKhaulah: React.FC = () => {
         {/* 1. HEAD & BEAUTIFUL HIJAB (WAJAH MANIS & JILBAB PUTIH KHAULAH) */}
         {/* ======================================================== */}
         <group ref={headRef} position={[0, 1.52, 0]}>
-          {/* Face Base: Kulit Halus Sawo Matang Manis */}
+          {/* Face Base: Kulit Halus Bersih Manis */}
           <mesh castShadow>
             <sphereGeometry args={[0.34, 32, 32]} />
-            <meshStandardMaterial color="#F5CEAB" roughness={0.4} />
+            <meshStandardMaterial color="#F7D5B8" roughness={0.4} />
           </mesh>
 
-          {/* --- DUA MATA BULAT BESAR BERBINAR (LEFT & RIGHT EYES) --- */}
+          {/* --- DUA MATA BERSIH, INDAH, JELAS, DAN CERIA (TANPA KESAN TOPENG) --- */}
           {/* MATA KIRI (LEFT EYE) */}
-          <group ref={leftEyeRef} position={[-0.13, 0.04, 0.312]} rotation={[0, -0.1, 0]}>
-          {/* Putih Mata (Sclera) */}
-          <mesh>
-            <sphereGeometry args={[0.075, 16, 16]} />
-            <meshBasicMaterial color="#FFFFFF" />
-          </mesh>
-          {/* Iris Cokelat Hangat */}
-          <mesh position={[0, 0, 0.018]}>
-            <sphereGeometry args={[0.052, 16, 16]} />
-            <meshStandardMaterial color="#2B1810" roughness={0.2} />
-          </mesh>
-          {/* Pupil Hitam */}
-          <mesh position={[0, 0, 0.03]}>
-            <sphereGeometry args={[0.036, 16, 16]} />
-            <meshBasicMaterial color="#0A050A" />
-          </mesh>
-          {/* Kilau Cahaya Utama (Sparkle 1) */}
-          <mesh position={[-0.018, 0.02, 0.042]}>
-            <sphereGeometry args={[0.016, 12, 12]} />
-            <meshBasicMaterial color="#FFFFFF" />
-          </mesh>
-          {/* Kilau Cahaya Sekunder (Sparkle 2) */}
-          <mesh position={[0.018, -0.018, 0.042]}>
-            <sphereGeometry args={[0.009, 8, 8]} />
-            <meshBasicMaterial color="#FFFFFF" />
-          </mesh>
-          {/* Garis Kelopak Mata Atas Lembut */}
-          <mesh position={[0, 0.062, 0.022]} rotation={[0, 0, 0.05]}>
-            <boxGeometry args={[0.11, 0.018, 0.02]} />
-            <meshBasicMaterial color="#1E1216" />
-          </mesh>
-        </group>
+          <group ref={leftEyeRef} position={[-0.115, 0.04, 0.322]}>
+            {/* Putih Mata Bersih (Sclera) */}
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.058, 0.058, 0.006, 16]} />
+              <meshBasicMaterial color="#FFFFFF" />
+            </mesh>
+            {/* Iris Cokelat Hangat & Pupil */}
+            <mesh position={[0, 0, 0.004]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.044, 0.044, 0.006, 16]} />
+              <meshBasicMaterial color="#2B1810" />
+            </mesh>
+            {/* Pupil Hitam Tengah */}
+            <mesh position={[0, 0, 0.007]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.028, 0.028, 0.006, 16]} />
+              <meshBasicMaterial color="#110B0E" />
+            </mesh>
+            {/* Kilau Cahaya Utama (Sparkle 1) */}
+            <mesh position={[-0.015, 0.016, 0.012]}>
+              <sphereGeometry args={[0.014, 10, 10]} />
+              <meshBasicMaterial color="#FFFFFF" />
+            </mesh>
+            {/* Kilau Cahaya Sekunder (Sparkle 2) */}
+            <mesh position={[0.014, -0.014, 0.012]}>
+              <sphereGeometry args={[0.008, 8, 8]} />
+              <meshBasicMaterial color="#FFFFFF" />
+            </mesh>
+            {/* Garis Kelopak Mata Atas Halus & Ramping */}
+            <mesh position={[0, 0.052, 0.005]} rotation={[0, 0, 0.06]}>
+              <boxGeometry args={[0.08, 0.008, 0.008]} />
+              <meshBasicMaterial color="#2B1810" />
+            </mesh>
+          </group>
 
-        {/* MATA KANAN (RIGHT EYE) - IDENTIK DAN JELAS KELIHATAN */}
-        <group ref={rightEyeRef} position={[0.13, 0.04, 0.312]} rotation={[0, 0.1, 0]}>
-          {/* Putih Mata (Sclera) */}
-          <mesh>
-            <sphereGeometry args={[0.075, 16, 16]} />
-            <meshBasicMaterial color="#FFFFFF" />
+          {/* MATA KANAN (RIGHT EYE) */}
+          <group ref={rightEyeRef} position={[0.115, 0.04, 0.322]}>
+            {/* Putih Mata Bersih (Sclera) */}
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.058, 0.058, 0.006, 16]} />
+              <meshBasicMaterial color="#FFFFFF" />
+            </mesh>
+            {/* Iris Cokelat Hangat & Pupil */}
+            <mesh position={[0, 0, 0.004]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.044, 0.044, 0.006, 16]} />
+              <meshBasicMaterial color="#2B1810" />
+            </mesh>
+            {/* Pupil Hitam Tengah */}
+            <mesh position={[0, 0, 0.007]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.028, 0.028, 0.006, 16]} />
+              <meshBasicMaterial color="#110B0E" />
+            </mesh>
+            {/* Kilau Cahaya Utama (Sparkle 1) */}
+            <mesh position={[-0.015, 0.016, 0.012]}>
+              <sphereGeometry args={[0.014, 10, 10]} />
+              <meshBasicMaterial color="#FFFFFF" />
+            </mesh>
+            {/* Kilau Cahaya Sekunder (Sparkle 2) */}
+            <mesh position={[0.014, -0.014, 0.012]}>
+              <sphereGeometry args={[0.008, 8, 8]} />
+              <meshBasicMaterial color="#FFFFFF" />
+            </mesh>
+            {/* Garis Kelopak Mata Atas Halus & Ramping */}
+            <mesh position={[0, 0.052, 0.005]} rotation={[0, 0, -0.06]}>
+              <boxGeometry args={[0.08, 0.008, 0.008]} />
+              <meshBasicMaterial color="#2B1810" />
+            </mesh>
+          </group>
+
+          {/* ALIS LEMBUT RAMPING (Ditempatkan di atas, tidak menempel pada mata) */}
+          <mesh position={[-0.115, 0.135, 0.315]} rotation={[0, 0, 0.08]}>
+            <boxGeometry args={[0.075, 0.009, 0.008]} />
+            <meshBasicMaterial color="#3D261D" />
           </mesh>
-          {/* Iris Cokelat Hangat */}
-          <mesh position={[0, 0, 0.018]}>
-            <sphereGeometry args={[0.052, 16, 16]} />
-            <meshStandardMaterial color="#2B1810" roughness={0.2} />
+          <mesh position={[0.115, 0.135, 0.315]} rotation={[0, 0, -0.08]}>
+            <boxGeometry args={[0.075, 0.009, 0.008]} />
+            <meshBasicMaterial color="#3D261D" />
           </mesh>
-          {/* Pupil Hitam */}
-          <mesh position={[0, 0, 0.03]}>
-            <sphereGeometry args={[0.036, 16, 16]} />
-            <meshBasicMaterial color="#0A050A" />
+
+          {/* PIPI MERONA MANIS LEMBUT */}
+          <mesh position={[-0.17, -0.045, 0.30]}>
+            <circleGeometry args={[0.042, 16]} />
+            <meshBasicMaterial color="#FF8DA1" transparent opacity={0.65} />
           </mesh>
-          {/* Kilau Cahaya Utama (Sparkle 1) */}
-          <mesh position={[-0.018, 0.02, 0.042]}>
-            <sphereGeometry args={[0.016, 12, 12]} />
-            <meshBasicMaterial color="#FFFFFF" />
+          <mesh position={[0.17, -0.045, 0.30]}>
+            <circleGeometry args={[0.042, 16]} />
+            <meshBasicMaterial color="#FF8DA1" transparent opacity={0.65} />
           </mesh>
-          {/* Kilau Cahaya Sekunder (Sparkle 2) */}
-          <mesh position={[0.018, -0.018, 0.042]}>
-            <sphereGeometry args={[0.009, 8, 8]} />
-            <meshBasicMaterial color="#FFFFFF" />
+
+          {/* HIDUNG CILIK MANIS */}
+          <mesh position={[0, 0.005, 0.338]}>
+            <sphereGeometry args={[0.018, 10, 10]} />
+            <meshStandardMaterial color="#E8A888" roughness={0.5} />
           </mesh>
-          {/* Garis Kelopak Mata Atas Lembut */}
-          <mesh position={[0, 0.062, 0.022]} rotation={[0, 0, -0.05]}>
-            <boxGeometry args={[0.11, 0.018, 0.02]} />
-            <meshBasicMaterial color="#1E1216" />
+
+          {/* SENYUM MANIS CERIA KHAULAH */}
+          <group position={[0, -0.08, 0.325]}>
+            {/* Curved Smile Line */}
+            <mesh position={[0, 0, 0]}>
+              <torusGeometry args={[0.055, 0.012, 8, 16, Math.PI]} />
+              <meshStandardMaterial color="#C2185B" />
+            </mesh>
+            {/* Gigi Putih Rapi Mungil */}
+            <mesh position={[0, 0.008, 0.002]}>
+              <boxGeometry args={[0.065, 0.012, 0.008]} />
+              <meshBasicMaterial color="#FFFFFF" />
+            </mesh>
+          </group>
+
+          {/* JILBAB PUTIH BERGO BERSIH (OUTER HIJAB HOOD - TANPA CIPUT GELAP) */}
+          <mesh position={[0, 0.04, -0.05]} castShadow>
+            <sphereGeometry args={[0.375, 32, 28]} />
+            <meshStandardMaterial color="#FFFFFF" roughness={0.5} />
           </mesh>
-        </group>
 
-        {/* ALIS LEMBUT KIRI (LEFT EYEBROW) */}
-        <mesh position={[-0.13, 0.15, 0.3]} rotation={[0, 0, 0.08]}>
-          <boxGeometry args={[0.11, 0.022, 0.018]} />
-          <meshBasicMaterial color="#261A1D" />
-        </mesh>
-
-        {/* ALIS LEMBUT KANAN (RIGHT EYEBROW) */}
-        <mesh position={[0.13, 0.15, 0.3]} rotation={[0, 0, -0.08]}>
-          <boxGeometry args={[0.11, 0.022, 0.018]} />
-          <meshBasicMaterial color="#261A1D" />
-        </mesh>
-
-        {/* PIPI MERONA KIRI (LEFT BLUSH) */}
-        <mesh position={[-0.19, -0.05, 0.28]}>
-          <sphereGeometry args={[0.05, 16, 16]} />
-          <meshStandardMaterial color="#F48FB1" roughness={0.6} />
-        </mesh>
-
-        {/* PIPI MERONA KANAN (RIGHT BLUSH) */}
-        <mesh position={[0.19, -0.05, 0.28]}>
-          <sphereGeometry args={[0.05, 16, 16]} />
-          <meshStandardMaterial color="#F48FB1" roughness={0.6} />
-        </mesh>
-
-        {/* HIDUNG CILIK MANIS */}
-        <mesh position={[0, 0.0, 0.335]}>
-          <sphereGeometry args={[0.024, 12, 12]} />
-          <meshStandardMaterial color="#E2A984" roughness={0.5} />
-        </mesh>
-
-        {/* SENYUM MANIS BERGIGI RAPI & CERIA */}
-        <group position={[0, -0.095, 0.325]}>
-          {/* Sweet Open Smile with Soft Curved Shape */}
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.08, 0.08, 0.02, 16, 1, false, Math.PI, Math.PI]} />
-            <meshBasicMaterial color="#B71C1C" />
+          {/* BINGKAI BERGO LEMBUT MEMBINGKAI WAJAH DENGAN RAPI */}
+          <mesh position={[0, 0.06, 0.08]} rotation={[0.22, 0, 0]}>
+            <torusGeometry args={[0.335, 0.038, 16, 32, Math.PI * 1.5]} />
+            <meshStandardMaterial color="#FFFFFF" roughness={0.5} />
           </mesh>
-          {/* Gigi Putih Rapi di Bagian Atas */}
-          <mesh position={[0, 0.018, 0.008]}>
-            <boxGeometry args={[0.11, 0.022, 0.012]} />
-            <meshBasicMaterial color="#FFFFFF" />
-          </mesh>
-        </group>
 
-        {/* CIPUT HITAM DI DAHI KHAULAH (INNER CIPUT MELENGKUNG RAPI) */}
-        <mesh position={[0, 0.16, 0.06]} rotation={[0.3, 0, 0]}>
-          <cylinderGeometry args={[0.33, 0.35, 0.14, 32, 1, true, -Math.PI * 0.45, Math.PI * 0.9]} />
-          <meshStandardMaterial color="#1E1E22" roughness={0.7} side={THREE.DoubleSide} />
-        </mesh>
-
-        {/* JILBAB PUTIH BAGIAN ATAS & BELAKANG (OUTER HIJAB HOOD) */}
-        <mesh position={[0, 0.04, -0.05]} castShadow>
-          <sphereGeometry args={[0.375, 32, 28]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.5} />
-        </mesh>
-
-        {/* BINGKAI BERGO MELENGKUNG LEMBUT DI SEKELILING WAJAH */}
-        <mesh position={[0, 0.06, 0.08]} rotation={[0.22, 0, 0]}>
-          <torusGeometry args={[0.335, 0.045, 16, 32, Math.PI * 1.5]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.5} />
-        </mesh>
-
-        {/* JILBAB BERGO MENJUTAI KE BAHU (SHOULDER DRAPE) */}
-        <group ref={hijabDrapeRef} position={[0, -0.05, 0.01]}>
-          <mesh position={[0, -0.17, 0]}>
-            <cylinderGeometry args={[0.26, 0.52, 0.38, 32]} />
-            <meshStandardMaterial color="#FFFFFF" roughness={0.55} />
-          </mesh>
-        </group>
+          {/* JILBAB BERGO MENJUNTAI KE BAHU (SHOULDER DRAPE) */}
+          <group ref={hijabDrapeRef} position={[0, -0.05, 0.01]}>
+            <mesh position={[0, -0.17, 0]}>
+              <cylinderGeometry args={[0.26, 0.52, 0.38, 32]} />
+              <meshStandardMaterial color="#FFFFFF" roughness={0.55} />
+            </mesh>
+          </group>
 
         {/* --- ACCESSORIES (Bisa Dipakai di Atas Hijab) --- */}
         {activeAccessory === 'princess_crown' && (

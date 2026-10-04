@@ -12,7 +12,7 @@ export interface FamilyDialogData {
   avatarBg: string;
   text: string;
   actionText?: string;
-  actionType?: 'high_five' | 'take_snack' | 'play_ball' | 'cuddle_baby';
+  actionType?: 'high_five' | 'take_snack' | 'play_ball' | 'cuddle_baby' | 'play_drumband' | 'play_toycar';
 }
 
 export interface GameState {
@@ -279,41 +279,43 @@ export const gameStore = {
     emitChange();
   },
 
-  executeDialogAction: (actionType: 'high_five' | 'take_snack' | 'play_ball' | 'cuddle_baby') => {
+  executeDialogAction: (actionType: 'high_five' | 'take_snack' | 'play_ball' | 'cuddle_baby' | 'play_drumband' | 'play_toycar') => {
     if (actionType === 'high_five') {
       soundManager.playHighFive();
-      confetti({ particleCount: 35, spread: 70, origin: { y: 0.7 } });
+      soundManager.playKeyboardTyping();
+      confetti({ particleCount: 40, spread: 75, origin: { y: 0.7 } });
       state = {
         ...state,
-        bubbleMessage: 'Tos hebat sama Abi! "Khaulah anak hebat dan shalihah!" ✋✨',
+        bubbleMessage: 'Tos hebat sama Abi! "Khaulah anak cerdas & shalihah kebanggaan Abi!" 💻✨',
         activeDialog: null,
       };
       emitChange();
     } else if (actionType === 'take_snack') {
+      soundManager.playBroomSweep();
       soundManager.playSnackBuff();
-      confetti({ particleCount: 45, spread: 80, origin: { y: 0.7 } });
+      confetti({ particleCount: 50, spread: 85, origin: { y: 0.7 } });
       state = {
         ...state,
-        speedBuffTimeLeft: 18, // 18 seconds of speed buff
-        bubbleMessage: 'Nyam! Bekal Cinta Ummi membuat Khaulah berlari super cepat! 🍰⚡',
+        speedBuffTimeLeft: 20, // 20 seconds of speed buff
+        bubbleMessage: 'Alhamdulillah! Ummi bercadar tersenyum bahagia. Bekal Cinta & Berkah Ummi memberi Khaulah energi super cepat! 🧕🧹⚡',
         activeDialog: null,
       };
       emitChange();
-    } else if (actionType === 'play_ball') {
-      soundManager.playStarCollect();
-      confetti({ particleCount: 25, spread: 60, origin: { y: 0.8 } });
+    } else if (actionType === 'play_drumband' || actionType === 'play_ball') {
+      soundManager.playDrumband();
+      confetti({ particleCount: 45, spread: 70, origin: { y: 0.75 } });
       state = {
         ...state,
-        bubbleMessage: 'Hore! Khaulah dan Khalid asyik bermain bola bersama! ⚽🎉',
+        bubbleMessage: 'Ratatat! Adek Khalid dan Mbak Khaulah asyik memainkan irama drumband penuh semangat! 🥁🎶',
         activeDialog: null,
       };
       emitChange();
-    } else if (actionType === 'cuddle_baby') {
-      soundManager.playBabyGiggle();
-      confetti({ particleCount: 25, spread: 60, origin: { y: 0.8 } });
+    } else if (actionType === 'play_toycar' || actionType === 'cuddle_baby') {
+      soundManager.playToyCar();
+      confetti({ particleCount: 35, spread: 65, origin: { y: 0.8 } });
       state = {
         ...state,
-        bubbleMessage: 'Adek Faqih tertawa ceria saat dipeluk Mbak Khaulah! 💕👶',
+        bubbleMessage: 'Brum brum pip pip! Adek Faqih tertawa riang balapan mobilan bareng Mbak Khaulah! 🚗💨👶',
         activeDialog: null,
       };
       emitChange();

@@ -28,38 +28,38 @@ export const HUD: React.FC = () => {
     if (id === 'abi') {
       gameStore.openDialog({
         speaker: 'Abi',
-        role: 'Ayah Hebat',
+        role: 'Ayah Tercinta 💻',
         avatarBg: 'bg-blue-600',
-        text: 'Assalamu\'alaikum Khaulah sayang! Semangat belajar dan bermain di TK Karang Tengah ya. Khaulah adalah anak shalihah kebanggaan Abi!',
-        actionText: '✋ Tos Hebat sama Abi!',
+        text: 'Assalamu\'alaikum Khaulah putri shalihah Abi! Abi sedang fokus menyelesaikan pekerjaan dan coding di laptop untuk keluarga. Tapi melihat senyum ceria Khaulah membuat lelah Abi langsung hilang! Semangat selalu ya nak!',
+        actionText: '💻 Tos Semangat sama Abi! ✨',
         actionType: 'high_five',
       });
     } else if (id === 'ummi') {
       gameStore.openDialog({
         speaker: 'Ummi',
-        role: 'Ibu Tercinta',
+        role: 'Ibu Tercinta Bercadar 🧕',
         avatarBg: 'bg-rose-500',
-        text: 'Khaulah sayang, Ummi sudah siapkan kue pelangi lezat untuk bekal Khaulah. Habiskan ya sayang, supaya Khaulah bertenaga dan lari super cepat!',
-        actionText: '🍰 Ambil Bekal Cinta Ummi (+Speed Boost!)',
+        text: 'Assalamu\'alaikum Khaulah bidadari kecil Ummi! Kebersihan itu sebagian dari iman, nak. Ummi sedang menyapu teras agar rumah kita selalu asri dan rapi. Ummi sudah siapkan bekal cinta terenak untuk Khaulah, ayo ambil sayang!',
+        actionText: '🧹 Ambil Bekal Berkah Ummi! (+Speed Boost ⚡)',
         actionType: 'take_snack',
       });
     } else if (id === 'khalid') {
       gameStore.openDialog({
         speaker: 'Adek Khalid',
-        role: 'Adik Periang',
+        role: 'Pemain Drumband Cilik 👦🥁',
         avatarBg: 'bg-amber-500',
-        text: 'Mbak Khaulah! Ayo main bola bareng Khalid! Nanti kita main ayunan bareng di TK ya!',
-        actionText: '⚽ Main Bola Bersama Khalid!',
-        actionType: 'play_ball',
+        text: 'Mbak Khaulah lihat nih! Khalid lagi latihan drumband! Dum-tak-tak-dum ratatat! Nanti pas pawai drum band di TK, Khalid mau main paling hebat bareng Mbak Khaulah!',
+        actionText: '🥁 Main Drumband Bareng Khalid! 🎶',
+        actionType: 'play_drumband',
       });
     } else if (id === 'faqih') {
       gameStore.openDialog({
         speaker: 'Adek Faqih',
-        role: 'Adik Bayi Lucu',
+        role: 'Adik Gemas Balap Mobilan 👶🚗',
         avatarBg: 'bg-emerald-500',
-        text: 'Ciluk... BAAA! Adek Faqih tersenyum gembira sambil menggoyangkan mainan kerincingan melihat Mbak Khaulah!',
-        actionText: '👶 Peluk Sayang Adek Faqih!',
-        actionType: 'cuddle_baby',
+        text: 'Ngeeeng! Brum brum pip pip! Adek Faqih lagi seru banget ngebutin mobil-mobilan di karpet lintasan! Mbak Khaulah ayo balapan mobilan bareng Faqih!',
+        actionText: '🚗 Balapan Mobilan bareng Faqih! 💨',
+        actionType: 'play_toycar',
       });
     } else if (id === 'slide') {
       gameStore.setActiveRide('slide');
@@ -110,7 +110,7 @@ export const HUD: React.FC = () => {
               </svg>
             </div>
             <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-yellow-950 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full border border-white shadow">
-              Khaulah (6th)
+              Khaulah
             </div>
           </div>
 
@@ -228,10 +228,10 @@ export const HUD: React.FC = () => {
 
             {/* Avatar Badge */}
             <div className={`w-20 h-20 mx-auto -mt-14 rounded-3xl ${activeDialog.avatarBg} border-4 border-white shadow-xl flex items-center justify-center text-3xl`}>
-              {activeDialog.speaker === 'Abi' && '👨‍👧'}
-              {activeDialog.speaker === 'Ummi' && '🧕💕'}
-              {activeDialog.speaker === 'Adek Khalid' && '👦⚽'}
-              {activeDialog.speaker === 'Adek Faqih' && '👶🍼'}
+              {activeDialog.speaker.includes('Abi') && '💻👨‍👧'}
+              {activeDialog.speaker.includes('Ummi') && '🧕🧹'}
+              {activeDialog.speaker.includes('Khalid') && '👦🥁'}
+              {activeDialog.speaker.includes('Faqih') && '👶🚗'}
             </div>
 
             {/* Speaker Name & Role */}

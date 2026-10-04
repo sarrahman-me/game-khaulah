@@ -369,6 +369,150 @@ class SoundEngine {
     });
   }
 
+  // Abi's Laptop keyboard typing sound: rapid crisp laptop keyclicks
+  public playKeyboardTyping() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    // Series of 5 rapid key clicks
+    const keyClicks = [
+      { t: 0.0, f: 1800 },
+      { t: 0.05, f: 1650 },
+      { t: 0.09, f: 1950 },
+      { t: 0.14, f: 1720 },
+      { t: 0.19, f: 2100 },
+    ];
+
+    keyClicks.forEach(({ t, f }) => {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, now + t);
+      osc.frequency.exponentialRampToValueAtTime(f * 0.4, now + t + 0.025);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.setValueAtTime(0.16, now + t);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.03);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now + t);
+      osc.stop(now + t + 0.035);
+    });
+  }
+
+  // Ummi's broom sweeping sound: gentle rhythmic brush swish
+  public playBroomSweep() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    // Two brush strokes
+    [0.0, 0.18].forEach((offset) => {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(320, now + offset);
+      osc.frequency.linearRampToValueAtTime(180, now + offset + 0.14);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.setValueAtTime(0.14, now + offset);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.15);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now + offset);
+      osc.stop(now + offset + 0.16);
+    });
+  }
+
+  // Khalid's drumband snare rhythm: energetic marching band drum cadence
+  public playDrumband() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    // Rhythmic marching beat: dum - tak - tak - DUM!
+    const drumHits = [
+      { t: 0.0, f: 190, tone: 'dum', gain: 0.28, len: 0.1 },
+      { t: 0.1, f: 290, tone: 'tak', gain: 0.32, len: 0.07 },
+      { t: 0.18, f: 310, tone: 'tak', gain: 0.32, len: 0.07 },
+      { t: 0.26, f: 210, tone: 'dum', gain: 0.35, len: 0.14 },
+    ];
+
+    drumHits.forEach((hit) => {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = hit.tone === 'tak' ? 'triangle' : 'sine';
+      const startT = now + hit.t;
+      osc.frequency.setValueAtTime(hit.f, startT);
+      osc.frequency.exponentialRampToValueAtTime(80, startT + hit.len);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.setValueAtTime(hit.gain, startT);
+      gain.gain.exponentialRampToValueAtTime(0.001, startT + hit.len);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(startT);
+      osc.stop(startT + hit.len + 0.02);
+    });
+  }
+
+  // Faqih's toy car sound: playful engine rev "vroom" + mini horn "pip pip!"
+  public playToyCar() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+
+    // 1. Engine revving
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(110, now);
+    osc.frequency.exponentialRampToValueAtTime(260, now + 0.22);
+    osc.frequency.exponentialRampToValueAtTime(150, now + 0.38);
+
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.42);
+
+    // 2. Cute double horn "pip pip!"
+    [0.42, 0.54].forEach((hornT) => {
+      if (!this.ctx) return;
+      const hornOsc = this.ctx.createOscillator();
+      const hornGain = this.ctx.createGain();
+
+      hornOsc.type = 'sine';
+      hornOsc.frequency.setValueAtTime(880, now + hornT);
+
+      hornGain.gain.setValueAtTime(0.001, now);
+      hornGain.gain.setValueAtTime(0.2, now + hornT);
+      hornGain.gain.exponentialRampToValueAtTime(0.001, now + hornT + 0.08);
+
+      hornOsc.connect(hornGain);
+      hornGain.connect(this.ctx.destination);
+      hornOsc.start(now + hornT);
+      hornOsc.stop(now + hornT + 0.09);
+    });
+  }
+
   // Cheerful background music: gentle procedural lullaby/marimba loop
   public startBgm() {
     if (this.bgmPlaying || this.isMuted) return;

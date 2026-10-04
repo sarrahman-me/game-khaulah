@@ -68,7 +68,7 @@ export const WelcomeModal: React.FC = () => {
             <div>
               <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">Keluarga Tercinta di Rumah</h4>
               <p className="text-gray-600 text-[11px] sm:text-xs">
-                Sapa <b>Abi</b>, ambil bekal lezat dari <b>Ummi</b>, main bola bareng <b>Khalid</b>, dan cilukba sama <b>Adek Faqih</b>!
+                Sapa <b>Abi</b> yang sedang bekerja di laptop, ambil bekal berkah <b>Ummi bercadar</b> yang menyapu, tabuh drumband bareng <b>Adek Khalid</b>, dan balapan mobilan sama <b>Adek Faqih</b>!
               </p>
             </div>
           </div>
