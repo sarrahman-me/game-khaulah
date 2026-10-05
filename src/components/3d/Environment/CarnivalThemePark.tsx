@@ -307,7 +307,12 @@ export const CarnivalThemePark: React.FC = () => {
         {/* Water */}
         <mesh position={[0, 0.45, 0]}>
           <cylinderGeometry args={[2.0, 2.0, 0.05, 20]} />
-          <meshStandardMaterial color="#0096C7" roughness={0.1} />
+          <meshStandardMaterial
+            color="#00B4D8"
+            emissive="#0077B6"
+            emissiveIntensity={0.25}
+            roughness={0.06}
+          />
         </mesh>
         {/* Floating Ducks in pool */}
         {[

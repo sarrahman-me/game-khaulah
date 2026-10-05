@@ -15,37 +15,52 @@ const AnimatedPoolWater: React.FC = () => {
   useFrame((state) => {
     if (!waterRef.current) return;
     const t = state.clock.getElapsedTime();
-    waterRef.current.position.y = 0.12 + Math.sin(t * 2.2) * 0.015;
+    waterRef.current.position.y = 0.28 + Math.sin(t * 2.2) * 0.012;
   });
 
   return (
     <group position={[4, 0, -24]}>
-      {/* Pool Basin Cavity Trench */}
-      <mesh position={[0, -0.45, 0]}>
-        <boxGeometry args={[12.2, 0.9, 8.2]} />
-        <meshStandardMaterial color="#0077B6" roughness={0.6} />
+      {/* Pool Basin Floor - Azure Mosaic Tiles */}
+      <mesh position={[0, 0.04, 0]}>
+        <boxGeometry args={[12.4, 0.08, 8.4]} />
+        <meshStandardMaterial color="#48CAE4" roughness={0.25} />
       </mesh>
-      {/* Pool Mosaic Blue Bottom */}
-      <mesh position={[0, -0.88, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[12, 8]} />
-        <meshStandardMaterial color="#0096C7" roughness={0.3} metalness={0.1} />
+
+      {/* Pool Basin Mosaic Interior Walls */}
+      <mesh position={[0, 0.18, 4.1]}>
+        <boxGeometry args={[12.4, 0.28, 0.2]} />
+        <meshStandardMaterial color="#0096C7" roughness={0.3} />
+      </mesh>
+      <mesh position={[0, 0.18, -4.1]}>
+        <boxGeometry args={[12.4, 0.28, 0.2]} />
+        <meshStandardMaterial color="#0096C7" roughness={0.3} />
+      </mesh>
+      <mesh position={[6.1, 0.18, 0]}>
+        <boxGeometry args={[0.2, 0.28, 8.2]} />
+        <meshStandardMaterial color="#0096C7" roughness={0.3} />
+      </mesh>
+      <mesh position={[-6.1, 0.18, 0]}>
+        <boxGeometry args={[0.2, 0.28, 8.2]} />
+        <meshStandardMaterial color="#0096C7" roughness={0.3} />
       </mesh>
 
       {/* Crystal Clear Swimming Pool Water Surface */}
-      <mesh ref={waterRef} position={[0, 0.12, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[11.8, 7.8]} />
+      <mesh ref={waterRef} position={[0, 0.28, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[12.0, 8.0]} />
         <meshStandardMaterial
           color="#00B4D8"
-          roughness={0.06}
+          emissive="#0077B6"
+          emissiveIntensity={0.32}
+          roughness={0.04}
+          metalness={0.0}
           transparent
-          opacity={0.82}
-          metalness={0.18}
+          opacity={0.86}
         />
       </mesh>
 
-      {/* Stainless Steel Pool Handrails */}
+      {/* Stainless Steel Pool Handrails at Entrance Steps */}
       {[-0.6, 0.6].map((hx, idx) => (
-        <group key={idx} position={[hx, 0.45, 4.0]}>
+        <group key={idx} position={[hx, 0.55, 4.0]}>
           <mesh castShadow>
             <cylinderGeometry args={[0.035, 0.035, 0.8, 12]} />
             <meshStandardMaterial color="#CED4DA" metalness={0.9} roughness={0.1} />
@@ -54,9 +69,9 @@ const AnimatedPoolWater: React.FC = () => {
       ))}
 
       {/* Built-in Shallow Entrance Steps */}
-      {[0.0, -0.3, -0.6].map((sy, idx) => (
+      {[0.20, 0.12, 0.06].map((sy, idx) => (
         <mesh key={idx} position={[0, sy, 3.4 - idx * 0.45]}>
-          <boxGeometry args={[2.6, 0.28, 0.5]} />
+          <boxGeometry args={[2.6, 0.08, 0.45]} />
           <meshStandardMaterial color="#90E0EF" roughness={0.4} />
         </mesh>
       ))}
@@ -81,7 +96,7 @@ const WaterMushroomFountain: React.FC = () => {
   });
 
   return (
-    <group position={[0, 0.1, -21.5]}>
+    <group position={[0, 0.28, -21.5]}>
       {/* Mushroom Fountain Stem */}
       <mesh position={[0, 0.8, 0]} castShadow>
         <cylinderGeometry args={[0.12, 0.18, 1.5, 12]} />
@@ -529,13 +544,27 @@ export const BackyardWaterpark: React.FC = () => {
       new THREE.Vector3(-11.5, 0.4, -29.5)
     );
 
-    const c1 = { box: slideTopBox, type: 'ground' as const };
-    const c2 = { box: treehouseBox, type: 'ground' as const };
-    const c3 = { box: campBox, type: 'ground' as const };
-    colliders.push(c1, c2, c3);
+    // 4. Elevated Pool Deck Platform Frame Colliders (Y: 0.36)
+    const deckN = { box: new THREE.Box3(new THREE.Vector3(-5, 0, -19.7), new THREE.Vector3(13, 0.36, -17.0)), type: 'ground' as const };
+    const deckS = { box: new THREE.Box3(new THREE.Vector3(-5, 0, -31.0), new THREE.Vector3(13, 0.36, -28.3)), type: 'ground' as const };
+    const deckE = { box: new THREE.Box3(new THREE.Vector3(10.3, 0, -28.3), new THREE.Vector3(13, 0.36, -19.7)), type: 'ground' as const };
+    const deckW = { box: new THREE.Box3(new THREE.Vector3(-5, 0, -28.3), new THREE.Vector3(-2.3, 0.36, -19.7)), type: 'ground' as const };
+    const poolFloor = { box: new THREE.Box3(new THREE.Vector3(-2.3, 0, -28.3), new THREE.Vector3(10.3, 0.25, -19.7)), type: 'ground' as const };
+
+    const poolColliders = [
+      { box: slideTopBox, type: 'ground' as const },
+      { box: treehouseBox, type: 'ground' as const },
+      { box: campBox, type: 'ground' as const },
+      deckN,
+      deckS,
+      deckE,
+      deckW,
+      poolFloor,
+    ];
+    colliders.push(...poolColliders);
 
     return () => {
-      [c1, c2, c3].forEach((c) => {
+      poolColliders.forEach((c) => {
         const idx = colliders.indexOf(c);
         if (idx !== -1) colliders.splice(idx, 1);
       });
@@ -545,13 +574,13 @@ export const BackyardWaterpark: React.FC = () => {
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
 
-    // Gentle bobbing for floats
+    // Gentle bobbing for floats on top of sparkling pool water
     if (flamingoBobRef.current && activeRide !== 'flamingo') {
-      flamingoBobRef.current.position.y = 0.14 + Math.sin(t * 2.0) * 0.04;
+      flamingoBobRef.current.position.y = 0.30 + Math.sin(t * 2.0) * 0.035;
       flamingoBobRef.current.rotation.z = Math.sin(t * 1.5) * 0.03;
     }
     if (donutBobRef.current) {
-      donutBobRef.current.position.y = 0.14 + Math.cos(t * 1.8) * 0.035;
+      donutBobRef.current.position.y = 0.30 + Math.cos(t * 1.8) * 0.03;
       donutBobRef.current.rotation.y = t * 0.2;
     }
 
@@ -607,17 +636,46 @@ export const BackyardWaterpark: React.FC = () => {
   return (
     <group position={[0, 0, 0]}>
       {/* ============================================================== */}
-      {/* 1. ELEVATED POOL DECK PLATFORM (Timber Deck surrounding pool)  */}
+      {/* 1. ELEVATED POOL DECK PLATFORM (Open Timber Frame surrounding pool)  */}
       {/* ============================================================== */}
       <group position={[4, 0, -24]}>
-        {/* Warm Timber Deck */}
-        <mesh position={[0, 0.22, 0]} receiveShadow>
-          <boxGeometry args={[18, 0.22, 14]} />
+        {/* Warm Timber Deck Border Planks (Framing the pool basin) */}
+        {/* North Deck Plank */}
+        <mesh position={[0, 0.18, 5.7]} receiveShadow>
+          <boxGeometry args={[18, 0.36, 2.6]} />
           <meshStandardMaterial color="#C29B72" roughness={0.7} />
         </mesh>
-        {/* Pool White Coping Rim Stones */}
-        <mesh position={[0, 0.25, 0]} receiveShadow>
-          <boxGeometry args={[13.2, 0.08, 9.2]} />
+        {/* South Deck Plank */}
+        <mesh position={[0, 0.18, -5.7]} receiveShadow>
+          <boxGeometry args={[18, 0.36, 2.6]} />
+          <meshStandardMaterial color="#C29B72" roughness={0.7} />
+        </mesh>
+        {/* East Deck Plank */}
+        <mesh position={[7.4, 0.18, 0]} receiveShadow>
+          <boxGeometry args={[3.2, 0.36, 8.8]} />
+          <meshStandardMaterial color="#C29B72" roughness={0.7} />
+        </mesh>
+        {/* West Deck Plank */}
+        <mesh position={[-7.4, 0.18, 0]} receiveShadow>
+          <boxGeometry args={[3.2, 0.36, 8.8]} />
+          <meshStandardMaterial color="#C29B72" roughness={0.7} />
+        </mesh>
+
+        {/* Pool White Marble Coping Rim Borders (Hollow frame around water) */}
+        <mesh position={[0, 0.34, 4.3]} receiveShadow>
+          <boxGeometry args={[13.2, 0.06, 0.4]} />
+          <meshStandardMaterial color="#F8F9FA" roughness={0.4} />
+        </mesh>
+        <mesh position={[0, 0.34, -4.3]} receiveShadow>
+          <boxGeometry args={[13.2, 0.06, 0.4]} />
+          <meshStandardMaterial color="#F8F9FA" roughness={0.4} />
+        </mesh>
+        <mesh position={[6.3, 0.34, 0]} receiveShadow>
+          <boxGeometry args={[0.4, 0.06, 8.6]} />
+          <meshStandardMaterial color="#F8F9FA" roughness={0.4} />
+        </mesh>
+        <mesh position={[-6.3, 0.34, 0]} receiveShadow>
+          <boxGeometry args={[0.4, 0.06, 8.6]} />
           <meshStandardMaterial color="#F8F9FA" roughness={0.4} />
         </mesh>
       </group>
@@ -637,7 +695,7 @@ export const BackyardWaterpark: React.FC = () => {
       {/* 4. INFLATABLE FLOATIES (Flamingo & Rainbow Donut)              */}
       {/* ============================================================== */}
       {activeRide !== 'flamingo' && (
-        <group ref={flamingoBobRef} position={[4, 0.14, -22]}>
+        <group ref={flamingoBobRef} position={[4, 0.30, -22]}>
           <FlamingoFloatModel />
           <Billboard position={[0, 1.8, 0]}>
             <Text fontSize={0.22} color="#FF007F" outlineWidth={0.03} outlineColor="#FFF" anchorY="middle">
@@ -648,7 +706,7 @@ export const BackyardWaterpark: React.FC = () => {
       )}
 
       {/* Rainbow Donut Float */}
-      <group ref={donutBobRef} position={[7, 0.14, -26]}>
+      <group ref={donutBobRef} position={[7, 0.30, -26]}>
         <DonutFloatModel />
       </group>
 

@@ -118,33 +118,35 @@ const ContinuousVillageRiver: React.FC = () => {
 
   return (
     <group position={[0, 0, 11]}>
-      {/* River Bed Trench running across entire island (Width: 110, Depth: 5.0) */}
-      <mesh position={[0, -0.22, 0]}>
-        <boxGeometry args={[110, 0.6, 5.0]} />
-        <meshStandardMaterial color="#4A3F35" roughness={0.95} />
+      {/* Clean Sandy Pebble River Bed (Trench depth) */}
+      <mesh position={[0, -0.35, 0]}>
+        <boxGeometry args={[110, 0.5, 4.6]} />
+        <meshStandardMaterial color="#D4C5A9" roughness={0.9} />
       </mesh>
 
       {/* Realistic Glistening Blue River Water Surface */}
-      <mesh ref={waterRef} position={[0, 0.065, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[110, 4.7]} />
+      <mesh ref={waterRef} position={[0, 0.16, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[110, 4.6]} />
         <meshStandardMaterial
           color="#0096C7"
-          roughness={0.08}
+          emissive="#0077B6"
+          emissiveIntensity={0.28}
+          roughness={0.06}
+          metalness={0.0}
           transparent
-          opacity={0.86}
-          metalness={0.16}
+          opacity={0.88}
         />
       </mesh>
 
-      {/* South Riverbank Smooth Stone Curb (Z: -2.45) */}
-      <mesh position={[0, 0.15, -2.45]} receiveShadow>
-        <boxGeometry args={[110, 0.3, 0.4]} />
+      {/* South Riverbank Smooth Stone Curb (Z: -2.35) */}
+      <mesh position={[0, 0.15, -2.35]} receiveShadow>
+        <boxGeometry args={[110, 0.3, 0.3]} />
         <meshStandardMaterial color="#8D877B" roughness={0.8} />
       </mesh>
 
-      {/* North Riverbank Smooth Stone Curb (Z: +2.45) */}
-      <mesh position={[0, 0.15, 2.45]} receiveShadow>
-        <boxGeometry args={[110, 0.3, 0.4]} />
+      {/* North Riverbank Smooth Stone Curb (Z: +2.35) */}
+      <mesh position={[0, 0.15, 2.35]} receiveShadow>
+        <boxGeometry args={[110, 0.3, 0.3]} />
         <meshStandardMaterial color="#8D877B" roughness={0.8} />
       </mesh>
 
@@ -166,7 +168,7 @@ const ContinuousVillageRiver: React.FC = () => {
 
       {/* Floating Water Lily Pads with Delicate White/Pink Blossoms */}
       {lilyPadData.map((pad, idx) => (
-        <group key={idx} position={[pad.x, 0.08, pad.z]} rotation={[-Math.PI / 2, 0, idx * 0.7]}>
+        <group key={idx} position={[pad.x, 0.17, pad.z]} rotation={[-Math.PI / 2, 0, idx * 0.7]}>
           <circleGeometry args={[0.4, 12]} />
           <meshStandardMaterial color="#2D6A4F" roughness={0.4} />
           {/* Lily Flower on pad */}
@@ -365,8 +367,8 @@ const InterconnectedWalkways: React.FC = () => {
         <meshStandardMaterial color="#D8D0C3" roughness={0.7} />
       </mesh>
       {/* West promenade leading to Lake Pier and Beach */}
-      <mesh position={[-32, 0.254, 17.5]} receiveShadow>
-        <boxGeometry args={[32, 0.02, 3.2]} />
+      <mesh position={[-25, 0.254, 17.5]} receiveShadow>
+        <boxGeometry args={[18, 0.02, 3.2]} />
         <meshStandardMaterial color="#D8D0C3" roughness={0.7} />
       </mesh>
       {/* East promenade leading into Carnival Plaza */}
@@ -400,15 +402,15 @@ export const GroundIsland: React.FC = () => {
       new THREE.Vector3(20.0, -0.5, 8.5),
       new THREE.Vector3(26.0, 0.5, 13.5)
     );
-    // 5. North Village Landmass (School, Beach/Lake, Carnival; Z: 13.5 to 48, X: -55 to 55)
+    // 5. North School & Carnival Landmass (Z: 13.5 to 48, X: -18 to 55)
     const northBox = new THREE.Box3(
-      new THREE.Vector3(-55, -1, 13.5),
+      new THREE.Vector3(-18, -1, 13.5),
       new THREE.Vector3(55, 0.25, 48)
     );
     // 6. Walkable Riverbed Floor (shallow water splash floor; Z: 8.5 to 13.5, X: -55 to 55)
     const riverbedBox = new THREE.Box3(
       new THREE.Vector3(-55, -1.0, 8.5),
-      new THREE.Vector3(55, -0.05, 13.5)
+      new THREE.Vector3(55, 0.14, 13.5)
     );
 
     const c1 = { box: southBox, type: 'ground' as const };
@@ -460,11 +462,11 @@ export const GroundIsland: React.FC = () => {
       <EastAvenueStoneBridge />
 
       {/* ============================================================== */}
-      {/* 3. UNIFIED NORTH VILLAGE TERRAIN (Z: 13.5 to 48, X: -55 to 55) */}
-      {/* Matching natural lush green grass covering the northern zone    */}
+      {/* 3. UNIFIED NORTH VILLAGE TERRAIN (School & Carnival: X: -18 to 55, Z: 13.5 to 48) */}
+      {/* Matching natural lush green grass covering the School and Carnival */}
       {/* ============================================================== */}
-      <mesh position={[0, -0.2, 30.75]} receiveShadow>
-        <boxGeometry args={[110, 0.9, 34.5]} />
+      <mesh position={[18.5, -0.2, 30.75]} receiveShadow>
+        <boxGeometry args={[73, 0.9, 34.5]} />
         <meshStandardMaterial color="#4C8C2B" roughness={0.78} />
       </mesh>
       {/* Rich Fertile Earth Base beneath North Terrain */}

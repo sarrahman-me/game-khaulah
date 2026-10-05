@@ -1,45 +1,141 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore, gameStore } from '../../../state/useGameStore';
+import { colliders } from '../../../state/colliders';
 import { CheckpointFlag } from './CheckpointFlag';
 import { StarCollectible } from './StarCollectible';
 
-// Animated Lake Water Surface
+// Animated Sparkling Lake Water Surface
 const ShimmeringLake: React.FC = () => {
   const meshRef = useRef<THREE.Mesh>(null);
+  const rippleRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
-    if (!meshRef.current) return;
     const t = state.clock.getElapsedTime();
-    meshRef.current.position.y = 0.08 + Math.sin(t * 1.8) * 0.015;
+    if (meshRef.current) {
+      meshRef.current.position.y = 0.18 + Math.sin(t * 1.8) * 0.012;
+    }
+    if (rippleRef.current) {
+      rippleRef.current.children.forEach((child, i) => {
+        const ring = child as THREE.Mesh;
+        const s = 1 + ((t * 0.8 + i * 0.3) % 1) * 0.6;
+        ring.scale.set(s, s, 1);
+        const mat = ring.material as THREE.MeshBasicMaterial;
+        if (mat) mat.opacity = 0.5 * (1 - ((t * 0.8 + i * 0.3) % 1));
+      });
+    }
   });
 
   return (
-    <group position={[-28, 0, 20]}>
-      {/* Lake Bed */}
-      <mesh position={[0, -0.25, 0]}>
-        <boxGeometry args={[18, 0.6, 14]} />
-        <meshStandardMaterial color="#3D4A54" roughness={0.95} />
+    <group position={[0, 0, 0]}>
+      {/* Sandy Lake Bed Cavity */}
+      <mesh position={[0, -0.3, 0]}>
+        <boxGeometry args={[22.5, 0.5, 18.5]} />
+        <meshStandardMaterial color="#E9D8A6" roughness={0.9} />
       </mesh>
-      {/* Lake Water Surface */}
-      <mesh ref={meshRef} position={[0, 0.08, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[17.5, 13.5]} />
-        <meshStandardMaterial color="#0096C7" roughness={0.08} transparent opacity={0.86} metalness={0.16} />
+
+      {/* Crystal Clear Radiant Blue Lake Water Surface */}
+      <mesh ref={meshRef} position={[0, 0.18, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[22.2, 18.2]} />
+        <meshStandardMaterial
+          color="#0096C7"
+          emissive="#0077B6"
+          emissiveIntensity={0.28}
+          roughness={0.06}
+          metalness={0.0}
+          transparent
+          opacity={0.88}
+        />
       </mesh>
-      {/* Lily pads */}
+
+      {/* Animated Subtle Shimmer Ripples */}
+      <group ref={rippleRef} position={[0, 0.19, 0]}>
+        {[
+          [-4, -3],
+          [3, 4],
+          [-2, 5],
+          [5, -2],
+        ].map(([rx, rz], idx) => (
+          <mesh key={idx} position={[rx, 0, rz]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.5, 0.7, 16]} />
+            <meshBasicMaterial color="#E0FBFC" transparent opacity={0.35} />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Water Lily Pads with delicate lotus flowers */}
       {[
-        [-5, -3],
-        [-3, 4],
-        [4, -2],
-        [3, 3],
+        [-6, 4],
+        [5, 5],
+        [-4, -5],
+        [6, -4],
+        [-1, 2],
+        [2, -3],
       ].map(([lx, lz], idx) => (
-        <group key={idx} position={[lx, 0.12, lz]} rotation={[-Math.PI / 2, 0, idx]}>
-          <circleGeometry args={[0.45, 12]} />
+        <group key={idx} position={[lx, 0.20, lz]} rotation={[-Math.PI / 2, 0, idx * 1.1]}>
+          <circleGeometry args={[0.42, 12]} />
           <meshStandardMaterial color="#2D6A4F" roughness={0.4} />
+          {/* Lotus Flower */}
+          <mesh position={[0.08, 0.08, 0.04]}>
+            <sphereGeometry args={[0.11, 8, 8]} />
+            <meshStandardMaterial color={idx % 2 === 0 ? '#FFCCD5' : '#FFF'} />
+          </mesh>
         </group>
       ))}
+    </group>
+  );
+};
+
+// Tropical Coconut Palm Tree Model
+const TropicalPalmTree: React.FC<{ pos: [number, number, number]; scale?: number; rotationY?: number }> = ({
+  pos,
+  scale = 1.0,
+  rotationY = 0,
+}) => {
+  return (
+    <group position={pos} scale={scale} rotation={[0, rotationY, 0]}>
+      {/* Curved Palm Trunk */}
+      <group position={[0, 0, 0]}>
+        <mesh position={[0, 0.8, 0]} rotation={[0.08, 0, 0]} castShadow>
+          <cylinderGeometry args={[0.22, 0.32, 1.6, 8]} />
+          <meshStandardMaterial color="#7F4F24" roughness={0.85} />
+        </mesh>
+        <mesh position={[0.1, 2.3, 0]} rotation={[0.16, 0, 0]} castShadow>
+          <cylinderGeometry args={[0.18, 0.22, 1.5, 8]} />
+          <meshStandardMaterial color="#8C532B" roughness={0.85} />
+        </mesh>
+        <mesh position={[0.26, 3.7, 0]} rotation={[0.22, 0, 0]} castShadow>
+          <cylinderGeometry args={[0.14, 0.18, 1.4, 8]} />
+          <meshStandardMaterial color="#9C5D33" roughness={0.85} />
+        </mesh>
+      </group>
+
+      {/* Coconuts Cluster */}
+      {[-0.12, 0.12, 0].map((cx, idx) => (
+        <mesh key={idx} position={[0.35 + cx, 4.3, idx * 0.12 - 0.06]} castShadow>
+          <sphereGeometry args={[0.16, 8, 8]} />
+          <meshStandardMaterial color="#582F0E" roughness={0.8} />
+        </mesh>
+      ))}
+
+      {/* Tropical Arching Palm Fronds */}
+      {[0, 1, 2, 3, 4, 5].map((idx) => {
+        const ang = (idx * Math.PI * 2) / 6;
+        return (
+          <group
+            key={idx}
+            position={[0.35, 4.5, 0]}
+            rotation={[0.4 * Math.sin(ang), ang, 0.4 * Math.cos(ang)]}
+          >
+            <mesh position={[0, 0.2, 1.3]} rotation={[0.3, 0, 0]} castShadow>
+              <boxGeometry args={[0.5, 0.04, 2.6]} />
+              <meshStandardMaterial color={idx % 2 === 0 ? '#2D6A4F' : '#40916C'} roughness={0.6} />
+            </mesh>
+          </group>
+        );
+      })}
     </group>
   );
 };
@@ -99,19 +195,71 @@ export const SunnyBeachLake: React.FC = () => {
   const activeRide = useGameStore((s) => s.activeRide);
   const boatBobRef = useRef<THREE.Group>(null);
 
+  useEffect(() => {
+    // Colliders for the Beach & Lake area (World coords)
+    // 1. South Beach Shore
+    const southBeachBox = new THREE.Box3(
+      new THREE.Vector3(-55, -1, 13.5),
+      new THREE.Vector3(-18, 0.25, 20.0)
+    );
+    // 2. North Beach Shore
+    const northBeachBox = new THREE.Box3(
+      new THREE.Vector3(-55, -1, 38.0),
+      new THREE.Vector3(-18, 0.25, 48.0)
+    );
+    // 3. West Beach Dunes
+    const westBeachBox = new THREE.Box3(
+      new THREE.Vector3(-55, -1, 20.0),
+      new THREE.Vector3(-46.0, 0.25, 38.0)
+    );
+    // 4. East Shore (connecting to school lawn & promenade)
+    const eastShoreBox = new THREE.Box3(
+      new THREE.Vector3(-24.0, -1, 20.0),
+      new THREE.Vector3(-18.0, 0.25, 38.0)
+    );
+    // 5. Wooden Pier Platform (Y: 0.28)
+    const pierBox = new THREE.Box3(
+      new THREE.Vector3(-31.5, 0, 23.5),
+      new THREE.Vector3(-22.5, 0.32, 26.5)
+    );
+    // 6. Lakebed Floor (shallow wading water splash floor)
+    const lakeFloorBox = new THREE.Box3(
+      new THREE.Vector3(-46.0, -1, 20.0),
+      new THREE.Vector3(-24.0, 0.16, 38.0)
+    );
+
+    const beachColliders = [
+      { box: southBeachBox, type: 'ground' as const },
+      { box: northBeachBox, type: 'ground' as const },
+      { box: westBeachBox, type: 'ground' as const },
+      { box: eastShoreBox, type: 'ground' as const },
+      { box: pierBox, type: 'ground' as const },
+      { box: lakeFloorBox, type: 'ground' as const },
+    ];
+    colliders.push(...beachColliders);
+
+    return () => {
+      beachColliders.forEach((c) => {
+        const idx = colliders.indexOf(c);
+        if (idx !== -1) colliders.splice(idx, 1);
+      });
+    };
+  }, []);
+
   useFrame((state) => {
-    // Gentle bobbing when parked
+    const t = state.clock.getElapsedTime();
+
+    // Gentle bobbing when parked in the glistening blue lake water
     if (boatBobRef.current && activeRide !== 'boat') {
-      const t = state.clock.getElapsedTime();
-      boatBobRef.current.position.y = 0.15 + Math.sin(t * 2.2) * 0.05;
+      boatBobRef.current.position.y = 0.16 + Math.sin(t * 2.2) * 0.04;
       boatBobRef.current.rotation.z = Math.sin(t * 1.5) * 0.03;
     }
 
     const playerPos = gameStore.getState().playerPos;
-    // Boat Pier Proximity Check (Pier is at [-22, 0, 20])
-    const distBoat = Math.hypot(playerPos[0] - (-23), playerPos[2] - 20);
+    // Boat Pier Proximity Check (Dock is at [-27, 26])
+    const distBoat = Math.hypot(playerPos[0] - (-27), playerPos[2] - 26);
 
-    if (distBoat < 4.0 && activeRide === 'none') {
+    if (distBoat < 4.5 && activeRide === 'none') {
       gameStore.setNearbyInteractable({
         id: 'swan_boat',
         title: 'Perahu Bebek Kayuh 🦢⛵',
@@ -127,27 +275,118 @@ export const SunnyBeachLake: React.FC = () => {
 
   return (
     <group position={[-35, 0, 29]}>
-      {/* Shimmering Lake Water */}
+      {/* ============================================================== */}
+      {/* 1. CRYSTAL CLEAR SHIMMERING LAKE WATER & LAKE BED              */}
+      {/* ============================================================== */}
       <ShimmeringLake />
 
-      {/* Wooden Pier / Dermaga */}
-      <group position={[12, 0.25, -9]}>
+      {/* ============================================================== */}
+      {/* 2. GOLDEN SAND BEACH SURROUNDING THE LAKE (PANTAI PASIR)       */}
+      {/* ============================================================== */}
+      {/* North Beach */}
+      <mesh position={[0, 0.12, 11.5]} receiveShadow>
+        <boxGeometry args={[28, 0.26, 5]} />
+        <meshStandardMaterial color="#E9D8A6" roughness={0.9} />
+      </mesh>
+      {/* South Beach */}
+      <mesh position={[0, 0.12, -11.5]} receiveShadow>
+        <boxGeometry args={[28, 0.26, 5]} />
+        <meshStandardMaterial color="#E9D8A6" roughness={0.9} />
+      </mesh>
+      {/* West Beach Dunes */}
+      <mesh position={[-13.5, 0.12, 0]} receiveShadow>
+        <boxGeometry args={[5, 0.26, 28]} />
+        <meshStandardMaterial color="#E9D8A6" roughness={0.9} />
+      </mesh>
+      {/* East Shore (Transitioning towards schoolyard) */}
+      <mesh position={[13.5, 0.12, 0]} receiveShadow>
+        <boxGeometry args={[5, 0.26, 28]} />
+        <meshStandardMaterial color="#E9D8A6" roughness={0.9} />
+      </mesh>
+
+      {/* Shoreline Smooth River Pebbles */}
+      {[
+        [-10, -9],
+        [-5, -9.2],
+        [4, -9],
+        [-11, 2],
+        [-11, -3],
+        [11, 3],
+        [11, -2],
+        [-8, 9.2],
+        [3, 9],
+      ].map(([px, pz], idx) => (
+        <mesh key={idx} position={[px, 0.24, pz]} scale={[0.4, 0.2, 0.35]}>
+          <sphereGeometry args={[0.5, 8, 8]} />
+          <meshStandardMaterial color="#C2B8A3" roughness={0.8} />
+        </mesh>
+      ))}
+
+      {/* ============================================================== */}
+      {/* 3. TROPICAL COCONUT PALM TREES                                 */}
+      {/* ============================================================== */}
+      <TropicalPalmTree pos={[-13, 0.25, -10]} scale={1.15} rotationY={0.4} />
+      <TropicalPalmTree pos={[-13, 0.25, 10]} scale={1.2} rotationY={1.2} />
+      <TropicalPalmTree pos={[12, 0.25, 10]} scale={1.1} rotationY={2.1} />
+      <TropicalPalmTree pos={[12, 0.25, -10]} scale={1.1} rotationY={3.4} />
+      <TropicalPalmTree pos={[-8, 0.25, -11.5]} scale={1.05} rotationY={0.8} />
+
+      {/* ============================================================== */}
+      {/* 4. WOODEN PIER / DERMAGA KAYU EXTENDING INTO BLUE WATER        */}
+      {/* ============================================================== */}
+      <group position={[8.0, 0.28, -4]}>
+        {/* Main Wooden Deck Plank */}
         <mesh position={[0, 0, 0]} castShadow receiveShadow>
-          <boxGeometry args={[4.5, 0.2, 2.2]} />
+          <boxGeometry args={[8.0, 0.16, 2.6]} />
           <meshStandardMaterial color="#8D5B4C" roughness={0.7} />
         </mesh>
-        {/* Pier posts into water */}
-        {[-1.8, 1.8].map((px, idx) => (
-          <mesh key={idx} position={[px, -0.5, 0]}>
-            <cylinderGeometry args={[0.1, 0.1, 1.2, 6]} />
-            <meshStandardMaterial color="#6F4E37" />
+
+        {/* Dock Plank Grooves */}
+        {[-3.0, -1.5, 0, 1.5, 3.0].map((gx, idx) => (
+          <mesh key={idx} position={[gx, 0.085, 0]}>
+            <boxGeometry args={[0.04, 0.015, 2.55]} />
+            <meshStandardMaterial color="#582F0E" />
           </mesh>
+        ))}
+
+        {/* Piling Posts extending into the water */}
+        {[-3.6, -1.2, 1.2, 3.6].map((px, idx) => (
+          <React.Fragment key={idx}>
+            <mesh position={[px, -0.4, -1.2]} castShadow>
+              <cylinderGeometry args={[0.09, 0.09, 0.8, 8]} />
+              <meshStandardMaterial color="#6F4E37" />
+            </mesh>
+            <mesh position={[px, -0.4, 1.2]} castShadow>
+              <cylinderGeometry args={[0.09, 0.09, 0.8, 8]} />
+              <meshStandardMaterial color="#6F4E37" />
+            </mesh>
+          </React.Fragment>
+        ))}
+
+        {/* Pier Lanterns on entrance and dock head */}
+        {[-3.6, 3.6].map((px, idx) => (
+          <group key={idx} position={[px, 0.45, -1.2]}>
+            <mesh position={[0, -0.15, 0]}>
+              <cylinderGeometry args={[0.035, 0.035, 0.35, 6]} />
+              <meshStandardMaterial color="#4A3F35" />
+            </mesh>
+            <mesh position={[0, 0.05, 0]}>
+              <boxGeometry args={[0.18, 0.22, 0.18]} />
+              <meshStandardMaterial color="#2B2D42" />
+            </mesh>
+            <mesh position={[0, 0.05, 0]}>
+              <sphereGeometry args={[0.07, 8, 8]} />
+              <meshStandardMaterial color="#FFE6A7" emissive="#FFD166" emissiveIntensity={0.8} />
+            </mesh>
+          </group>
         ))}
       </group>
 
-      {/* Parked Swan Pedal Boat (Only rendered here if player is NOT riding it) */}
+      {/* ============================================================== */}
+      {/* 5. PARKED SWAN PEDAL BOAT FLOATING IN THE BLUE WATER           */}
+      {/* ============================================================== */}
       {activeRide !== 'boat' && (
-        <group ref={boatBobRef} position={[12, 0.15, -6]} rotation={[0, Math.PI / 2, 0]}>
+        <group ref={boatBobRef} position={[3.5, 0.16, -1.5]} rotation={[0, Math.PI / 2, 0]}>
           <SwanBoatModel />
           <Billboard position={[0, 2.1, 0]}>
             <Text fontSize={0.24} color="#0077B6" outlineWidth={0.03} outlineColor="#FFF" anchorY="middle">
@@ -157,111 +396,120 @@ export const SunnyBeachLake: React.FC = () => {
         </group>
       )}
 
-      {/* --- GOLDEN SAND BEACH (PANTAI PASIR) --- */}
-      <group position={[-5, 0, 3]}>
-        {/* Soft Golden Sand Mound */}
-        <mesh position={[0, 0.08, 0]} receiveShadow>
-          <boxGeometry args={[20, 0.22, 16]} />
-          <meshStandardMaterial color="#E9D8A6" roughness={0.9} />
+      {/* ============================================================== */}
+      {/* 6. GIANT SANDCASTLE (WALK-THROUGH) ON THE WEST BEACH           */}
+      {/* ============================================================== */}
+      <group position={[-12.5, 0.25, 2]}>
+        {/* Main Castle Walls */}
+        <mesh position={[0, 0.9, 0]} castShadow receiveShadow>
+          <boxGeometry args={[3.6, 1.8, 3.6]} />
+          <meshStandardMaterial color="#DDA15E" roughness={0.8} />
+        </mesh>
+        {/* Open Archway Door to walk inside */}
+        <mesh position={[0, 0.7, 1.81]}>
+          <boxGeometry args={[1.2, 1.4, 0.05]} />
+          <meshStandardMaterial color="#332" />
         </mesh>
 
-        {/* --- BEACH UMBRELLAS & LOUNGE CHAIRS --- */}
+        {/* 4 Corner Turret Towers */}
         {[
-          { pos: [-4, 0.1, -3] as [number, number, number], color1: '#E63946', color2: '#FFF' },
-          { pos: [3, 0.1, -2] as [number, number, number], color1: '#4EA8DE', color2: '#FFD166' },
-        ].map((umb, idx) => (
-          <group key={idx} position={umb.pos}>
-            {/* Pole */}
-            <mesh position={[0, 1.1, 0]} castShadow>
-              <cylinderGeometry args={[0.05, 0.05, 2.2, 8]} />
-              <meshStandardMaterial color="#FFF" />
+          [-1.8, 0, -1.8],
+          [1.8, 0, -1.8],
+          [-1.8, 0, 1.8],
+          [1.8, 0, 1.8],
+        ].map(([tx, ty, tz], idx) => (
+          <group key={idx} position={[tx, ty, tz]}>
+            <mesh position={[0, 1.2, 0]} castShadow>
+              <cylinderGeometry args={[0.45, 0.5, 2.4, 10]} />
+              <meshStandardMaterial color="#DDA15E" />
             </mesh>
-            {/* Canopy */}
-            <mesh position={[0, 2.2, 0]} castShadow>
-              <coneGeometry args={[1.5, 0.7, 12]} />
-              <meshStandardMaterial color={umb.color1} />
+            <mesh position={[0, 2.7, 0]}>
+              <coneGeometry args={[0.6, 0.8, 10]} />
+              <meshStandardMaterial color="#BC6C25" />
             </mesh>
-            {/* Lounge Mat */}
-            <mesh position={[0.7, 0.1, 0.5]} rotation={[-Math.PI / 2, 0, 0.3]}>
-              <planeGeometry args={[0.9, 1.8]} />
-              <meshStandardMaterial color={umb.color2} />
+            {/* Little red flag atop turret */}
+            <mesh position={[0, 3.25, 0]}>
+              <boxGeometry args={[0.25, 0.15, 0.02]} />
+              <meshStandardMaterial color="#E63946" />
             </mesh>
           </group>
         ))}
 
-        {/* Bouncing Beach Ball */}
-        <mesh position={[0, 0.35, -1]} castShadow>
-          <sphereGeometry args={[0.32, 12, 12]} />
-          <meshStandardMaterial color="#FF007F" roughness={0.3} />
-        </mesh>
-
-        {/* --- GIANT SANDCASTLE (WALK-THROUGH) --- */}
-        <group position={[-4, 0.1, 3]}>
-          {/* Main Castle Walls */}
-          <mesh position={[0, 0.9, 0]} castShadow receiveShadow>
-            <boxGeometry args={[3.6, 1.8, 3.6]} />
-            <meshStandardMaterial color="#DDA15E" roughness={0.8} />
-          </mesh>
-          {/* Open Archway Door to walk inside */}
-          <mesh position={[0, 0.7, 1.81]}>
-            <boxGeometry args={[1.2, 1.4, 0.05]} />
-            <meshStandardMaterial color="#332" />
-          </mesh>
-
-          {/* 4 Corner Turret Towers */}
-          {[
-            [-1.8, 0, -1.8],
-            [1.8, 0, -1.8],
-            [-1.8, 0, 1.8],
-            [1.8, 0, 1.8],
-          ].map(([tx, ty, tz], idx) => (
-            <group key={idx} position={[tx, ty, tz]}>
-              <mesh position={[0, 1.2, 0]} castShadow>
-                <cylinderGeometry args={[0.45, 0.5, 2.4, 10]} />
-                <meshStandardMaterial color="#DDA15E" />
-              </mesh>
-              <mesh position={[0, 2.7, 0]}>
-                <coneGeometry args={[0.6, 0.8, 10]} />
-                <meshStandardMaterial color="#BC6C25" />
-              </mesh>
-              {/* Little red flag atop turret */}
-              <mesh position={[0, 3.25, 0]}>
-                <boxGeometry args={[0.25, 0.15, 0.02]} />
-                <meshStandardMaterial color="#E63946" />
-              </mesh>
-            </group>
-          ))}
-
-          {/* Golden Star Hidden inside Sandcastle! */}
-          <StarCollectible id="star_beach_castle" position={[0, 1.2, 0]} color="#FFD700" />
-        </group>
-
-        {/* Sparkling Clam Shells */}
-        {[
-          [5, 0.2, 1],
-          [2, 0.2, 4],
-          [-2, 0.2, -4],
-        ].map(([cx, cy, cz], idx) => (
-          <group key={idx} position={[cx, cy, cz]}>
-            <mesh position={[0, 0.05, 0]}>
-              <sphereGeometry args={[0.18, 8, 8]} />
-              <meshStandardMaterial color="#FFCCD5" roughness={0.4} />
-            </mesh>
-            {/* Glowing Pearl inside */}
-            <mesh position={[0, 0.12, 0]}>
-              <sphereGeometry args={[0.08, 10, 10]} />
-              <meshStandardMaterial color="#FFF" emissive="#FFF" emissiveIntensity={0.6} />
-            </mesh>
-          </group>
-        ))}
+        {/* Golden Star Hidden inside Sandcastle! */}
+        <StarCollectible id="star_beach_castle" position={[0, 1.2, 0]} color="#FFD700" />
       </group>
 
-      {/* --- CHECKPOINT 5 (Danau & Pantai) --- */}
-      <CheckpointFlag index={5} position={[1, 0.3, -1]} />
+      {/* ============================================================== */}
+      {/* 7. BEACH UMBRELLAS, LOUNGE CHAIRS & PLAYFUL ITEMS              */}
+      {/* ============================================================== */}
+      {/* South Beach Umbrella (Red & White) */}
+      <group position={[-5, 0.25, -11.5]}>
+        <mesh position={[0, 1.1, 0]} castShadow>
+          <cylinderGeometry args={[0.05, 0.05, 2.2, 8]} />
+          <meshStandardMaterial color="#FFF" />
+        </mesh>
+        <mesh position={[0, 2.2, 0]} castShadow>
+          <coneGeometry args={[1.5, 0.7, 12]} />
+          <meshStandardMaterial color="#E63946" />
+        </mesh>
+        <mesh position={[0.7, 0.1, 0.5]} rotation={[-Math.PI / 2, 0, 0.3]}>
+          <planeGeometry args={[0.9, 1.8]} />
+          <meshStandardMaterial color="#FFF" />
+        </mesh>
+      </group>
 
-      {/* --- STAR COLLECTIBLES --- */}
-      <StarCollectible id="star_beach_1" position={[12, 1.2, -9]} color="#00B4D8" />
-      <StarCollectible id="star_beach_2" position={[-9, 1.2, 0]} color="#FFB703" />
+      {/* North Beach Umbrella (Cyan & Yellow) */}
+      <group position={[-3, 0.25, 11.5]}>
+        <mesh position={[0, 1.1, 0]} castShadow>
+          <cylinderGeometry args={[0.05, 0.05, 2.2, 8]} />
+          <meshStandardMaterial color="#FFF" />
+        </mesh>
+        <mesh position={[0, 2.2, 0]} castShadow>
+          <coneGeometry args={[1.5, 0.7, 12]} />
+          <meshStandardMaterial color="#4EA8DE" />
+        </mesh>
+        <mesh position={[0.7, 0.1, 0.5]} rotation={[-Math.PI / 2, 0, 0.3]}>
+          <planeGeometry args={[0.9, 1.8]} />
+          <meshStandardMaterial color="#FFD166" />
+        </mesh>
+      </group>
+
+      {/* Bouncing Beach Ball */}
+      <mesh position={[-1, 0.55, -10.5]} castShadow>
+        <sphereGeometry args={[0.32, 12, 12]} />
+        <meshStandardMaterial color="#FF007F" roughness={0.3} />
+      </mesh>
+
+      {/* Sparkling Clam Shells with Glowing Pearls */}
+      {[
+        [2, 0.28, -10],
+        [-11, 0.28, -6],
+        [-2, 0.28, 10.5],
+      ].map(([cx, cy, cz], idx) => (
+        <group key={idx} position={[cx, cy, cz]}>
+          <mesh position={[0, 0.05, 0]}>
+            <sphereGeometry args={[0.18, 8, 8]} />
+            <meshStandardMaterial color="#FFCCD5" roughness={0.4} />
+          </mesh>
+          <mesh position={[0, 0.12, 0]}>
+            <sphereGeometry args={[0.08, 10, 10]} />
+            <meshStandardMaterial color="#FFF" emissive="#FFF" emissiveIntensity={0.6} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* ============================================================== */}
+      {/* 8. CHECKPOINT 5 (Danau & Pantai at Pier Entrance)              */}
+      {/* ============================================================== */}
+      <CheckpointFlag index={5} position={[12, 0.26, -4]} />
+
+      {/* ============================================================== */}
+      {/* 9. STAR COLLECTIBLES                                           */}
+      {/* ============================================================== */}
+      {/* Star above the Boat Dock Pier */}
+      <StarCollectible id="star_beach_1" position={[4, 1.2, -1.5]} color="#00B4D8" />
+      {/* Star at North Beach Umbrella */}
+      <StarCollectible id="star_beach_2" position={[-3, 1.2, 11.5]} color="#FFB703" />
     </group>
   );
 };

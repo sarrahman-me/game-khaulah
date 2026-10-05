@@ -64,7 +64,7 @@ const CHECKPOINTS: [number, number, number][] = [
   [0, 6.0, 65],      // Checkpoint 2: Puncak Awan Gula-Gula Skyway
   [0, 10.0, 95],     // Checkpoint 3: Kastil Bintang Khaulah
   [-34, 0.8, -2],    // Checkpoint 4: Peternakan & Kebun Hewan
-  [-34, 0.8, 28],    // Checkpoint 5: Danau Bebek & Pantai Pasir
+  [-23, 0.8, 25],    // Checkpoint 5: Danau Bebek & Pantai Pasir
   [34, 0.8, -2],     // Checkpoint 6: Desa Pertokoan Cilik
   [34, 0.8, 28],     // Checkpoint 7: Alun-Alun Karnaval & Theme Park
   [0, 0.8, -18],     // Checkpoint 8: Kolam Renang & Halaman Belakang 🏊‍♀️🏡

@@ -87,7 +87,7 @@ export const PlayerKhaulah: React.FC = () => {
         if (ride !== 'none') {
           gameStore.setActiveRide('none');
           if (ride === 'boat') {
-            pos.current.set(-23, 0.4, 20);
+            pos.current.set(-25, 0.4, 25);
           } else if (ride === 'carousel') {
             pos.current.set(28, 0.4, 17);
           } else if (ride === 'ferris') {
@@ -612,13 +612,13 @@ export const PlayerKhaulah: React.FC = () => {
     let groundedThisFrame = false;
 
     // Gravity & Boat lake water / Swimming Pool buoyancy
-    const inPool = pos.current.x >= -1.0 && pos.current.x <= 9.0 && pos.current.z >= -27.5 && pos.current.z <= -20.5;
+    const inPool = pos.current.x >= -2.0 && pos.current.x <= 10.0 && pos.current.z >= -28.0 && pos.current.z <= -20.0;
     if (activeRide === 'boat') {
-      pos.current.y = 0.2 + Math.sin(state.clock.getElapsedTime() * 2.5) * 0.04;
+      pos.current.y = 0.20 + Math.sin(state.clock.getElapsedTime() * 2.5) * 0.04;
       velocityY.current = 0;
       groundedThisFrame = true;
     } else if (inPool && activeRide === 'none') {
-      pos.current.y = 0.2 + Math.sin(state.clock.getElapsedTime() * 2.8) * 0.03;
+      pos.current.y = 0.28 + Math.sin(state.clock.getElapsedTime() * 2.8) * 0.02;
       velocityY.current = 0;
       groundedThisFrame = true;
     } else {
