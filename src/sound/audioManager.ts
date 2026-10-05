@@ -623,10 +623,12 @@ class SoundEngine {
   }
 
   // Update siklus waktu dan sesuaikan audio jika sedang berjalan
-  public setTimeOfDay(time: TimeCyclePeriod) {
+  public setTimeOfDay(time: TimeCyclePeriod, playTransitionChime: boolean = true) {
     if (this.currentTimeOfDay === time) return;
     this.currentTimeOfDay = time;
-    this.playTimeTransition(time);
+    if (playTransitionChime) {
+      this.playTimeTransition(time);
+    }
     if (this.bgmPlaying) {
       this.restartBgmForCurrentTime();
     }

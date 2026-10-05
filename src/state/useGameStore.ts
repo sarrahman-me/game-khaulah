@@ -130,6 +130,63 @@ const CHECKPOINTS: [number, number, number][] = [
   [0, 0.8, -18],     // Checkpoint 8: Kolam Renang & Halaman Belakang 🏊‍♀️🏡
 ];
 
+const STORAGE_KEY_TIME_OF_DAY = 'khaulah_time_of_day_state';
+
+interface SavedTimeState {
+  timeOfDay: TimeOfDay;
+  timeOfDayTimeLeft: number;
+}
+
+function loadSavedTimeOfDay(): { timeOfDay: TimeOfDay; timeOfDayTimeLeft: number } {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = localStorage.getItem(STORAGE_KEY_TIME_OF_DAY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as SavedTimeState;
+        const validTimes: TimeOfDay[] = ['subuh', 'siang', 'sore', 'malam'];
+        if (parsed && validTimes.includes(parsed.timeOfDay)) {
+          const maxDuration = TIME_OF_DAY_INTERVALS[parsed.timeOfDay];
+          const timeLeft =
+            typeof parsed.timeOfDayTimeLeft === 'number' &&
+            parsed.timeOfDayTimeLeft > 0 &&
+            parsed.timeOfDayTimeLeft <= maxDuration
+              ? parsed.timeOfDayTimeLeft
+              : maxDuration;
+
+          return {
+            timeOfDay: parsed.timeOfDay,
+            timeOfDayTimeLeft: timeLeft,
+          };
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load timeOfDay from localStorage:', e);
+  }
+  return {
+    timeOfDay: 'siang',
+    timeOfDayTimeLeft: TIME_OF_DAY_INTERVALS['siang'],
+  };
+}
+
+function saveTimeOfDay(timeOfDay: TimeOfDay, timeOfDayTimeLeft: number) {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem(
+        STORAGE_KEY_TIME_OF_DAY,
+        JSON.stringify({
+          timeOfDay,
+          timeOfDayTimeLeft: Math.round(timeOfDayTimeLeft * 10) / 10,
+        })
+      );
+    }
+  } catch (e) {
+    console.warn('Failed to save timeOfDay to localStorage:', e);
+  }
+}
+
+const initialTime = loadSavedTimeOfDay();
+
 let state: GameState = {
   stars: 0,
   totalStars: 50,
@@ -142,7 +199,7 @@ let state: GameState = {
   activeAccessory: 'none',
   activePet: 'kitten',
   activeEmote: 'none',
-  bubbleMessage: 'Selamat pagi Khaulah! Ayo sapa Abi, Ummi, dan berangkat ke TK Karang Tengah! 🎒🏡',
+  bubbleMessage: TIME_OF_DAY_MESSAGES[initialTime.timeOfDay],
   isClosetOpen: false,
   isWelcomeOpen: true,
   isMuted: false,
@@ -156,8 +213,8 @@ let state: GameState = {
   speedBuffTimeLeft: 0,
   nearbyInteractable: null,
   activeDialog: null,
-  timeOfDay: 'siang',
-  timeOfDayTimeLeft: TIME_OF_DAY_INTERVALS['siang'],
+  timeOfDay: initialTime.timeOfDay,
+  timeOfDayTimeLeft: initialTime.timeOfDayTimeLeft,
   isRidingScooter: false,
   scooterPos: [3.2, 0.2, -4.0],
   schoolQuest: {
@@ -167,6 +224,9 @@ let state: GameState = {
     completed: false,
   },
 };
+
+// Sinkronkan tema audio awal sesuai waktu yang tersimpan di localStorage tanpa chime
+soundManager.setTimeOfDay(initialTime.timeOfDay, false);
 
 const listeners = new Set<() => void>();
 
@@ -477,12 +537,14 @@ export const gameStore = {
 
   // --- TIME OF DAY AUTOMATION & CONTROLS ---
   setTimeOfDay: (time: TimeOfDay) => {
+    const timeLeft = TIME_OF_DAY_INTERVALS[time];
     state = {
       ...state,
       timeOfDay: time,
-      timeOfDayTimeLeft: TIME_OF_DAY_INTERVALS[time],
+      timeOfDayTimeLeft: timeLeft,
       bubbleMessage: TIME_OF_DAY_MESSAGES[time],
     };
+    saveTimeOfDay(time, timeLeft);
     soundManager.setTimeOfDay(time);
     emitChange();
   },
@@ -502,8 +564,9 @@ export const gameStore = {
         timeOfDayTimeLeft: newTimeLeft,
       };
       const newSec = Math.ceil(newTimeLeft);
-      // Emit perubahan per detik agar display UI timer di HUD tetap efisien (1 render per detik)
+      // Emit perubahan per detik dan simpan progres waktu ke localStorage
       if (prevSec !== newSec) {
+        saveTimeOfDay(state.timeOfDay, newTimeLeft);
         emitChange();
       }
     }
