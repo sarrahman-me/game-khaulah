@@ -33,6 +33,7 @@ export const PlayerKhaulah: React.FC = () => {
   const blinkTimer = useRef(2.5);
   const isBlinking = useRef(false);
   const blinkDuration = useRef(0);
+  const currentEyeScaleY = useRef(1.0);
   const currentBankAngle = useRef(0);
   const currentForwardLean = useRef(0);
 
@@ -706,7 +707,7 @@ export const PlayerKhaulah: React.FC = () => {
     blinkTimer.current -= dt;
     if (blinkTimer.current <= 0) {
       isBlinking.current = true;
-      blinkDuration.current = 0.13;
+      blinkDuration.current = 0.12;
       blinkTimer.current = 2.8 + Math.random() * 2.5;
     }
     if (isBlinking.current) {
@@ -715,28 +716,47 @@ export const PlayerKhaulah: React.FC = () => {
         isBlinking.current = false;
       }
     }
-    const eyeScaleY = isBlinking.current ? 0.08 : 1.0;
+    const targetEyeScaleY = isBlinking.current ? 0.08 : 1.0;
+    // Damping terkontrol dengan batas aman mutlak [0.08, 1.0] agar tidak pernah meledak/overshoot saat terjadi frame lag
+    const eyeAlpha = Math.min(dt * 24, 1.0);
+    currentEyeScaleY.current = THREE.MathUtils.clamp(
+      THREE.MathUtils.lerp(currentEyeScaleY.current, targetEyeScaleY, eyeAlpha),
+      0.08,
+      1.0
+    );
+
     if (leftEyeRef.current) {
-      leftEyeRef.current.scale.y = THREE.MathUtils.lerp(leftEyeRef.current.scale.y, eyeScaleY, dt * 35);
+      leftEyeRef.current.scale.y = currentEyeScaleY.current;
     }
     if (rightEyeRef.current) {
-      rightEyeRef.current.scale.y = THREE.MathUtils.lerp(rightEyeRef.current.scale.y, eyeScaleY, dt * 35);
+      rightEyeRef.current.scale.y = currentEyeScaleY.current;
     }
 
     // Body Leaning & Banking
     const targetForwardLean = isMoving && isGrounded.current ? 0.09 : 0;
-    currentForwardLean.current = THREE.MathUtils.lerp(currentForwardLean.current, targetForwardLean, dt * 10);
+    currentForwardLean.current = THREE.MathUtils.lerp(
+      currentForwardLean.current,
+      targetForwardLean,
+      Math.min(dt * 10, 1.0)
+    );
 
     const targetBank = isMoving ? -moveX * 0.12 : 0;
-    currentBankAngle.current = THREE.MathUtils.lerp(currentBankAngle.current, targetBank, dt * 8);
+    currentBankAngle.current = THREE.MathUtils.lerp(
+      currentBankAngle.current,
+      targetBank,
+      Math.min(dt * 8, 1.0)
+    );
 
     if (modelRef.current) {
       modelRef.current.rotation.x = currentForwardLean.current;
       modelRef.current.rotation.z = currentBankAngle.current;
 
-      // Squash & Stretch Spring Interpolation
-      targetSquash.current.lerp(new THREE.Vector3(1, 1, 1), dt * 7);
-      squashScale.current.lerp(targetSquash.current, dt * 16);
+      // Squash & Stretch Spring Interpolation dengan batas aman
+      targetSquash.current.lerp(new THREE.Vector3(1, 1, 1), Math.min(dt * 7, 1.0));
+      squashScale.current.lerp(targetSquash.current, Math.min(dt * 14, 1.0));
+      squashScale.current.x = THREE.MathUtils.clamp(squashScale.current.x, 0.7, 1.35);
+      squashScale.current.y = THREE.MathUtils.clamp(squashScale.current.y, 0.7, 1.35);
+      squashScale.current.z = THREE.MathUtils.clamp(squashScale.current.z, 0.7, 1.35);
       modelRef.current.scale.copy(squashScale.current);
     }
 
@@ -845,7 +865,7 @@ export const PlayerKhaulah: React.FC = () => {
       // Air flutter on Skirt & Hijab Drape
       if (skirtRef.current) {
         skirtRef.current.rotation.x = THREE.MathUtils.clamp(-velocityY.current * 0.02, -0.22, 0.22);
-        skirtRef.current.rotation.z = THREE.MathUtils.lerp(skirtRef.current.rotation.z, 0, dt * 10);
+        skirtRef.current.rotation.z = THREE.MathUtils.lerp(skirtRef.current.rotation.z, 0, Math.min(dt * 10, 1.0));
       }
       if (hijabDrapeRef.current) {
         hijabDrapeRef.current.rotation.x = THREE.MathUtils.clamp(-velocityY.current * 0.025, -0.28, 0.28);
