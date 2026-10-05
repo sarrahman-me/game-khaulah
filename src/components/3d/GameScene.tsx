@@ -7,6 +7,7 @@ import { PetCompanion } from './PetCompanion';
 import { CameraController } from './CameraController';
 import { GroundIsland } from './Environment/GroundIsland';
 import { RumahKhaulah } from './Environment/RumahKhaulah';
+import { BackyardWaterpark } from './Environment/BackyardWaterpark';
 import { FamilyMembers } from './Environment/FamilyMembers';
 import { SchoolTK } from './Environment/SchoolTK';
 import { ObbyCourse } from './Environment/ObbyCourse';
@@ -154,6 +155,7 @@ export const GameScene: React.FC = () => {
         <NightFireflies />
         <GroundIsland />
         <RumahKhaulah />
+        <BackyardWaterpark />
         <FamilyMembers />
         <SchoolTK />
         <SchoolQuest />

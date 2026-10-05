@@ -92,6 +92,10 @@ export const PlayerKhaulah: React.FC = () => {
             pos.current.set(28, 0.4, 17);
           } else if (ride === 'ferris') {
             pos.current.set(43, 0.4, 27);
+          } else if (ride === 'flamingo') {
+            pos.current.set(4, 0.4, -20);
+          } else if (ride === 'pool_slide') {
+            pos.current.set(5, 0.4, -24);
           }
           gameStore.setMessage('Hore! Khaulah selesai bermain wahana! ✨');
           return;
@@ -220,6 +224,17 @@ export const PlayerKhaulah: React.FC = () => {
             gameStore.executeDialogAction('buy_icecream');
           } else if (near.id === 'village_train') {
             gameStore.setActiveRide('train');
+          } else if (near.id === 'pool_slide') {
+            gameStore.setActiveRide('pool_slide');
+          } else if (near.id === 'flamingo_float') {
+            gameStore.setActiveRide('flamingo');
+          } else if (near.id === 'treehouse') {
+            pos.current.set(-14, 3.8, -24);
+            soundManager.playJump();
+            gameStore.setMessage('Khaulah memanjat ke Rumah Pohon Rahasia! Pemandangannya indah sekali! 🏡🌳✨');
+          } else if (near.id === 'marshmallow') {
+            gameStore.executeDialogAction('take_snack');
+            gameStore.setMessage('Nyam nyam! Khaulah menikmati marshmallow bakar manis! (+Speed Boost ⚡🍡)');
           }
         } else {
           gameStore.triggerEmote('wave');
@@ -435,6 +450,82 @@ export const PlayerKhaulah: React.FC = () => {
       return;
     }
 
+    // Backyard Waterpark: Water Slide ride
+    if (activeRide === 'pool_slide') {
+      slideTimer.current += dt * 0.85;
+      if (slideTimer.current < 0.28) {
+        // Climbing ladder
+        const t = slideTimer.current / 0.28;
+        pos.current.set(10, 0.4 + t * 3.0, -27.8 - t * 1.2);
+        facingAngle.current = Math.PI;
+
+        const climb = Math.sin(slideTimer.current * 30);
+        if (leftArmRef.current) leftArmRef.current.rotation.x = climb * 0.7;
+        if (rightArmRef.current) rightArmRef.current.rotation.x = -climb * 0.7;
+        if (leftLegRef.current) leftLegRef.current.rotation.x = -climb * 0.6;
+        if (rightLegRef.current) rightLegRef.current.rotation.x = climb * 0.6;
+      } else if (slideTimer.current < 0.42) {
+        // Sitting at top of water slide
+        pos.current.set(10, 3.4, -29);
+        facingAngle.current = 0;
+        if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.5; leftArmRef.current.rotation.z = -0.3; }
+        if (rightArmRef.current) { rightArmRef.current.rotation.x = -0.5; rightArmRef.current.rotation.z = 0.3; }
+        if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.45;
+        if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.45;
+        if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.35;
+      } else if (slideTimer.current < 0.88) {
+        // Sliding down water slide wuuush!
+        const t = (slideTimer.current - 0.42) / 0.46;
+        pos.current.set(10 - t * 4.0, 3.4 - t * 3.2, -29 + t * 5.2);
+        facingAngle.current = 0.3;
+
+        if (leftArmRef.current) { leftArmRef.current.rotation.x = -Math.PI * 0.85; leftArmRef.current.rotation.z = -0.35; }
+        if (rightArmRef.current) { rightArmRef.current.rotation.x = -Math.PI * 0.85; rightArmRef.current.rotation.z = 0.35; }
+        if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.45;
+        if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.45;
+        if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.35;
+        if (hijabDrapeRef.current) hijabDrapeRef.current.rotation.x = 0.35;
+      } else {
+        // Splashing down into the pool byuuur!
+        pos.current.set(6, 0.2, -24);
+        slideTimer.current = 0;
+        soundManager.playWaterSplash();
+        gameStore.setActiveRide('none');
+        gameStore.setMessage('BYUUUUUR! Hore, Khaulah meluncur seru ke kolam renang! 🛝🌊✨');
+      }
+      groupRef.current.position.copy(pos.current);
+      groupRef.current.rotation.y = facingAngle.current;
+      gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, true);
+      return;
+    }
+
+    // Backyard Waterpark: Flamingo Float ride
+    if (activeRide === 'flamingo') {
+      const time = state.clock.getElapsedTime();
+      const bob = Math.sin(time * 2.0) * 0.04;
+      pos.current.set(4, 0.28 + bob, -22);
+      facingAngle.current = 0;
+
+      if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.6; leftArmRef.current.rotation.z = -0.2; }
+      if (rightArmRef.current) { rightArmRef.current.rotation.x = -Math.PI * 0.7 + Math.sin(time * 5) * 0.3; rightArmRef.current.rotation.z = 0.35; }
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.35;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.35;
+      if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.25;
+
+      if (keys.current['Space'] || gameStore.getState().isJumpPressed) {
+        gameStore.setActiveRide('none');
+        velocityY.current = 7;
+        pos.current.y += 0.5;
+        soundManager.playWaterSplash();
+        gameStore.setMessage('Hoppp! Khaulah melompat dari pelampung flamingo! 🦩🌊');
+      }
+
+      groupRef.current.position.copy(pos.current);
+      groupRef.current.rotation.y = facingAngle.current;
+      gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, false);
+      return;
+    }
+
     // 1. Gather Input
     let moveX = 0;
     let moveZ = 0;
@@ -520,9 +611,14 @@ export const PlayerKhaulah: React.FC = () => {
     // 4. Ground Collision Detection & Buoyancy
     let groundedThisFrame = false;
 
-    // Gravity & Boat lake water buoyancy
+    // Gravity & Boat lake water / Swimming Pool buoyancy
+    const inPool = pos.current.x >= -1.0 && pos.current.x <= 9.0 && pos.current.z >= -27.5 && pos.current.z <= -20.5;
     if (activeRide === 'boat') {
       pos.current.y = 0.2 + Math.sin(state.clock.getElapsedTime() * 2.5) * 0.04;
+      velocityY.current = 0;
+      groundedThisFrame = true;
+    } else if (inPool && activeRide === 'none') {
+      pos.current.y = 0.2 + Math.sin(state.clock.getElapsedTime() * 2.8) * 0.03;
       velocityY.current = 0;
       groundedThisFrame = true;
     } else {

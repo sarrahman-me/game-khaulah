@@ -5,7 +5,7 @@ import { soundManager } from '../sound/audioManager';
 export type AccessoryType = 'none' | 'bunny_ears' | 'fairy_wings' | 'princess_crown' | 'cat_ears' | 'star_halo';
 export type PetType = 'none' | 'puppy' | 'kitten' | 'fairy';
 export type EmoteType = 'none' | 'wave' | 'dance' | 'cheer';
-export type RideType = 'none' | 'slide' | 'swing' | 'carousel' | 'ferris' | 'train' | 'boat' | 'firetruck';
+export type RideType = 'none' | 'slide' | 'swing' | 'carousel' | 'ferris' | 'train' | 'boat' | 'firetruck' | 'pool_slide' | 'flamingo';
 
 export interface FamilyDialogData {
   speaker: string;
@@ -67,11 +67,12 @@ const CHECKPOINTS: [number, number, number][] = [
   [-34, 0.8, 28],    // Checkpoint 5: Danau Bebek & Pantai Pasir
   [34, 0.8, -2],     // Checkpoint 6: Desa Pertokoan Cilik
   [34, 0.8, 28],     // Checkpoint 7: Alun-Alun Karnaval & Theme Park
+  [0, 0.8, -18],     // Checkpoint 8: Kolam Renang & Halaman Belakang 🏊‍♀️🏡
 ];
 
 let state: GameState = {
   stars: 0,
-  totalStars: 45,
+  totalStars: 50,
   collectedStarIds: [],
   checkpointIndex: 0,
   checkpointPosition: [0, 0.8, -4],

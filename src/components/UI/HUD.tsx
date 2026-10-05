@@ -27,6 +27,7 @@ const ZONE_NAMES = [
   'Danau Bebek & Pantai Pasir 🏖️',
   'Desa Pertokoan & Damkar 🛒',
   'Alun-Alun Karnaval Ceria 🎡',
+  'Kolam Renang & Halaman Belakang 🏊‍♀️🌴',
 ];
 
 export const HUD: React.FC = () => {
@@ -165,6 +166,18 @@ export const HUD: React.FC = () => {
       gameStore.executeDialogAction('buy_icecream');
     } else if (id === 'village_train') {
       gameStore.setActiveRide('train');
+    } else if (id === 'pool_slide') {
+      gameStore.setActiveRide('pool_slide');
+    } else if (id === 'flamingo_float') {
+      gameStore.setActiveRide('flamingo');
+    } else if (id === 'treehouse') {
+      const cur = gameStore.getState().playerPos;
+      gameStore.setPlayerMotion([-14, 3.8, -24], 0, false);
+      soundManager.playJump();
+      gameStore.setMessage('Khaulah memanjat ke Rumah Pohon Rahasia! Pemandangannya indah sekali! 🏡🌳✨');
+    } else if (id === 'marshmallow') {
+      gameStore.executeDialogAction('take_snack');
+      gameStore.setMessage('Nyam nyam! Khaulah menikmati marshmallow bakar manis! (+Speed Boost ⚡🍡)');
     }
   };
 

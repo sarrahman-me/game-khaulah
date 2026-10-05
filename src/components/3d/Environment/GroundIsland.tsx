@@ -380,9 +380,9 @@ const InterconnectedWalkways: React.FC = () => {
 
 export const GroundIsland: React.FC = () => {
   useEffect(() => {
-    // 1. South Village Landmass (Rumah Khaulah, Farm, Town Street; Z: -16 to 8.5, X: -55 to 55)
+    // 1. South Village Landmass (Rumah Khaulah, Backyard Pool, Farm, Town; Z: -36 to 8.5, X: -55 to 55)
     const southBox = new THREE.Box3(
-      new THREE.Vector3(-55, -1, -16),
+      new THREE.Vector3(-55, -1, -36),
       new THREE.Vector3(55, 0.25, 8.5)
     );
     // 2. Central Arch Bridge (Z: 8.5 to 13.5, X: -3.0 to 3.0)
@@ -431,21 +431,21 @@ export const GroundIsland: React.FC = () => {
   return (
     <group position={[0, 0, 0]}>
       {/* ============================================================== */}
-      {/* 1. UNIFIED SOUTH VILLAGE TERRAIN (Z: -16 to 8.5, X: -55 to 55) */}
-      {/* Natural lush green grass covering the entire southern zone     */}
+      {/* 1. UNIFIED SOUTH VILLAGE TERRAIN (Z: -36 to 8.5, X: -55 to 55) */}
+      {/* Natural lush green grass covering the house, backyard & shops  */}
       {/* ============================================================== */}
-      <mesh position={[0, -0.2, -3.75]} receiveShadow>
-        <boxGeometry args={[110, 0.9, 24.5]} />
+      <mesh position={[0, -0.2, -13.75]} receiveShadow>
+        <boxGeometry args={[110, 0.9, 44.5]} />
         <meshStandardMaterial color="#4C8C2B" roughness={0.78} />
       </mesh>
       {/* Rich Fertile Earth Base beneath South Terrain */}
-      <mesh position={[0, -1.8, -3.75]}>
-        <boxGeometry args={[110.5, 2.3, 25.0]} />
+      <mesh position={[0, -1.8, -13.75]}>
+        <boxGeometry args={[110.5, 2.3, 45.0]} />
         <meshStandardMaterial color="#543D2B" roughness={0.95} />
       </mesh>
 
-      {/* South Island Perimeter Stone Retaining Wall (Z: -16) */}
-      <mesh position={[0, 0.15, -16]} receiveShadow>
+      {/* South Island Perimeter Stone Retaining Wall (Z: -36) */}
+      <mesh position={[0, 0.15, -36]} receiveShadow>
         <boxGeometry args={[110, 0.4, 0.35]} />
         <meshStandardMaterial color="#78716C" roughness={0.8} />
       </mesh>
@@ -482,8 +482,8 @@ export const GroundIsland: React.FC = () => {
       {/* East & West Perimeter Stone Retaining Walls */}
       {[-55, 55].map((wx, idx) => (
         <React.Fragment key={idx}>
-          <mesh position={[wx, 0.15, -3.75]} receiveShadow>
-            <boxGeometry args={[0.35, 0.4, 24.5]} />
+          <mesh position={[wx, 0.15, -13.75]} receiveShadow>
+            <boxGeometry args={[0.35, 0.4, 44.5]} />
             <meshStandardMaterial color="#78716C" roughness={0.8} />
           </mesh>
           <mesh position={[wx, 0.15, 30.75]} receiveShadow>
