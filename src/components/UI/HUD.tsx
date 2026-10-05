@@ -328,7 +328,11 @@ export const HUD: React.FC = () => {
           {/* Background Music Toggle */}
           <button
             onClick={() => gameStore.toggleBgm()}
-            title={isBgmActive ? 'Matikan Musik' : 'Nyalakan Musik Marimba'}
+            title={
+              isBgmActive
+                ? `Matikan Musik (${TIME_OF_DAY_CONFIG[timeOfDay].name})`
+                : `Nyalakan Musik (${TIME_OF_DAY_CONFIG[timeOfDay].name}) 🎵`
+            }
             className={`w-11 h-11 rounded-2xl flex items-center justify-center border-2 border-white shadow-md active:scale-90 transition-transform ${
               isBgmActive ? 'bg-pink-500 text-white' : 'bg-white/80 text-gray-600'
             }`}

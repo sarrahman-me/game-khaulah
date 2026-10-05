@@ -317,7 +317,7 @@ export const gameStore = {
   },
 
   toggleBgm: () => {
-    const active = soundManager.toggleBgm();
+    const active = soundManager.toggleBgm(state.timeOfDay);
     state = { ...state, isBgmActive: active };
     emitChange();
   },
@@ -483,6 +483,7 @@ export const gameStore = {
       timeOfDayTimeLeft: TIME_OF_DAY_INTERVALS[time],
       bubbleMessage: TIME_OF_DAY_MESSAGES[time],
     };
+    soundManager.setTimeOfDay(time);
     emitChange();
   },
 

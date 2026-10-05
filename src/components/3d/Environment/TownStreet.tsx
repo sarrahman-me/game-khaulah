@@ -5,35 +5,7 @@ import * as THREE from 'three';
 import { useGameStore, gameStore } from '../../../state/useGameStore';
 import { CheckpointFlag } from './CheckpointFlag';
 import { StarCollectible } from './StarCollectible';
-
-// Street Lamp with glowing light at subuh/sore/malam
-const StreetLamp: React.FC<{ pos: [number, number, number] }> = ({ pos }) => {
-  const timeOfDay = useGameStore((s) => s.timeOfDay);
-  const isDark = timeOfDay === 'malam' || timeOfDay === 'sore' || timeOfDay === 'subuh';
-
-  return (
-    <group position={pos}>
-      {/* Lamp Post */}
-      <mesh position={[0, 1.8, 0]} castShadow>
-        <cylinderGeometry args={[0.07, 0.1, 3.6, 8]} />
-        <meshStandardMaterial color="#4A4E69" />
-      </mesh>
-      {/* Lamp Arm & Lantern */}
-      <mesh position={[0, 3.55, 0.3]}>
-        <boxGeometry args={[0.1, 0.1, 0.7]} />
-        <meshStandardMaterial color="#4A4E69" />
-      </mesh>
-      <mesh position={[0, 3.4, 0.6]} castShadow>
-        <boxGeometry args={[0.3, 0.38, 0.3]} />
-        <meshStandardMaterial
-          color={isDark ? '#FFF275' : '#E0E1DD'}
-          emissive={isDark ? '#FFD166' : '#000'}
-          emissiveIntensity={isDark ? 0.9 : 0}
-        />
-      </mesh>
-    </group>
-  );
-};
+import { StreetLamp } from './StreetLamps';
 
 // Mini Fire Truck Model
 export const MiniFireTruckModel: React.FC<{ isRiding?: boolean }> = () => {

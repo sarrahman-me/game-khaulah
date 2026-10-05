@@ -1,11 +1,15 @@
 // Web Audio API procedural sound engine for Khaulah 3D World
 // No external assets required, zero latency, 100% reliable
 
+export type TimeCyclePeriod = 'subuh' | 'siang' | 'sore' | 'malam';
+
 class SoundEngine {
   private ctx: AudioContext | null = null;
   private isMuted: boolean = false;
   private bgmInterval: number | null = null;
+  private ambientInterval: number | null = null;
   private bgmPlaying: boolean = false;
+  private currentTimeOfDay: TimeCyclePeriod = 'siang';
 
   private initCtx() {
     if (!this.ctx) {
@@ -536,49 +540,289 @@ class SoundEngine {
     });
   }
 
-  // Cheerful background music: gentle procedural lullaby/marimba loop
-  public startBgm() {
-    if (this.bgmPlaying || this.isMuted) return;
-    this.initCtx();
-    this.bgmPlaying = true;
+  // --- PROCEDURAL DYNAMIC AUDIO PER SIKLUS WAKTU (SUBUH, SIANG, SORE, MALAM) ---
 
-    // A sweet 8-bar pentatonic tune in C major (so it's always melodically harmonious)
-    const melody = [
-      523.25, 587.33, 659.25, 783.99,
-      659.25, 587.33, 523.25, 392.00,
-      440.00, 523.25, 659.25, 587.33,
-      523.25, 659.25, 783.99, 1046.50,
-      880.00, 783.99, 659.25, 523.25,
-      587.33, 659.25, 587.33, 392.00,
-      440.00, 523.25, 659.25, 783.99,
-      659.25, 587.33, 523.25, 523.25,
-    ];
-    let noteIdx = 0;
+  // Suara kicauan burung pagi lembut (ambient Subuh)
+  private playBirdChirp() {
+    if (this.isMuted || !this.ctx || !this.bgmPlaying) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
 
-    const playNextNote = () => {
-      if (!this.bgmPlaying || !this.ctx || this.isMuted) return;
-      const freq = melody[noteIdx % melody.length];
-      noteIdx++;
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(2600, now);
+    osc.frequency.linearRampToValueAtTime(3400, now + 0.05);
+    osc.frequency.exponentialRampToValueAtTime(2400, now + 0.15);
 
-      const now = this.ctx.currentTime;
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.015, now + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.18);
+  }
+
+  // Suara jangkrik malam lembut (ambient Malam)
+  private playCricketChirp() {
+    if (this.isMuted || !this.ctx || !this.bgmPlaying) return;
+    const now = this.ctx.currentTime;
+    for (let i = 0; i < 3; i++) {
+      const t = now + i * 0.045;
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
 
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(4600 + Math.random() * 200, t);
 
-      // Warm marimba envelope
-      gain.gain.setValueAtTime(0.04, now);
-      gain.gain.exponentialRampToValueAtTime(0.0005, now + 0.38);
+      gain.gain.setValueAtTime(0.001, t);
+      gain.gain.linearRampToValueAtTime(0.008, t + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
 
       osc.connect(gain);
       gain.connect(this.ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.045);
+    }
+  }
 
-      osc.start(now);
-      osc.stop(now + 0.4);
+  // Chime transisi natural penanda pergantian siklus waktu
+  public playTimeTransition(time: TimeCyclePeriod) {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const transitionNotes: Record<TimeCyclePeriod, number[]> = {
+      subuh: [293.66, 440.00, 587.33], // D4 -> A4 -> D5 (Fajar sejuk merekah damai)
+      siang: [523.25, 659.25, 783.99, 1046.50], // C5 -> E5 -> G5 -> C6 (Matahari ceria bersinar)
+      sore: [392.00, 493.88, 587.33], // G4 -> B4 -> D5 (Senja keemasan hangat)
+      malam: [739.99, 932.33, 1108.73], // F#5 -> A#5 -> C#6 (Bintang-bintang gemerlap)
     };
 
-    this.bgmInterval = window.setInterval(playNextNote, 280);
+    const notes = transitionNotes[time] || transitionNotes.siang;
+    notes.forEach((freq, idx) => {
+      if (!this.ctx) return;
+      const t = now + idx * 0.12;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = time === 'malam' ? 'triangle' : 'sine';
+      osc.frequency.setValueAtTime(freq, t);
+
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.linearRampToValueAtTime(0.035, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.48);
+    });
+  }
+
+  // Update siklus waktu dan sesuaikan audio jika sedang berjalan
+  public setTimeOfDay(time: TimeCyclePeriod) {
+    if (this.currentTimeOfDay === time) return;
+    this.currentTimeOfDay = time;
+    this.playTimeTransition(time);
+    if (this.bgmPlaying) {
+      this.restartBgmForCurrentTime();
+    }
+  }
+
+  // Memulai trek instrumen & melodi sesuai siklus waktu
+  private startBgmTrack(time: TimeCyclePeriod) {
+    if (!this.bgmPlaying || !this.ctx || this.isMuted) return;
+
+    let noteIdx = 0;
+
+    if (time === 'subuh') {
+      // 1. SUBUH: Seruling embun pagi lembut & damai (D-minor / F-major pentatonic)
+      const melody = [
+        293.66, 329.63, 392.00, 440.00, // D4, E4, G4, A4
+        392.00, 329.63, 293.66, 220.00, // G4, E4, D4, A3
+        293.66, 392.00, 440.00, 523.25, // D4, G4, A4, C5
+        587.33, 440.00, 392.00, 329.63, // D5, A4, G4, E4
+        392.00, 440.00, 493.88, 587.33, // G4, A4, B4, D5
+        440.00, 392.00, 329.63, 293.66, // A4, G4, E4, D4
+        293.66, 392.00, 329.63, 293.66, // D4, G4, E4, D4
+      ];
+
+      const playSubuhNote = () => {
+        if (!this.bgmPlaying || !this.ctx || this.isMuted) return;
+        const freq = melody[noteIdx % melody.length];
+        noteIdx++;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+
+        // Gentle flute-like envelope
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.035, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.0005, now + 0.55);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.58);
+      };
+
+      this.bgmInterval = window.setInterval(playSubuhNote, 460);
+
+      // Kicauan burung fajar berkala
+      this.ambientInterval = window.setInterval(() => {
+        if (Math.random() > 0.3) {
+          this.playBirdChirp();
+        }
+      }, 3200);
+
+    } else if (time === 'siang') {
+      // 2. SIANG: Bouncy cheerful marimba (C-Major riang gembira)
+      const melody = [
+        523.25, 587.33, 659.25, 783.99, // C5, D5, E5, G5
+        659.25, 587.33, 523.25, 392.00, // E5, D5, C5, G4
+        440.00, 523.25, 659.25, 587.33, // A4, C5, E5, D5
+        523.25, 659.25, 783.99, 1046.50,// C5, E5, G5, C6
+        880.00, 783.99, 659.25, 523.25, // A5, G5, E5, C5
+        587.33, 659.25, 587.33, 392.00, // D5, E5, D5, G4
+        440.00, 523.25, 659.25, 783.99, // A4, C5, E5, G5
+        659.25, 587.33, 523.25, 523.25, // E5, D5, C5, C5
+      ];
+
+      const playSiangNote = () => {
+        if (!this.bgmPlaying || !this.ctx || this.isMuted) return;
+        const freq = melody[noteIdx % melody.length];
+        noteIdx++;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+
+        // Warm marimba envelope
+        gain.gain.setValueAtTime(0.045, now);
+        gain.gain.exponentialRampToValueAtTime(0.0005, now + 0.34);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.36);
+      };
+
+      this.bgmInterval = window.setInterval(playSiangNote, 270);
+
+    } else if (time === 'sore') {
+      // 3. SORE: Warm Kalimba / Sunset Harp (G-Major senja hangat)
+      const melody = [
+        392.00, 440.00, 493.88, 587.33, // G4, A4, B4, D5
+        493.88, 440.00, 392.00, 329.63, // B4, A4, G4, E4
+        392.00, 493.88, 587.33, 659.25, // G4, B4, D5, E5
+        587.33, 493.88, 440.00, 392.00, // D5, B4, A4, G4
+        440.00, 493.88, 587.33, 440.00, // A4, B4, D5, A4
+        493.88, 440.00, 392.00, 329.63, // B4, A4, G4, E4
+        329.63, 392.00, 440.00, 493.88, // E4, G4, A4, B4
+        392.00, 392.00, 293.66, 392.00, // G4, G4, D4, G4
+      ];
+
+      const playSoreNote = () => {
+        if (!this.bgmPlaying || !this.ctx || this.isMuted) return;
+        const freq = melody[noteIdx % melody.length];
+        noteIdx++;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now);
+
+        // Kalimba envelope with warm decay
+        gain.gain.setValueAtTime(0.038, now);
+        gain.gain.exponentialRampToValueAtTime(0.0005, now + 0.42);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.45);
+      };
+
+      this.bgmInterval = window.setInterval(playSoreNote, 350);
+
+    } else {
+      // 4. MALAM: Celesta / Sparkling Starry Music Box Lullaby
+      const melody = [
+        554.37, 622.25, 739.99, 830.61, // C#5, D#5, F#5, G#5
+        739.99, 622.25, 554.37, 466.16, // F#5, D#5, C#5, A#4
+        466.16, 554.37, 622.25, 739.99, // A#4, C#5, D#5, F#5
+        830.61, 932.33, 1108.73, 830.61,// G#5, A#5, C#6, G#5
+        739.99, 622.25, 554.37, 622.25, // F#5, D#5, C#5, D#5
+        554.37, 466.16, 369.99, 466.16, // C#5, A#4, F#4, A#4
+        554.37, 622.25, 739.99, 622.25, // C#5, D#5, F#5, D#5
+        554.37, 369.99, 554.37, 554.37, // C#5, F#4, C#5, C#5
+      ];
+
+      const playMalamNote = () => {
+        if (!this.bgmPlaying || !this.ctx || this.isMuted) return;
+        const freq = melody[noteIdx % melody.length];
+        noteIdx++;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+
+        // Music box / celesta chime envelope
+        gain.gain.setValueAtTime(0.034, now);
+        gain.gain.exponentialRampToValueAtTime(0.0003, now + 0.58);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.6);
+      };
+
+      this.bgmInterval = window.setInterval(playMalamNote, 430);
+
+      // Jangkrik malam lembut berkala
+      this.ambientInterval = window.setInterval(() => {
+        this.playCricketChirp();
+      }, 2400);
+    }
+  }
+
+  // Mulai atau lanjutkan BGM sesuai siklus waktu saat ini
+  public startBgm(time?: TimeCyclePeriod) {
+    if (time) {
+      this.currentTimeOfDay = time;
+    }
+    if (this.bgmPlaying || this.isMuted) return;
+    this.initCtx();
+    this.bgmPlaying = true;
+    this.startBgmTrack(this.currentTimeOfDay);
+  }
+
+  // Restart BGM dengan mulus ke siklus waktu saat ini
+  private restartBgmForCurrentTime() {
+    if (!this.bgmPlaying) return;
+    if (this.bgmInterval !== null) {
+      clearInterval(this.bgmInterval);
+      this.bgmInterval = null;
+    }
+    if (this.ambientInterval !== null) {
+      clearInterval(this.ambientInterval);
+      this.ambientInterval = null;
+    }
+    this.startBgmTrack(this.currentTimeOfDay);
   }
 
   // Realistic cute double bicycle bell "Kring.. kring!"
@@ -845,20 +1089,28 @@ class SoundEngine {
       clearInterval(this.bgmInterval);
       this.bgmInterval = null;
     }
+    if (this.ambientInterval !== null) {
+      clearInterval(this.ambientInterval);
+      this.ambientInterval = null;
+    }
   }
 
-  public toggleBgm(): boolean {
+  public toggleBgm(time?: TimeCyclePeriod): boolean {
     if (this.bgmPlaying) {
       this.stopBgm();
       return false;
     } else {
-      this.startBgm();
+      this.startBgm(time);
       return true;
     }
   }
 
   public isBgmActive(): boolean {
     return this.bgmPlaying;
+  }
+
+  public getCurrentTimeOfDay(): TimeCyclePeriod {
+    return this.currentTimeOfDay;
   }
 }
 
