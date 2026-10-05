@@ -78,17 +78,17 @@ export const GameScene: React.FC = () => {
 
   const env = {
     day: {
-      bg: '#BEE1E6',
-      fogNear: 80,
-      fogFar: 220,
-      ambientColor: '#FFF3E0',
-      ambientIntensity: 0.95,
+      bg: '#BAE6FD',
+      fogNear: 85,
+      fogFar: 230,
+      ambientColor: '#FFFFFF',
+      ambientIntensity: 0.85,
       sunPos: [45, 55, 30] as [number, number, number],
-      sunColor: '#FFF9EB',
-      sunIntensity: 1.45,
-      hemiSky: '#FDE2E4',
-      hemiGround: '#C5DEDD',
-      hemiIntensity: 0.65,
+      sunColor: '#FFFBEB',
+      sunIntensity: 1.4,
+      hemiSky: '#E0F2FE',
+      hemiGround: '#86EFAC',
+      hemiIntensity: 0.6,
     },
     sunset: {
       bg: '#F8AD9D',

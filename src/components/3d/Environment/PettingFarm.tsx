@@ -224,15 +224,15 @@ export const PettingFarm: React.FC = () => {
         <group key={`fence_n_${idx}`} position={[fx, 0, -9]}>
           <mesh position={[0, 0.45, 0]} castShadow>
             <cylinderGeometry args={[0.08, 0.08, 0.9, 6]} />
-            <meshStandardMaterial color="#B08968" />
+            <meshStandardMaterial color="#8D5B4C" roughness={0.8} />
           </mesh>
           <mesh position={[1.5, 0.6, 0]}>
             <boxGeometry args={[3.2, 0.1, 0.05]} />
-            <meshStandardMaterial color="#CDB4DB" />
+            <meshStandardMaterial color="#8D5B4C" roughness={0.8} />
           </mesh>
           <mesh position={[1.5, 0.3, 0]}>
             <boxGeometry args={[3.2, 0.1, 0.05]} />
-            <meshStandardMaterial color="#CDB4DB" />
+            <meshStandardMaterial color="#8D5B4C" roughness={0.8} />
           </mesh>
         </group>
       ))}

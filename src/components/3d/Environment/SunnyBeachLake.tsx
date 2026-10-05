@@ -21,12 +21,12 @@ const ShimmeringLake: React.FC = () => {
       {/* Lake Bed */}
       <mesh position={[0, -0.25, 0]}>
         <boxGeometry args={[18, 0.6, 14]} />
-        <meshStandardMaterial color="#2E5077" roughness={0.9} />
+        <meshStandardMaterial color="#3D4A54" roughness={0.95} />
       </mesh>
       {/* Lake Water Surface */}
       <mesh ref={meshRef} position={[0, 0.08, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[17.5, 13.5]} />
-        <meshStandardMaterial color="#4EA8DE" roughness={0.08} transparent opacity={0.85} metalness={0.15} />
+        <meshStandardMaterial color="#0096C7" roughness={0.08} transparent opacity={0.86} metalness={0.16} />
       </mesh>
       {/* Lily pads */}
       {[
@@ -37,7 +37,7 @@ const ShimmeringLake: React.FC = () => {
       ].map(([lx, lz], idx) => (
         <group key={idx} position={[lx, 0.12, lz]} rotation={[-Math.PI / 2, 0, idx]}>
           <circleGeometry args={[0.45, 12]} />
-          <meshStandardMaterial color="#52B788" />
+          <meshStandardMaterial color="#2D6A4F" roughness={0.4} />
         </group>
       ))}
     </group>

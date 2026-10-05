@@ -149,12 +149,34 @@ export const TownStreet: React.FC = () => {
 
   return (
     <group position={[35, 0, -3]}>
-      {/* --- 1. ASPHALT ROADWAY & CROSSWALKS --- */}
-      <group position={[0, 0.05, 3]}>
-        {/* Road Surface */}
+      {/* --- 1. ASPHALT ROADWAY, SIDEWALKS & CROSSWALKS --- */}
+      {/* North Sidewalk (In front of shops) */}
+      <mesh position={[0, 0.05, -1.8]} receiveShadow>
+        <boxGeometry args={[36, 0.06, 2.8]} />
+        <meshStandardMaterial color="#E2E8F0" roughness={0.7} />
+      </mesh>
+      {/* North Sidewalk Stone Curb */}
+      <mesh position={[0, 0.06, -0.4]} receiveShadow>
+        <boxGeometry args={[36, 0.08, 0.2]} />
+        <meshStandardMaterial color="#94A3B8" roughness={0.75} />
+      </mesh>
+
+      {/* South Sidewalk */}
+      <mesh position={[0, 0.05, 7.2]} receiveShadow>
+        <boxGeometry args={[36, 0.06, 2.0]} />
+        <meshStandardMaterial color="#E2E8F0" roughness={0.7} />
+      </mesh>
+      {/* South Sidewalk Stone Curb */}
+      <mesh position={[0, 0.06, 6.2]} receiveShadow>
+        <boxGeometry args={[36, 0.08, 0.2]} />
+        <meshStandardMaterial color="#94A3B8" roughness={0.75} />
+      </mesh>
+
+      {/* Main Asphalt Road Surface */}
+      <group position={[0, 0.05, 2.9]}>
         <mesh position={[0, 0, 0]} receiveShadow>
-          <boxGeometry args={[36, 0.04, 7.5]} />
-          <meshStandardMaterial color="#343A40" roughness={0.8} />
+          <boxGeometry args={[36, 0.04, 6.4]} />
+          <meshStandardMaterial color="#343A40" roughness={0.82} />
         </mesh>
         {/* Road Center Dashes (White) */}
         {[-14, -8, -2, 4, 10].map((dx, idx) => (
@@ -175,9 +197,9 @@ export const TownStreet: React.FC = () => {
       </group>
 
       {/* Sidewalk Lamp Posts */}
-      <StreetLamp pos={[-12, 0, -1.2]} />
-      <StreetLamp pos={[3, 0, -1.2]} />
-      <StreetLamp pos={[16, 0, -1.2]} />
+      <StreetLamp pos={[-12, 0, -0.9]} />
+      <StreetLamp pos={[3, 0, -0.9]} />
+      <StreetLamp pos={[16, 0, -0.9]} />
 
       {/* --- 2. KHAULAH MART (MINIMARKET) --- */}
       <group position={[-8, 0, -4]}>

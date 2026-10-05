@@ -27,22 +27,22 @@ export function getTrainTrackPose(progress: number): { pos: THREE.Vector3; headi
   if (dist < width) {
     // 1. Bottom edge: from (minX, minZ) to (maxX, minZ) moving right (+X)
     const t = dist / width;
-    pos.set(minX + t * width, 0.4, minZ);
+    pos.set(minX + t * width, 0.5, minZ);
     heading = Math.PI / 2; // facing +X
   } else if (dist < width + depth) {
     // 2. Right edge: from (maxX, minZ) to (maxX, maxZ) moving forward (+Z)
     const t = (dist - width) / depth;
-    pos.set(maxX, 0.4, minZ + t * depth);
+    pos.set(maxX, 0.5, minZ + t * depth);
     heading = 0; // facing +Z
   } else if (dist < 2 * width + depth) {
     // 3. Top edge: from (maxX, maxZ) to (minX, maxZ) moving left (-X)
     const t = (dist - (width + depth)) / width;
-    pos.set(maxX - t * width, 0.4, maxZ);
+    pos.set(maxX - t * width, 0.5, maxZ);
     heading = -Math.PI / 2; // facing -X
   } else {
     // 4. Left edge: from (minX, maxZ) to (minX, minZ) moving backward (-Z)
     const t = (dist - (2 * width + depth)) / depth;
-    pos.set(minX, 0.4, maxZ - t * depth);
+    pos.set(minX, 0.5, maxZ - t * depth);
     heading = Math.PI; // facing -Z
   }
 
@@ -196,24 +196,24 @@ const StationPlatform: React.FC<{ pos: [number, number, number]; name: string; r
   return (
     <group position={pos} rotation={[0, rotY, 0]}>
       {/* Platform Concrete Slab */}
-      <mesh position={[0, 0.22, 0]} receiveShadow>
-        <boxGeometry args={[7.5, 0.35, 3.2]} />
+      <mesh position={[0, 0.35, 0]} receiveShadow>
+        <boxGeometry args={[7.5, 0.28, 3.2]} />
         <meshStandardMaterial color="#E9D8A6" roughness={0.7} />
       </mesh>
       {/* Station Canopy Roof */}
-      <mesh position={[0, 2.8, 0]} castShadow>
+      <mesh position={[0, 2.9, 0]} castShadow>
         <boxGeometry args={[7.8, 0.2, 3.5]} />
         <meshStandardMaterial color="#E76F51" />
       </mesh>
       {/* Roof Pillar Supports */}
       {[-3.2, 3.2].map((px, idx) => (
-        <mesh key={idx} position={[px, 1.4, 0]}>
+        <mesh key={idx} position={[px, 1.5, 0]}>
           <cylinderGeometry args={[0.1, 0.1, 2.5, 8]} />
           <meshStandardMaterial color="#6F4E37" />
         </mesh>
       ))}
       {/* Station Nameboard Billboard */}
-      <Billboard position={[0, 3.5, 0]}>
+      <Billboard position={[0, 3.6, 0]}>
         <Text fontSize={0.32} color="#582F0E" outlineWidth={0.04} outlineColor="#FFF" anchorY="middle">
           {name}
         </Text>
@@ -251,26 +251,45 @@ export const VillageTrain: React.FC = () => {
 
   return (
     <group position={[0, 0, 0]}>
-      {/* --- 1. CONTINUOUS PERIMETER RAILWAY TRACKS --- */}
+      {/* --- 1. CONTINUOUS PERIMETER RAILWAY TRACKS & GRAVEL BALLAST --- */}
       {/* South Track (Z: -12, X: -48 to 48) */}
-      <mesh position={[0, 0.04, -12]} receiveShadow>
-        <boxGeometry args={[96, 0.05, 1.8]} />
-        <meshStandardMaterial color="#8D5B4C" roughness={0.9} />
+      <mesh position={[0, 0.265, -12]} receiveShadow>
+        <boxGeometry args={[96, 0.04, 1.6]} />
+        <meshStandardMaterial color="#78716C" roughness={0.9} />
       </mesh>
+      <mesh position={[0, 0.29, -12]}>
+        <boxGeometry args={[96, 0.02, 0.8]} />
+        <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.4} />
+      </mesh>
+
       {/* North Track (Z: 42, X: -48 to 48) */}
-      <mesh position={[0, 0.04, 42]} receiveShadow>
-        <boxGeometry args={[96, 0.05, 1.8]} />
-        <meshStandardMaterial color="#8D5B4C" roughness={0.9} />
+      <mesh position={[0, 0.265, 42]} receiveShadow>
+        <boxGeometry args={[96, 0.04, 1.6]} />
+        <meshStandardMaterial color="#78716C" roughness={0.9} />
       </mesh>
+      <mesh position={[0, 0.29, 42]}>
+        <boxGeometry args={[96, 0.02, 0.8]} />
+        <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.4} />
+      </mesh>
+
       {/* West Track (X: -48, Z: -12 to 42) */}
-      <mesh position={[-48, 0.04, 15]} receiveShadow>
-        <boxGeometry args={[1.8, 0.05, 54]} />
-        <meshStandardMaterial color="#8D5B4C" roughness={0.9} />
+      <mesh position={[-48, 0.265, 15]} receiveShadow>
+        <boxGeometry args={[1.6, 0.04, 54]} />
+        <meshStandardMaterial color="#78716C" roughness={0.9} />
       </mesh>
+      <mesh position={[-48, 0.29, 15]}>
+        <boxGeometry args={[0.8, 0.02, 54]} />
+        <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.4} />
+      </mesh>
+
       {/* East Track (X: 48, Z: -12 to 42) */}
-      <mesh position={[48, 0.04, 15]} receiveShadow>
-        <boxGeometry args={[1.8, 0.05, 54]} />
-        <meshStandardMaterial color="#8D5B4C" roughness={0.9} />
+      <mesh position={[48, 0.265, 15]} receiveShadow>
+        <boxGeometry args={[1.6, 0.04, 54]} />
+        <meshStandardMaterial color="#78716C" roughness={0.9} />
+      </mesh>
+      <mesh position={[48, 0.29, 15]}>
+        <boxGeometry args={[0.8, 0.02, 54]} />
+        <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.4} />
       </mesh>
 
       {/* --- 2. FOUR THEMED STATIONS --- */}

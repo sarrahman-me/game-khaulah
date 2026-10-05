@@ -210,7 +210,18 @@ export const CarnivalThemePark: React.FC = () => {
 
   return (
     <group position={[35, 0, 29]}>
-      {/* --- CARNIVAL ENTRANCE ARCHWAY --- */}
+      {/* --- FESTIVAL PLAZA PAVING (Warm Stone Pavers with Festive Borders) --- */}
+      <mesh position={[0, 0.252, 0]} receiveShadow>
+        <boxGeometry args={[34, 0.02, 30]} />
+        <meshStandardMaterial color="#EAE2D6" roughness={0.7} />
+      </mesh>
+      {/* Paved Plaza Edging */}
+      <mesh position={[0, 0.254, 0]} receiveShadow>
+        <boxGeometry args={[34.4, 0.02, 30.4]} />
+        <meshStandardMaterial color="#C8BEB2" roughness={0.75} />
+      </mesh>
+
+      {/* --- CARNIVAL ENTRANCE ARCHWAY & COLORFUL FESTIVAL BALLOONS --- */}
       <group position={[-14, 0, -10]}>
         {/* Left & Right Candy Pillars */}
         <mesh position={[-2.4, 2.2, 0]} castShadow>
@@ -232,6 +243,21 @@ export const CarnivalThemePark: React.FC = () => {
             🎪 PASAR MALAM & KARNAVAL CERIA 🎡
           </Text>
         </Billboard>
+
+        {/* Festive Balloon Clusters on Entrance Arch (Kids love this!) */}
+        {[-2.4, 2.4].map((bx, bi) => (
+          <group key={bi} position={[bx, 4.5, 0]}>
+            {[-0.2, 0, 0.2].map((ox, oi) => (
+              <mesh key={oi} position={[ox, 0.6 + oi * 0.2, (oi - 1) * 0.15]}>
+                <sphereGeometry args={[0.22, 10, 10]} />
+                <meshStandardMaterial
+                  color={['#FF006E', '#FFBE0B', '#3A86FF', '#06D6A0', '#8338EC'][(bi * 3 + oi) % 5]}
+                  roughness={0.2}
+                />
+              </mesh>
+            ))}
+          </group>
+        ))}
       </group>
 
       {/* --- 1. KOMEDI PUTAR (CAROUSEL) --- */}
