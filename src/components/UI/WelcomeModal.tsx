@@ -86,9 +86,9 @@ export const WelcomeModal: React.FC = () => {
           <div className="bg-white/90 p-3 rounded-2xl border border-rose-200 shadow-xs flex items-center gap-3">
             <span className="text-2xl">🛴</span>
             <div>
-              <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">Skuter Pink & Waktu Ajaib</h4>
+              <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">Skuter Pink & Siklus Waktu Alami</h4>
               <p className="text-gray-600 text-[11px] sm:text-xs">
-                Naiki <b>Skuter Pink Khaulah</b> untuk ngebut (bunyikan bel <b>[H]</b> "kring-kring!"), dan ganti suasana langit ke <b>Senja 🌇</b> atau <b>Malam Kunang-Kunang 🌙</b>!
+                Naiki <b>Skuter Pink Khaulah</b> untuk ngebut (bunyikan bel <b>[H]</b> "kring-kring!"), dan nikmati keindahan langit yang berganti otomatis dari <b>Subuh 🌅</b>, <b>Siang ☀️</b>, <b>Sore 🌇</b>, hingga <b>Malam Berbintang 🌙</b>!
               </p>
             </div>
           </div>

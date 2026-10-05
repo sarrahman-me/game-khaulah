@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGameStore, gameStore } from '../../state/useGameStore';
+import { useGameStore, gameStore, TIME_OF_DAY_CONFIG } from '../../state/useGameStore';
 import { soundManager } from '../../sound/audioManager';
 import {
   Star,
@@ -12,6 +12,7 @@ import {
   Flag,
   Sparkles,
   X,
+  Sunrise,
   Sun,
   Sunset,
   Moon,
@@ -43,6 +44,7 @@ export const HUD: React.FC = () => {
   const activeDialog = useGameStore((s) => s.activeDialog);
   const activeRide = useGameStore((s) => s.activeRide);
   const timeOfDay = useGameStore((s) => s.timeOfDay);
+  const timeOfDayTimeLeft = useGameStore((s) => s.timeOfDayTimeLeft);
   const isRidingScooter = useGameStore((s) => s.isRidingScooter);
   const schoolQuest = useGameStore((s) => s.schoolQuest);
 
@@ -291,32 +293,37 @@ export const HUD: React.FC = () => {
 
         {/* Right: Menu & Audio Controls */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          {/* Time of Day Toggle */}
-          <button
-            onClick={() => gameStore.cycleTimeOfDay()}
-            title={
-              timeOfDay === 'day'
-                ? 'Ganti ke Senja Hangat 🌇'
-                : timeOfDay === 'sunset'
-                ? 'Ganti ke Malam Berbintang 🌙'
-                : 'Ganti ke Pagi Ceria ☀️'
-            }
-            className={`w-11 h-11 rounded-2xl flex items-center justify-center border-2 border-white shadow-md active:scale-90 transition-transform ${
-              timeOfDay === 'night'
-                ? 'bg-indigo-900 text-yellow-300'
-                : timeOfDay === 'sunset'
-                ? 'bg-orange-500 text-yellow-100'
-                : 'bg-amber-300 text-amber-900'
+          {/* Time of Day Indicator (Otomatis: Subuh ➔ Siang ➔ Sore ➔ Malam) */}
+          <div
+            title={`Waktu Otomatis: ${TIME_OF_DAY_CONFIG[timeOfDay].name} (${Math.ceil(timeOfDayTimeLeft)}s tersisa) — Siklus berganti otomatis: Subuh ➔ Siang ➔ Sore ➔ Malam`}
+            className={`h-11 px-3 rounded-2xl flex items-center gap-2 border-2 border-white shadow-md select-none transition-all duration-300 ${
+              timeOfDay === 'subuh'
+                ? 'bg-gradient-to-r from-indigo-900 to-purple-900 text-indigo-100'
+                : timeOfDay === 'siang'
+                ? 'bg-gradient-to-r from-amber-300 to-yellow-300 text-amber-950 font-bold'
+                : timeOfDay === 'sore'
+                ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white'
+                : 'bg-gradient-to-r from-slate-900 to-indigo-950 text-yellow-300'
             }`}
           >
-            {timeOfDay === 'night' ? (
-              <Moon className="w-5 h-5 fill-yellow-300" />
-            ) : timeOfDay === 'sunset' ? (
-              <Sunset className="w-5 h-5" />
+            {timeOfDay === 'subuh' ? (
+              <Sunrise className="w-5 h-5 text-indigo-200" />
+            ) : timeOfDay === 'siang' ? (
+              <Sun className="w-5 h-5 text-amber-600 fill-amber-400" />
+            ) : timeOfDay === 'sore' ? (
+              <Sunset className="w-5 h-5 text-yellow-200" />
             ) : (
-              <Sun className="w-5 h-5" />
+              <Moon className="w-5 h-5 fill-yellow-300" />
             )}
-          </button>
+            <div className="flex flex-col text-left leading-none pr-0.5">
+              <span className="text-[11px] font-bubble font-bold">
+                {TIME_OF_DAY_CONFIG[timeOfDay].badgeLabel}
+              </span>
+              <span className="text-[10px] font-mono font-semibold opacity-85 mt-0.5">
+                {Math.ceil(timeOfDayTimeLeft)}s
+              </span>
+            </div>
+          </div>
 
           {/* Background Music Toggle */}
           <button

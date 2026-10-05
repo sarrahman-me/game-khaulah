@@ -7,6 +7,65 @@ export type PetType = 'none' | 'puppy' | 'kitten' | 'fairy';
 export type EmoteType = 'none' | 'wave' | 'dance' | 'cheer';
 export type RideType = 'none' | 'slide' | 'swing' | 'carousel' | 'ferris' | 'train' | 'boat' | 'firetruck' | 'pool_slide' | 'flamingo';
 
+export type TimeOfDay = 'subuh' | 'siang' | 'sore' | 'malam';
+
+// Durasi interval waktu (dalam detik) untuk masing-masing fase secara otomatis
+export const TIME_OF_DAY_INTERVALS: Record<TimeOfDay, number> = {
+  subuh: 45, // 45 detik: Fajar Subuh yang sejuk & tenang
+  siang: 90, // 90 detik: Siang hari ceria untuk bermain & eksplorasi
+  sore: 45,  // 45 detik: Senja sore keemasan nan syahdu
+  malam: 60, // 60 detik: Malam berbintang dengan lentera & kunang-kunang
+};
+
+export const TIME_OF_DAY_SEQUENCE: Record<TimeOfDay, TimeOfDay> = {
+  subuh: 'siang',
+  siang: 'sore',
+  sore: 'malam',
+  malam: 'subuh',
+};
+
+export const TIME_OF_DAY_CONFIG: Record<
+  TimeOfDay,
+  {
+    name: string;
+    badgeLabel: string;
+    description: string;
+    duration: number;
+  }
+> = {
+  subuh: {
+    name: 'Subuh',
+    badgeLabel: 'Subuh',
+    description: 'Fajar Subuh yang damai dan sejuk 🌅🕊️',
+    duration: 45,
+  },
+  siang: {
+    name: 'Siang',
+    badgeLabel: 'Siang',
+    description: 'Matahari siang ceria bersinar hangat ☀️🏡',
+    duration: 90,
+  },
+  sore: {
+    name: 'Sore',
+    badgeLabel: 'Sore',
+    description: 'Senja sore jingga keemasan nan indah 🌇✨',
+    duration: 45,
+  },
+  malam: {
+    name: 'Malam',
+    badgeLabel: 'Malam',
+    description: 'Malam berbintang ajaib & kunang-kunang 🌙🕯️',
+    duration: 60,
+  },
+};
+
+export const TIME_OF_DAY_MESSAGES: Record<TimeOfDay, string> = {
+  subuh: 'Fajar Subuh yang sejuk dan damai! Waktunya bangun dan sholat Subuh, Khaulah! 🌅🕊️',
+  siang: 'Matahari siang ceria bersinar hangat! Selamat beraktivitas Khaulah! ☀️🏡🎒',
+  sore: 'Senja sore jingga keemasan yang indah di desa Karang Tengah! 🌇✨',
+  malam: 'Malam berbintang ajaib! Kunang-kunang dan lentera mulai menyala! 🌙✨🕯️',
+};
+
 export interface FamilyDialogData {
   speaker: string;
   role: string;
@@ -45,7 +104,8 @@ export interface GameState {
   nearbyInteractable: { id: string; title: string; prompt: string } | null;
   activeDialog: FamilyDialogData | null;
   // Time of Day
-  timeOfDay: 'day' | 'sunset' | 'night';
+  timeOfDay: TimeOfDay;
+  timeOfDayTimeLeft: number;
   // Scooter vehicle
   isRidingScooter: boolean;
   scooterPos: [number, number, number];
@@ -96,7 +156,8 @@ let state: GameState = {
   speedBuffTimeLeft: 0,
   nearbyInteractable: null,
   activeDialog: null,
-  timeOfDay: 'day',
+  timeOfDay: 'siang',
+  timeOfDayTimeLeft: TIME_OF_DAY_INTERVALS['siang'],
   isRidingScooter: false,
   scooterPos: [3.2, 0.2, -4.0],
   schoolQuest: {
@@ -414,28 +475,41 @@ export const gameStore = {
     }
   },
 
-  // --- TIME OF DAY CONTROLS ---
-  setTimeOfDay: (time: 'day' | 'sunset' | 'night') => {
-    const messages = {
-      day: 'Matahari pagi ceria bersinar hangat! Selamat beraktivitas Khaulah! ☀️🏡',
-      sunset: 'Senja jingga keemasan yang indah di desa Karang Tengah! 🌇✨',
-      night: 'Malam berbintang ajaib! Kunang-kunang dan lentera mulai menyala! 🌙✨🕯️',
-    };
+  // --- TIME OF DAY AUTOMATION & CONTROLS ---
+  setTimeOfDay: (time: TimeOfDay) => {
     state = {
       ...state,
       timeOfDay: time,
-      bubbleMessage: messages[time],
+      timeOfDayTimeLeft: TIME_OF_DAY_INTERVALS[time],
+      bubbleMessage: TIME_OF_DAY_MESSAGES[time],
     };
     emitChange();
   },
 
+  tickTimeOfDay: (dt: number) => {
+    const safeDt = Math.min(dt, 0.2); // Cegah lonjakan waktu jika window lag/unfocused
+    const prevSec = Math.ceil(state.timeOfDayTimeLeft);
+    const newTimeLeft = Math.max(0, state.timeOfDayTimeLeft - safeDt);
+
+    if (newTimeLeft <= 0) {
+      // Waktu interval habis, berganti otomatis ke fase berikutnya (Subuh ➔ Siang ➔ Sore ➔ Malam)
+      const nextTime = TIME_OF_DAY_SEQUENCE[state.timeOfDay];
+      gameStore.setTimeOfDay(nextTime);
+    } else {
+      state = {
+        ...state,
+        timeOfDayTimeLeft: newTimeLeft,
+      };
+      const newSec = Math.ceil(newTimeLeft);
+      // Emit perubahan per detik agar display UI timer di HUD tetap efisien (1 render per detik)
+      if (prevSec !== newSec) {
+        emitChange();
+      }
+    }
+  },
+
   cycleTimeOfDay: () => {
-    const next: Record<'day' | 'sunset' | 'night', 'day' | 'sunset' | 'night'> = {
-      day: 'sunset',
-      sunset: 'night',
-      night: 'day',
-    };
-    gameStore.setTimeOfDay(next[state.timeOfDay]);
+    gameStore.setTimeOfDay(TIME_OF_DAY_SEQUENCE[state.timeOfDay]);
   },
 
   // --- SCOOTER VEHICLE CONTROLS ---

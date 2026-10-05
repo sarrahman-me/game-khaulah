@@ -375,7 +375,7 @@ const SecretTreehouse: React.FC = () => {
 // Family Glamping & Marshmallow Campfire Spot
 const FamilyGlampingCamp: React.FC = () => {
   const timeOfDay = useGameStore((s) => s.timeOfDay);
-  const isNight = timeOfDay === 'night' || timeOfDay === 'sunset';
+  const isNight = timeOfDay === 'malam' || timeOfDay === 'sore' || timeOfDay === 'subuh';
 
   return (
     <group position={[-14, 0, -32]}>

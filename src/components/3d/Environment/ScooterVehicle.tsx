@@ -46,8 +46,10 @@ export const ScooterVehicle: React.FC = () => {
   // If Khaulah is currently riding, the parked model is hidden (rendered on player)
   if (isRidingScooter) return null;
 
-  const isNight = timeOfDay === 'night';
-  const isSunset = timeOfDay === 'sunset';
+  const isNight = timeOfDay === 'malam';
+  const isSunset = timeOfDay === 'sore';
+  const isSubuh = timeOfDay === 'subuh';
+  const isDark = isNight || isSunset || isSubuh;
 
   return (
     <group ref={groupRef} position={scooterPos} rotation={[0, Math.PI / 4, 0]}>
@@ -171,13 +173,13 @@ export const ScooterVehicle: React.FC = () => {
             <mesh position={[0, 0, -0.016]}>
               <circleGeometry args={[0.032, 12]} />
               <meshStandardMaterial
-                color={isNight || isSunset ? '#FFF9A6' : '#FFFFFF'}
-                emissive={isNight || isSunset ? '#FFF9A6' : '#444444'}
-                emissiveIntensity={isNight ? 1.0 : 0.2}
+                color={isDark ? '#FFF9A6' : '#FFFFFF'}
+                emissive={isDark ? '#FFF9A6' : '#444444'}
+                emissiveIntensity={isNight ? 1.0 : isDark ? 0.7 : 0.2}
               />
             </mesh>
-            {(isNight || isSunset) && (
-              <pointLight color="#FFF9A6" intensity={1.2} distance={3.5} position={[0, 0, -0.1]} />
+            {isDark && (
+              <pointLight color="#FFF9A6" intensity={isNight ? 1.2 : 0.8} distance={3.5} position={[0, 0, -0.1]} />
             )}
           </group>
         </group>

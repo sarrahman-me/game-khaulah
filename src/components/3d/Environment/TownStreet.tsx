@@ -6,10 +6,10 @@ import { useGameStore, gameStore } from '../../../state/useGameStore';
 import { CheckpointFlag } from './CheckpointFlag';
 import { StarCollectible } from './StarCollectible';
 
-// Street Lamp with glowing light at sunset/night
+// Street Lamp with glowing light at subuh/sore/malam
 const StreetLamp: React.FC<{ pos: [number, number, number] }> = ({ pos }) => {
   const timeOfDay = useGameStore((s) => s.timeOfDay);
-  const isDark = timeOfDay === 'night' || timeOfDay === 'sunset';
+  const isDark = timeOfDay === 'malam' || timeOfDay === 'sore' || timeOfDay === 'subuh';
 
   return (
     <group position={pos}>

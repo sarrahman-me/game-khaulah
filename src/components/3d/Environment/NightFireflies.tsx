@@ -28,7 +28,7 @@ export const NightFireflies: React.FC = () => {
   const fireflyRefs = useRef<(THREE.Group | null)[]>([]);
 
   useFrame((state) => {
-    if (timeOfDay === 'day') return;
+    if (timeOfDay === 'siang') return;
     const time = state.clock.getElapsedTime();
 
     FIREFLIES.forEach((f, idx) => {
@@ -41,9 +41,9 @@ export const NightFireflies: React.FC = () => {
     });
   });
 
-  if (timeOfDay === 'day') return null;
+  if (timeOfDay === 'siang') return null;
 
-  const isNight = timeOfDay === 'night';
+  const isNight = timeOfDay === 'malam';
 
   return (
     <group>
