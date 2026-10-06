@@ -7,6 +7,7 @@ const tempPetPlayerPos = new THREE.Vector3();
 
 export const PetCompanion: React.FC = () => {
   const activePet = useGameStore((s) => s.activePet);
+  const isInWater = useGameStore((s) => s.isInWater);
   const groupRef = useRef<THREE.Group>(null);
   const tailRef = useRef<THREE.Mesh>(null);
   const wingsRef = useRef<THREE.Group>(null);
@@ -59,18 +60,25 @@ export const PetCompanion: React.FC = () => {
       }
       groupRef.current.rotation.y = hoverAngle + Math.PI / 2;
     } else {
-      // Ground pet (kitten / puppy) trails behind player with lively hops
-      const trailAngle = time * 1.5;
-      const hopFrequency = isPlayerRunning ? 16 : 8;
-      const hopHeight = isPlayerRunning ? 0.22 : 0.08;
-      const verticalHop = Math.abs(Math.sin(time * hopFrequency)) * hopHeight;
+      // Ground pet (kitten / puppy) trails behind player with lively hops on land or cute swimming bobbing in water
+      if (isInWater) {
+        const swimBob = Math.sin(time * 10) * 0.035;
+        targetPos.current.set(
+          px - 0.85,
+          py + 0.12 + swimBob,
+          pz - 0.85
+        );
+      } else {
+        const hopFrequency = isPlayerRunning ? 16 : 8;
+        const hopHeight = isPlayerRunning ? 0.22 : 0.08;
+        const verticalHop = Math.abs(Math.sin(time * hopFrequency)) * hopHeight;
 
-      // Position behind player
-      targetPos.current.set(
-        px - 0.85,
-        py + 0.35 + verticalHop,
-        pz - 0.85
-      );
+        targetPos.current.set(
+          px - 0.85,
+          py + 0.35 + verticalHop,
+          pz - 0.85
+        );
+      }
 
       petPos.current.lerp(targetPos.current, dt * (isPlayerRunning ? 7 : 4));
       groupRef.current.position.copy(petPos.current);
@@ -78,16 +86,21 @@ export const PetCompanion: React.FC = () => {
       // Look towards player smoothly
       groupRef.current.lookAt(px, py + 0.5, pz);
 
-      // Tail wagging speed linked to excitement
+      // Tilt head up slightly when swimming to keep snout out of water
+      if (isInWater) {
+        groupRef.current.rotation.x = -0.16;
+      }
+
+      // Tail wagging speed linked to excitement or swimming paddle
       if (tailRef.current) {
-        const wagSpeed = isPlayerRunning ? 22 : 10;
-        tailRef.current.rotation.z = Math.sin(time * wagSpeed) * (isPlayerRunning ? 0.6 : 0.3);
+        const wagSpeed = isInWater ? 24 : (isPlayerRunning ? 22 : 10);
+        tailRef.current.rotation.z = Math.sin(time * wagSpeed) * (isInWater || isPlayerRunning ? 0.6 : 0.3);
       }
 
       // Idle cute head tilt or breathing when player stops
-      if (idleTimer.current > 1.5) {
+      if (!isInWater && idleTimer.current > 1.5) {
         groupRef.current.rotation.z = Math.sin(time * 2) * 0.08;
-      } else {
+      } else if (!isInWater) {
         groupRef.current.rotation.z = 0;
       }
     }

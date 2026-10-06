@@ -1085,6 +1085,31 @@ class SoundEngine {
     osc.stop(now + 0.3);
   }
 
+  // Suara langkah kecipak air ceria saat berada / melangkah di air
+  public playWaterStep() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    const startFreq = 420 + Math.random() * 80;
+    osc.frequency.setValueAtTime(startFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(140 + Math.random() * 30, now + 0.12);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.09, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.14);
+  }
+
   public stopBgm() {
     this.bgmPlaying = false;
     if (this.bgmInterval !== null) {

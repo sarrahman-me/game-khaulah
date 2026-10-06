@@ -93,6 +93,7 @@ export interface GameState {
   // Motion tracking for Roblox Brookhaven soft follow camera
   playerFacingAngle: number;
   isPlayerMoving: boolean;
+  isInWater: boolean;
   // New Family & Playground features
   activeRide: RideType;
   speedBuffTimeLeft: number;
@@ -248,6 +249,7 @@ let state: GameState = {
   cameraDistance: 8.5,
   playerFacingAngle: 0,
   isPlayerMoving: false,
+  isInWater: false,
   activeRide: 'none',
   speedBuffTimeLeft: 0,
   nearbyInteractable: null,
@@ -301,11 +303,22 @@ export const gameStore = {
     savePlayerPos(pos);
   },
 
-  setPlayerMotion: (pos: [number, number, number], facingAngle: number, isMoving: boolean) => {
+  setPlayerMotion: (pos: [number, number, number], facingAngle: number, isMoving: boolean, inWater = false) => {
     state.playerPos = pos;
     state.playerFacingAngle = facingAngle;
     state.isPlayerMoving = isMoving;
+    if (state.isInWater !== inWater) {
+      state = { ...state, isInWater: inWater };
+      emitChange();
+    }
     savePlayerPos(pos);
+  },
+
+  setIsInWater: (inWater: boolean) => {
+    if (state.isInWater !== inWater) {
+      state = { ...state, isInWater: inWater };
+      emitChange();
+    }
   },
 
   getLastSafePosition: (): [number, number, number] => {

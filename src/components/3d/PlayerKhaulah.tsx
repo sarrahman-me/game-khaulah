@@ -7,8 +7,123 @@ import { colliders } from '../../state/colliders';
 import { SwanBoatModel } from './Environment/SunnyBeachLake';
 import { MiniFireTruckModel } from './Environment/TownStreet';
 import { getTrainTrackPose } from './Environment/VillageTrain';
+import { getWaterStatus } from '../../state/waterZones';
 
+interface WaterRippleEffectsProps {
+  inWaterRef: React.MutableRefObject<boolean>;
+  isMovingRef: React.MutableRefObject<boolean>;
+  waterSurfaceYRef: React.MutableRefObject<number>;
+  playerPosRef: React.MutableRefObject<THREE.Vector3>;
+}
 
+// Interactive 3D Water Ripples & Splash FX surrounding Khaulah in water
+const WaterRippleEffects: React.FC<WaterRippleEffectsProps> = ({
+  inWaterRef,
+  isMovingRef,
+  waterSurfaceYRef,
+  playerPosRef,
+}) => {
+  const rootRef = useRef<THREE.Group>(null);
+  const ring1Ref = useRef<THREE.Mesh>(null);
+  const ring2Ref = useRef<THREE.Mesh>(null);
+  const wakeRef = useRef<THREE.Mesh>(null);
+  const bubblesRef = useRef<THREE.Group>(null);
+
+  useFrame((state) => {
+    if (!rootRef.current) return;
+    const inWater = inWaterRef.current;
+    rootRef.current.visible = inWater;
+    if (!inWater) return;
+
+    const t = state.clock.getElapsedTime();
+    const isMoving = isMovingRef.current;
+
+    // Adjust local Y offset to match exact water surface
+    const surfaceY = waterSurfaceYRef.current;
+    const playerY = playerPosRef.current.y;
+    rootRef.current.position.y = THREE.MathUtils.clamp(surfaceY - playerY + 0.006, -0.4, 0.4);
+
+    // Ripple 1
+    if (ring1Ref.current) {
+      const p1 = (t * 0.95) % 1;
+      const s1 = 0.5 + p1 * 1.5;
+      ring1Ref.current.scale.set(s1, s1, 1);
+      const mat1 = ring1Ref.current.material as THREE.MeshBasicMaterial;
+      if (mat1) mat1.opacity = Math.max(0, (1 - p1) * 0.55);
+    }
+
+    // Ripple 2
+    if (ring2Ref.current) {
+      const p2 = (t * 0.95 + 0.5) % 1;
+      const s2 = 0.5 + p2 * 1.5;
+      ring2Ref.current.scale.set(s2, s2, 1);
+      const mat2 = ring2Ref.current.material as THREE.MeshBasicMaterial;
+      if (mat2) mat2.opacity = Math.max(0, (1 - p2) * 0.55);
+    }
+
+    // Wake ripple trailing behind player
+    if (wakeRef.current) {
+      if (isMoving) {
+        wakeRef.current.visible = true;
+        const pw = (t * 2.2) % 1;
+        const sw = 0.6 + pw * 1.1;
+        wakeRef.current.scale.set(sw, sw * 0.75, 1);
+        const matw = wakeRef.current.material as THREE.MeshBasicMaterial;
+        if (matw) matw.opacity = Math.max(0, (1 - pw) * 0.45);
+      } else {
+        wakeRef.current.visible = false;
+      }
+    }
+
+    // Foam bubbles
+    if (bubblesRef.current) {
+      const speed = isMoving ? 14 : 4;
+      bubblesRef.current.children.forEach((c, idx) => {
+        const mesh = c as THREE.Mesh;
+        mesh.position.y = Math.sin(t * speed + idx * 1.3) * 0.02;
+        const bs = isMoving ? 0.8 + Math.sin(t * 12 + idx) * 0.25 : 0.5;
+        mesh.scale.set(bs, bs, bs);
+      });
+    }
+  });
+
+  return (
+    <group ref={rootRef} visible={false}>
+      {/* Concentric ripples */}
+      <mesh ref={ring1Ref} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.3, 0.42, 24]} />
+        <meshBasicMaterial color="#E0FBFC" transparent opacity={0.5} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh ref={ring2Ref} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.3, 0.42, 24]} />
+        <meshBasicMaterial color="#BEE9E8" transparent opacity={0.5} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* Trailing wake ripple */}
+      <mesh ref={wakeRef} position={[0, 0.002, -0.42]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.22, 0.34, 20]} />
+        <meshBasicMaterial color="#FFFFFF" transparent opacity={0.4} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* Water splash bubbles */}
+      <group ref={bubblesRef}>
+        {[
+          [-0.26, 0.15],
+          [0.26, 0.15],
+          [-0.18, -0.25],
+          [0.18, -0.25],
+          [0, 0.28],
+          [0, -0.36],
+        ].map(([px, pz], idx) => (
+          <mesh key={idx} position={[px, 0.01, pz]}>
+            <sphereGeometry args={[0.032, 8, 8]} />
+            <meshStandardMaterial color="#FFFFFF" roughness={0.2} transparent opacity={0.8} />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  );
+};
 
 export const PlayerKhaulah: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
@@ -55,6 +170,14 @@ export const PlayerKhaulah: React.FC = () => {
   const gravity = 25;
   const facingAngle = useRef(0);
   const slideTimer = useRef(0);
+
+  // Water interaction state refs
+  const wasInWater = useRef(false);
+  const waterStepTimer = useRef(0);
+  const lastWaterMessageTime = useRef(0);
+  const currentInWater = useRef(false);
+  const currentWaterSurfaceY = useRef(0.16);
+  const isMovingRef = useRef(false);
 
   // Keyboard input state
   const keys = useRef<{ [key: string]: boolean }>({});
@@ -281,6 +404,27 @@ export const PlayerKhaulah: React.FC = () => {
     const speedBuff = gameStore.getState().speedBuffTimeLeft;
     const ridingScooter = gameStore.getState().isRidingScooter;
     const activeRide = gameStore.getState().activeRide;
+
+    // Detect water status across all environments (River canal, Backyard Pool, Sunny Beach Lake)
+    const waterStatus = getWaterStatus(pos.current.x, pos.current.y, pos.current.z);
+    const inWater = waterStatus.inWater && activeRide === 'none';
+    currentInWater.current = inWater;
+    currentWaterSurfaceY.current = waterStatus.surfaceY;
+
+    // Water entry splash sound, auto dismount scooter, and greeting notification
+    if (inWater && !wasInWater.current) {
+      soundManager.playWaterSplash();
+      if (ridingScooter) {
+        gameStore.dismountScooter();
+      }
+      const curT = state.clock.getElapsedTime();
+      if (curT - lastWaterMessageTime.current > 12) {
+        lastWaterMessageTime.current = curT;
+        gameStore.setMessage('Byuuuur! Khaulah berenang & bermain air segar! 🌊🏊‍♀️✨');
+      }
+    }
+    wasInWater.current = inWater;
+
     let effectiveMoveSpeed = moveSpeed;
     if (ridingScooter) {
       effectiveMoveSpeed = speedBuff > 0 ? 26.0 : 20.0;
@@ -288,6 +432,9 @@ export const PlayerKhaulah: React.FC = () => {
       effectiveMoveSpeed = speedBuff > 0 ? 25.0 : 19.0;
     } else if (activeRide === 'boat') {
       effectiveMoveSpeed = 8.5;
+    } else if (inWater) {
+      // Natural gentle water resistance for joyful wading & swimming
+      effectiveMoveSpeed = speedBuff > 0 ? 12.0 : 8.0;
     } else if (speedBuff > 0) {
       effectiveMoveSpeed = 15.0;
     }
@@ -558,6 +705,7 @@ export const PlayerKhaulah: React.FC = () => {
 
     const inputLength = Math.hypot(moveX, moveZ);
     const isMoving = inputLength > 0.1;
+    isMovingRef.current = isMoving;
 
     // 2. Camera-relative direction calculation
     const camera = state.camera;
@@ -615,19 +763,21 @@ export const PlayerKhaulah: React.FC = () => {
     }
 
     if (jumpBufferTimer.current > 0 && (isGrounded.current || coyoteTimer.current > 0)) {
-      velocityY.current = jumpVelocity;
+      velocityY.current = inWater ? 11.5 : jumpVelocity;
       isGrounded.current = false;
       coyoteTimer.current = 0;
       jumpBufferTimer.current = 0;
-      soundManager.playJump();
+      if (inWater) {
+        soundManager.playWaterSplash();
+      } else {
+        soundManager.playJump();
+      }
       targetSquash.current.set(0.86, 1.25, 0.86);
     }
 
     // 4. Ground Collision Detection & Buoyancy
     let groundedThisFrame = false;
 
-    // Gravity & Boat lake water / Swimming Pool buoyancy
-    const inPool = pos.current.x >= -2.0 && pos.current.x <= 10.0 && pos.current.z >= -28.0 && pos.current.z <= -20.0;
     if (activeRide === 'boat') {
       pos.current.y = 0.20 + Math.sin(state.clock.getElapsedTime() * 2.5) * 0.03;
       velocityY.current = 0;
@@ -635,10 +785,24 @@ export const PlayerKhaulah: React.FC = () => {
       // Clamp boat inside lake water boundary so it never glides onto land or clips through trees
       pos.current.x = THREE.MathUtils.clamp(pos.current.x, -74.5, -55.5);
       pos.current.z = THREE.MathUtils.clamp(pos.current.z, 40.5, 55.5);
-    } else if (inPool && activeRide === 'none') {
-      pos.current.y = 0.28 + Math.sin(state.clock.getElapsedTime() * 2.8) * 0.02;
-      velocityY.current = 0;
-      groundedThisFrame = true;
+    } else if (inWater) {
+      const waterBob = Math.sin(state.clock.getElapsedTime() * 2.6) * 0.022;
+      const targetWaterY = waterStatus.surfaceY + 0.02 + waterBob;
+
+      if (velocityY.current > 0) {
+        // Leaping upward out of water
+        velocityY.current -= gravity * dt;
+        pos.current.y += velocityY.current * dt;
+      } else if (pos.current.y <= targetWaterY + 0.08) {
+        // Floating buoyant in water
+        pos.current.y = targetWaterY;
+        velocityY.current = 0;
+        groundedThisFrame = true;
+      } else {
+        // Falling towards water surface
+        velocityY.current -= gravity * dt;
+        pos.current.y += velocityY.current * dt;
+      }
     } else {
       velocityY.current -= gravity * dt;
       pos.current.y += velocityY.current * dt;
@@ -694,9 +858,13 @@ export const PlayerKhaulah: React.FC = () => {
 
     // Landing Impact Detection
     if (!wasGrounded.current && groundedThisFrame) {
-      const impact = Math.min(Math.abs(lastVelocityY.current) / 14, 1);
-      if (impact > 0.15) {
-        targetSquash.current.set(1 + impact * 0.18, Math.max(0.78, 1 - impact * 0.22), 1 + impact * 0.18);
+      if (inWater) {
+        soundManager.playWaterSplash();
+      } else {
+        const impact = Math.min(Math.abs(lastVelocityY.current) / 14, 1);
+        if (impact > 0.15) {
+          targetSquash.current.set(1 + impact * 0.18, Math.max(0.78, 1 - impact * 0.22), 1 + impact * 0.18);
+        }
       }
     }
     wasGrounded.current = groundedThisFrame;
@@ -715,7 +883,7 @@ export const PlayerKhaulah: React.FC = () => {
     groupRef.current.position.copy(pos.current);
     groupRef.current.rotation.y = facingAngle.current;
 
-    gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, isMoving);
+    gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, isMoving, inWater);
 
     // 5. Procedural Animations
     const time = state.clock.getElapsedTime();
@@ -750,7 +918,9 @@ export const PlayerKhaulah: React.FC = () => {
     }
 
     // Body Leaning & Banking
-    const targetForwardLean = isMoving && isGrounded.current ? 0.09 : 0;
+    const targetForwardLean = inWater
+      ? (isMoving ? 0.22 : 0.04)
+      : (isMoving && isGrounded.current ? 0.09 : 0);
     currentForwardLean.current = THREE.MathUtils.lerp(
       currentForwardLean.current,
       targetForwardLean,
@@ -777,7 +947,7 @@ export const PlayerKhaulah: React.FC = () => {
       modelRef.current.scale.copy(squashScale.current);
     }
 
-    // Vehicle Stance: Boat / Fire Truck OR Scooter Riding Stance OR Walking / Running Cycle
+    // Vehicle Stance: Boat / Fire Truck OR Scooter Riding Stance OR In-Water Swimming/Treading OR Walking / Running Cycle
     if (activeRide === 'boat' || activeRide === 'firetruck') {
       if (leftArmRef.current) {
         leftArmRef.current.rotation.x = -0.7;
@@ -816,6 +986,118 @@ export const PlayerKhaulah: React.FC = () => {
       }
       if (hijabDrapeRef.current) {
         hijabDrapeRef.current.rotation.x = isMoving ? 0.15 : 0;
+      }
+    } else if (inWater) {
+      if (isMoving && isGrounded.current) {
+        // --- ANIMASI BERENANG & MENGAYUH DI AIR (SWIMMING & WADING MOTION) ---
+        const swimCycle = Math.sin(time * 9.0);
+        const swimCos = Math.cos(time * 9.0);
+
+        // Ayunan tangan renang mengayuh air ceria (joyful swimming paddle strokes)
+        if (leftArmRef.current) {
+          leftArmRef.current.rotation.x = -0.75 + swimCycle * 0.65;
+          leftArmRef.current.rotation.y = 0.22 + swimCos * 0.22;
+          leftArmRef.current.rotation.z = -0.42 - Math.max(0, swimCycle) * 0.22;
+        }
+        if (rightArmRef.current) {
+          rightArmRef.current.rotation.x = -0.75 - swimCycle * 0.65;
+          rightArmRef.current.rotation.y = -0.22 - swimCos * 0.22;
+          rightArmRef.current.rotation.z = 0.42 + Math.max(0, -swimCycle) * 0.22;
+        }
+
+        // Tendangan kaki renang ceria & lentur (flutter kicks)
+        if (leftLegRef.current) {
+          leftLegRef.current.rotation.x = -0.32 + Math.sin(time * 11) * 0.45;
+          leftLegRef.current.rotation.z = -0.06;
+        }
+        if (rightLegRef.current) {
+          rightLegRef.current.rotation.x = -0.32 - Math.sin(time * 11) * 0.45;
+          rightLegRef.current.rotation.z = 0.06;
+        }
+
+        // Kepala mendongak ceria di atas air
+        if (headRef.current) {
+          headRef.current.rotation.x = -0.14;
+          headRef.current.rotation.y = Math.sin(time * 4.5) * 0.06;
+          headRef.current.rotation.z = 0;
+        }
+
+        // Rok dan juntai jilbab mengalir anggun di arus air
+        if (skirtRef.current) {
+          skirtRef.current.rotation.x = -0.22 + Math.sin(time * 9) * 0.05;
+          skirtRef.current.rotation.z = Math.sin(time * 9) * 0.06;
+        }
+        if (hijabDrapeRef.current) {
+          hijabDrapeRef.current.rotation.x = 0.20 + Math.sin(time * 9 - 0.4) * 0.06;
+        }
+
+        // Suara langkah kecipak air berirama
+        waterStepTimer.current += dt;
+        if (waterStepTimer.current > 0.38) {
+          soundManager.playWaterStep();
+          waterStepTimer.current = 0;
+        }
+      } else if (!isGrounded.current) {
+        // --- LOMPATAN DI AIR (JUMPING IN / OUT OF WATER) ---
+        if (leftArmRef.current) {
+          leftArmRef.current.rotation.x = -Math.PI * 0.82 + Math.sin(time * 10) * 0.08;
+          leftArmRef.current.rotation.z = -0.35;
+        }
+        if (rightArmRef.current) {
+          rightArmRef.current.rotation.x = -Math.PI * 0.82 - Math.sin(time * 10) * 0.08;
+          rightArmRef.current.rotation.z = 0.35;
+        }
+        if (leftLegRef.current) leftLegRef.current.rotation.x = -0.25;
+        if (rightLegRef.current) rightLegRef.current.rotation.x = 0.15;
+        if (skirtRef.current) skirtRef.current.rotation.x = -0.15;
+        if (hijabDrapeRef.current) hijabDrapeRef.current.rotation.x = 0.15;
+      } else {
+        // --- ANIMASI TERAPUNG SANTAI DI AIR (IDLE TREADING WATER & BUOYANCY) ---
+        const idleFloat = Math.sin(time * 2.8);
+        const idleFloatCos = Math.cos(time * 2.8);
+
+        // Tangan mengayuh santai ke samping untuk mengapung (treading water)
+        if (leftArmRef.current) {
+          leftArmRef.current.rotation.x = -0.42 + idleFloat * 0.12;
+          leftArmRef.current.rotation.y = 0.25 + idleFloatCos * 0.14;
+          leftArmRef.current.rotation.z = -0.42 + idleFloat * 0.08;
+        }
+        if (rightArmRef.current) {
+          rightArmRef.current.rotation.x = -0.42 - idleFloat * 0.12;
+          rightArmRef.current.rotation.y = -0.25 - idleFloatCos * 0.14;
+          rightArmRef.current.rotation.z = 0.42 - idleFloat * 0.08;
+        }
+
+        // Kaki mengapung santai dengan kayuhan lembut
+        if (leftLegRef.current) {
+          leftLegRef.current.rotation.x = -0.20 + idleFloat * 0.12;
+          leftLegRef.current.rotation.z = -0.06;
+        }
+        if (rightLegRef.current) {
+          rightLegRef.current.rotation.x = -0.20 - idleFloat * 0.12;
+          rightLegRef.current.rotation.z = 0.06;
+        }
+
+        // Kepala menoleh lembut menikmati sejuknya air
+        if (headRef.current) {
+          headRef.current.rotation.x = -0.06;
+          headRef.current.rotation.y = Math.sin(time * 1.4) * 0.08;
+          headRef.current.rotation.z = Math.cos(time * 1.8) * 0.04;
+        }
+
+        // Gerakan bernapas halus pada dada saat mengapung
+        if (torsoRef.current) {
+          torsoRef.current.position.y = 0.96 + Math.sin(time * 2.6) * 0.015;
+        }
+
+        // Rok & jilbab mengapung lembut di permukaan air
+        if (skirtRef.current) {
+          skirtRef.current.rotation.x = -0.12 + Math.sin(time * 2.6) * 0.04;
+          skirtRef.current.rotation.z = Math.sin(time * 2.0) * 0.04;
+        }
+        if (hijabDrapeRef.current) {
+          hijabDrapeRef.current.rotation.x = 0.12 + Math.sin(time * 2.4) * 0.04;
+        }
       }
     } else if (isMoving && isGrounded.current) {
       const walkCycle = Math.sin(time * 14);
@@ -1478,6 +1760,16 @@ export const PlayerKhaulah: React.FC = () => {
           decay={1.6}
         />
       )}
+
+      {/* ======================================================== */}
+      {/* 10. EFEK RIAK AIR & BUIH INTERAKTIF KETIKA DI AIR        */}
+      {/* ======================================================== */}
+      <WaterRippleEffects
+        inWaterRef={currentInWater}
+        isMovingRef={isMovingRef}
+        waterSurfaceYRef={currentWaterSurfaceY}
+        playerPosRef={pos}
+      />
     </group>
   );
 };
