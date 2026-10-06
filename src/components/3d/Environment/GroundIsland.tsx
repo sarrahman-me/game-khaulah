@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { colliders } from '../../../state/colliders';
+import { colliders, addSolidBox, addSolidCylinder, removeSolidCollider, SolidCollider } from '../../../state/colliders';
 
 interface AnimatedTreeProps {
   pos: [number, number, number];
@@ -219,6 +219,17 @@ const CentralWoodenBridge: React.FC = () => {
         </mesh>
       ))}
 
+      {/* South Entrance Approach Threshold Ramp (Connects ground Y: 0.25 smoothly to deck Y: 0.50) */}
+      <mesh position={[0, 0.08, -4.5]} rotation={[0.22, 0, 0]} castShadow receiveShadow>
+        <boxGeometry args={[4.4, 0.16, 0.9]} />
+        <meshStandardMaterial color="#8D5B4C" roughness={0.75} />
+      </mesh>
+      {/* North Entrance Approach Threshold Ramp (Connects deck Y: 0.50 smoothly to ground Y: 0.25) */}
+      <mesh position={[0, 0.08, 4.5]} rotation={[-0.22, 0, 0]} castShadow receiveShadow>
+        <boxGeometry args={[4.4, 0.16, 0.9]} />
+        <meshStandardMaterial color="#8D5B4C" roughness={0.75} />
+      </mesh>
+
       {/* Bridge Wooden Handrails (Left & Right) */}
       {[-2.1, 2.1].map((rx, idx) => (
         <group key={idx} position={[rx, 0.7, 0]}>
@@ -262,6 +273,16 @@ const WestRusticBridge: React.FC = () => {
         <boxGeometry args={[4.8, 0.2, 8.4]} />
         <meshStandardMaterial color="#8D5B4C" roughness={0.8} />
       </mesh>
+      {/* South Entrance Approach Threshold Ramp (Connects ground Y: 0.25 smoothly to deck Y: 0.50) */}
+      <mesh position={[0, 0.08, -4.5]} rotation={[0.22, 0, 0]} castShadow receiveShadow>
+        <boxGeometry args={[4.8, 0.16, 0.9]} />
+        <meshStandardMaterial color="#8D5B4C" roughness={0.8} />
+      </mesh>
+      {/* North Entrance Approach Threshold Ramp (Connects deck Y: 0.50 smoothly to ground Y: 0.25) */}
+      <mesh position={[0, 0.08, 4.5]} rotation={[-0.22, 0, 0]} castShadow receiveShadow>
+        <boxGeometry args={[4.8, 0.16, 0.9]} />
+        <meshStandardMaterial color="#8D5B4C" roughness={0.8} />
+      </mesh>
       {/* Log Handrails */}
       {[-2.3, 2.3].map((rx, idx) => (
         <group key={idx} position={[rx, 0.65, 0]}>
@@ -288,6 +309,16 @@ const EastAvenueStoneBridge: React.FC = () => {
       {/* Stone Paved Deck */}
       <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
         <boxGeometry args={[4.8, 0.22, 8.4]} />
+        <meshStandardMaterial color="#CBD5E1" roughness={0.65} />
+      </mesh>
+      {/* South Entrance Approach Threshold Ramp */}
+      <mesh position={[0, 0.08, -4.5]} rotation={[0.22, 0, 0]} castShadow receiveShadow>
+        <boxGeometry args={[4.8, 0.16, 0.9]} />
+        <meshStandardMaterial color="#CBD5E1" roughness={0.65} />
+      </mesh>
+      {/* North Entrance Approach Threshold Ramp */}
+      <mesh position={[0, 0.08, 4.5]} rotation={[-0.22, 0, 0]} castShadow receiveShadow>
+        <boxGeometry args={[4.8, 0.16, 0.9]} />
         <meshStandardMaterial color="#CBD5E1" roughness={0.65} />
       </mesh>
       {/* Stone Parapet Balustrades */}
@@ -393,6 +424,48 @@ const InterconnectedWalkways: React.FC = () => {
   );
 };
 
+const ISLAND_TREES = [
+  // Around Rumah Khaulah Garden & South Avenue
+  { pos: [-12, 0.25, -6], leafColor: '#2D6A4F', scale: 1.25, seed: 0 },
+  { pos: [12, 0.25, -6], leafColor: '#386641', scale: 1.3, seed: 1.5 },
+  { pos: [-14, 0.25, 4], leafColor: '#40916C', scale: 1.15, seed: 2.3 },
+  { pos: [14, 0.25, 4], leafColor: '#2D6A4F', scale: 1.1, seed: 3.8 },
+  { pos: [-8, 0.25, 9], leafColor: '#52B788', scale: 1.2, seed: 4.5 },
+  { pos: [8, 0.25, 9], leafColor: '#52B788', scale: 1.2, seed: 5.0 },
+
+  // Riverbank Trees (Shading the beautiful blue river)
+  { pos: [-28, 0.25, 13.0], leafColor: '#52B788', scale: 1.25, seed: 4.1 },
+  { pos: [28, 0.25, 13.0], leafColor: '#52B788', scale: 1.25, seed: 5.2 },
+  { pos: [-62, 0.25, 13.0], leafColor: '#386641', scale: 1.2, seed: 5.7 },
+  { pos: [62, 0.25, 13.0], leafColor: '#386641', scale: 1.2, seed: 6.0 },
+  { pos: [-28, 0.25, 23.0], leafColor: '#386641', scale: 1.2, seed: 6.2 },
+  { pos: [28, 0.25, 23.0], leafColor: '#386641', scale: 1.2, seed: 6.8 },
+
+  // Near TK Karang Tengah Schoolyard & Promenade
+  { pos: [-16, 0.25, 30], leafColor: '#2D6A4F', scale: 1.25, seed: 6.3 },
+  { pos: [16, 0.25, 30], leafColor: '#40916C', scale: 1.2, seed: 7.1 },
+  { pos: [-16, 0.25, 50], leafColor: '#386641', scale: 1.3, seed: 8.4 },
+  { pos: [16, 0.25, 50], leafColor: '#386641', scale: 1.3, seed: 9.0 },
+
+  // Farm & West Meadows
+  { pos: [-32, 0.25, -6], leafColor: '#2D6A4F', scale: 1.3, seed: 9.5 },
+  { pos: [-32, 0.25, 6], leafColor: '#40916C', scale: 1.25, seed: 9.8 },
+  { pos: [-90, 0.25, -10], leafColor: '#2D6A4F', scale: 1.35, seed: 10.2 },
+  { pos: [-90, 0.25, 45], leafColor: '#40916C', scale: 1.3, seed: 11.1 },
+
+  // Town & East Meadows
+  { pos: [32, 0.25, -6], leafColor: '#386641', scale: 1.25, seed: 11.8 },
+  { pos: [32, 0.25, 6], leafColor: '#2D6A4F', scale: 1.2, seed: 12.1 },
+  { pos: [90, 0.25, -10], leafColor: '#386641', scale: 1.3, seed: 12.3 },
+  { pos: [90, 0.25, 45], leafColor: '#2D6A4F', scale: 1.35, seed: 13.5 },
+
+  // Backyard Waterpark Groves
+  { pos: [-24, 0.25, -28], leafColor: '#2D6A4F', scale: 1.3, seed: 14.1 },
+  { pos: [24, 0.25, -28], leafColor: '#386641', scale: 1.3, seed: 14.6 },
+  { pos: [-24, 0.25, -52], leafColor: '#40916C', scale: 1.35, seed: 15.2 },
+  { pos: [24, 0.25, -52], leafColor: '#2D6A4F', scale: 1.35, seed: 15.8 },
+];
+
 export const GroundIsland: React.FC = () => {
   useEffect(() => {
     // 1. South Village Landmass (Rumah Khaulah, Backyard Pool, Farm, Town; Z: -62 to 14.5, X: -100 to 100)
@@ -400,20 +473,20 @@ export const GroundIsland: React.FC = () => {
       new THREE.Vector3(-100, -1, -62),
       new THREE.Vector3(100, 0.25, 14.5)
     );
-    // 2. Central Arch Bridge (Z: 13.8 to 22.2, X: -3.5 to 3.5)
+    // 2. Central Arch Bridge (deck top at Y = 0.51, spanning Z: 13.4 to 22.6)
     const centralBridgeBox = new THREE.Box3(
-      new THREE.Vector3(-3.5, -0.5, 13.8),
-      new THREE.Vector3(3.5, 0.5, 22.2)
+      new THREE.Vector3(-3.0, -0.5, 13.4),
+      new THREE.Vector3(3.0, 0.51, 22.6)
     );
-    // 3. West Country Bridge (Z: 13.8 to 22.2, X: -48.5 to -41.5)
+    // 3. West Country Bridge (deck top at Y = 0.51, spanning Z: 13.4 to 22.6)
     const westBridgeBox = new THREE.Box3(
-      new THREE.Vector3(-48.5, -0.5, 13.8),
-      new THREE.Vector3(-41.5, 0.5, 22.2)
+      new THREE.Vector3(-48.5, -0.5, 13.4),
+      new THREE.Vector3(-41.5, 0.51, 22.6)
     );
-    // 4. East Stone Bridge (Z: 13.8 to 22.2, X: 41.5 to 48.5)
+    // 4. East Stone Bridge (deck top at Y = 0.51, spanning Z: 13.4 to 22.6)
     const eastBridgeBox = new THREE.Box3(
-      new THREE.Vector3(41.5, -0.5, 13.8),
-      new THREE.Vector3(48.5, 0.5, 22.2)
+      new THREE.Vector3(41.5, -0.5, 13.4),
+      new THREE.Vector3(48.5, 0.51, 22.6)
     );
     // 5. North Landmass sections carved around Sunny Beach & Lake (-81 to -49, 34 to 62)
     const northEastBox = new THREE.Box3(
@@ -450,11 +523,36 @@ export const GroundIsland: React.FC = () => {
 
     colliders.push(c1, c2, c3, c4, c5a, c5b, c5c, c5d, c6);
 
+    // Solid Obstacles (Bridge handrails and all 28 tree trunks across the island)
+    const solids: SolidCollider[] = [
+      // 1. Central Arch Bridge Handrails (prevent clipping through or falling off side)
+      addSolidBox([-2.35, 0, 13.8], [-2.05, 1.6, 22.2], 'bridge_handrail_center_w'),
+      addSolidBox([2.05, 0, 13.8], [2.35, 1.6, 22.2], 'bridge_handrail_center_e'),
+      // 2. West Country Bridge Handrails
+      addSolidBox([-47.45, 0, 13.8], [-47.15, 1.6, 22.2], 'bridge_handrail_west_w'),
+      addSolidBox([-42.85, 0, 13.8], [-42.55, 1.6, 22.2], 'bridge_handrail_west_e'),
+      // 3. East Stone Bridge Handrails
+      addSolidBox([42.55, 0, 13.8], [42.85, 1.6, 22.2], 'bridge_handrail_east_w'),
+      addSolidBox([47.15, 0, 13.8], [47.45, 1.6, 22.2], 'bridge_handrail_east_e'),
+      // 4. All 28 Tree trunks across the island
+      ...ISLAND_TREES.map((t, idx) =>
+        addSolidCylinder(
+          t.pos[0],
+          t.pos[2],
+          0.38 * t.scale, // Authentic trunk collision radius
+          0,
+          3.2 * t.scale,
+          `island_tree_${idx}`
+        )
+      ),
+    ];
+
     return () => {
       [c1, c2, c3, c4, c5a, c5b, c5c, c5d, c6].forEach((c) => {
         const idx = colliders.indexOf(c);
         if (idx !== -1) colliders.splice(idx, 1);
       });
+      solids.forEach((s) => removeSolidCollider(s));
     };
   }, []);
 
@@ -563,47 +661,7 @@ export const GroundIsland: React.FC = () => {
       {/* 5. REALISTIC NATURAL TREES SWAYING IN THE WIND                  */}
       {/* Natural lush foliage green tones and authentic wooden trunks   */}
       {/* ============================================================== */}
-      {[
-        // Around Rumah Khaulah Garden & South Avenue
-        { pos: [-12, 0.25, -6], leafColor: '#2D6A4F', scale: 1.25, seed: 0 },
-        { pos: [12, 0.25, -6], leafColor: '#386641', scale: 1.3, seed: 1.5 },
-        { pos: [-14, 0.25, 4], leafColor: '#40916C', scale: 1.15, seed: 2.3 },
-        { pos: [14, 0.25, 4], leafColor: '#2D6A4F', scale: 1.1, seed: 3.8 },
-        { pos: [-8, 0.25, 9], leafColor: '#52B788', scale: 1.2, seed: 4.5 },
-        { pos: [8, 0.25, 9], leafColor: '#52B788', scale: 1.2, seed: 5.0 },
-
-        // Riverbank Trees (Shading the beautiful blue river)
-        { pos: [-28, 0.25, 13.0], leafColor: '#52B788', scale: 1.25, seed: 4.1 },
-        { pos: [28, 0.25, 13.0], leafColor: '#52B788', scale: 1.25, seed: 5.2 },
-        { pos: [-62, 0.25, 13.0], leafColor: '#386641', scale: 1.2, seed: 5.7 },
-        { pos: [62, 0.25, 13.0], leafColor: '#386641', scale: 1.2, seed: 6.0 },
-        { pos: [-28, 0.25, 23.0], leafColor: '#386641', scale: 1.2, seed: 6.2 },
-        { pos: [28, 0.25, 23.0], leafColor: '#386641', scale: 1.2, seed: 6.8 },
-
-        // Near TK Karang Tengah Schoolyard & Promenade
-        { pos: [-16, 0.25, 30], leafColor: '#2D6A4F', scale: 1.25, seed: 6.3 },
-        { pos: [16, 0.25, 30], leafColor: '#40916C', scale: 1.2, seed: 7.1 },
-        { pos: [-16, 0.25, 50], leafColor: '#386641', scale: 1.3, seed: 8.4 },
-        { pos: [16, 0.25, 50], leafColor: '#386641', scale: 1.3, seed: 9.0 },
-
-        // Farm & West Meadows
-        { pos: [-32, 0.25, -6], leafColor: '#2D6A4F', scale: 1.3, seed: 9.5 },
-        { pos: [-32, 0.25, 6], leafColor: '#40916C', scale: 1.25, seed: 9.8 },
-        { pos: [-90, 0.25, -10], leafColor: '#2D6A4F', scale: 1.35, seed: 10.2 },
-        { pos: [-90, 0.25, 45], leafColor: '#40916C', scale: 1.3, seed: 11.1 },
-
-        // Town & East Meadows
-        { pos: [32, 0.25, -6], leafColor: '#386641', scale: 1.25, seed: 11.8 },
-        { pos: [32, 0.25, 6], leafColor: '#2D6A4F', scale: 1.2, seed: 12.1 },
-        { pos: [90, 0.25, -10], leafColor: '#386641', scale: 1.3, seed: 12.3 },
-        { pos: [90, 0.25, 45], leafColor: '#2D6A4F', scale: 1.35, seed: 13.5 },
-
-        // Backyard Waterpark Groves
-        { pos: [-24, 0.25, -28], leafColor: '#2D6A4F', scale: 1.3, seed: 14.1 },
-        { pos: [24, 0.25, -28], leafColor: '#386641', scale: 1.3, seed: 14.6 },
-        { pos: [-24, 0.25, -52], leafColor: '#40916C', scale: 1.35, seed: 15.2 },
-        { pos: [24, 0.25, -52], leafColor: '#2D6A4F', scale: 1.35, seed: 15.8 },
-      ].map((tree, idx) => (
+      {ISLAND_TREES.map((tree, idx) => (
         <AnimatedTree
           key={idx}
           pos={tree.pos as [number, number, number]}

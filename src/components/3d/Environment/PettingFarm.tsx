@@ -1,8 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore, gameStore } from '../../../state/useGameStore';
+import { addSolidBox, addSolidCylinder, removeSolidCollider, SolidCollider } from '../../../state/colliders';
 
 // Animated hopping bunny
 const HoppingBunny: React.FC<{ pos: [number, number, number]; color: string; seed: number }> = ({ pos, color, seed }) => {
@@ -157,6 +158,26 @@ const FruitTree: React.FC<{ pos: [number, number, number]; fruitColor: string; f
 
 export const PettingFarm: React.FC = () => {
   const farmCenter: [number, number, number] = [-65, 0, -6];
+
+  useEffect(() => {
+    const solids: SolidCollider[] = [
+      // 1. Rustic Wooden Perimeter Fence (North boundary)
+      addSolidBox([-82, 0, -15.3], [-56, 1.2, -14.7], 'farm_perimeter_fence'),
+      // 2. Mini Pony Stable Building
+      addSolidBox([-79.3, 0, -10.9], [-74.7, 3.5, -7.1], 'farm_pony_stable'),
+      // 3. Bunny Hutch Wooden Shed
+      addSolidBox([-71.2, 0, -7.3], [-69.6, 2.0, -5.9], 'farm_bunny_shed'),
+      // 4. Hay Bale Stack
+      addSolidCylinder(-57.8, -10, 1.2, 0, 1.4, 'farm_hay_bales'),
+      // 5. Farm Gate Wooden Pillars
+      addSolidCylinder(-53, -8.5, 0.25, 0, 3.6, 'farm_gate_pillar_left'),
+      addSolidCylinder(-53, -3.5, 0.25, 0, 3.6, 'farm_gate_pillar_right'),
+    ];
+
+    return () => {
+      solids.forEach((s) => removeSolidCollider(s));
+    };
+  }, []);
 
   useFrame(() => {
     const playerPos = gameStore.getState().playerPos;

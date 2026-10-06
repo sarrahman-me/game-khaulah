@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { colliders } from '../../../state/colliders';
+import { colliders, addSolidBox, addSolidCylinder, removeSolidCollider, SolidCollider } from '../../../state/colliders';
 import { gameStore } from '../../../state/useGameStore';
 
 export const SchoolTK: React.FC = () => {
@@ -19,7 +19,7 @@ export const SchoolTK: React.FC = () => {
       new THREE.Vector3(24, 0.4, 68)
     );
 
-    // School building main block (solid wall)
+    // School building main block (walkable roof top)
     const schoolBuildingBox = new THREE.Box3(
       new THREE.Vector3(-14, 0, 52),
       new THREE.Vector3(14, 6.5, 64)
@@ -37,11 +37,28 @@ export const SchoolTK: React.FC = () => {
 
     colliders.push(c1, c2, c3);
 
+    // Solid Obstacles (Player cannot penetrate school building walls, gate pillars, flagpole)
+    const solids: SolidCollider[] = [
+      // Main school building wall block
+      addSolidBox([-11.5, 0, 53.8], [11.5, 8.5, 62.5], 'school_main_building'),
+      // School gate pillars (leaving wide central entrance arch open)
+      addSolidBox([-4.3, 0, 25.5], [-3.3, 4.0, 26.5], 'school_gate_left'),
+      addSolidBox([3.3, 0, 25.5], [4.3, 4.0, 26.5], 'school_gate_right'),
+      // Indonesian Flagpole base
+      addSolidCylinder(-3.5, 34, 1.1, 0, 7.0, 'school_flagpole'),
+      // Slide base platform structure
+      addSolidBox([7.8, 0, 40.8], [10.2, 2.5, 43.2], 'school_slide_base'),
+      // Swing A-frame legs
+      addSolidCylinder(-11.4, 42, 0.35, 0, 3.8, 'school_swing_left'),
+      addSolidCylinder(-6.6, 42, 0.35, 0, 3.8, 'school_swing_right'),
+    ];
+
     return () => {
       [c1, c2, c3].forEach((c) => {
         const idx = colliders.indexOf(c);
         if (idx !== -1) colliders.splice(idx, 1);
       });
+      solids.forEach((s) => removeSolidCollider(s));
     };
   }, []);
 

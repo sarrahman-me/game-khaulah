@@ -4,7 +4,7 @@ import { Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore, gameStore } from '../../../state/useGameStore';
 import { soundManager } from '../../../sound/audioManager';
-import { colliders } from '../../../state/colliders';
+import { colliders, addSolidBox, addSolidCylinder, removeSolidCollider, SolidCollider } from '../../../state/colliders';
 import { waterSlideCurve, getWaterSlidePose } from './waterSlideTrajectory';
 
 // ==============================================================
@@ -1366,11 +1366,42 @@ export const BackyardWaterpark: React.FC = () => {
     ];
     colliders.push(...poolColliders);
 
+    // Solid Obstacles (Perimeter fences, gazebo, treehouse trunk, teepee tent, slide tower)
+    const solids: SolidCollider[] = [
+      // 1. Backyard North, West, East perimeter fences
+      addSolidBox([-26.5, 0, -50.4], [26.5, 1.8, -49.6], 'backyard_fence_north'),
+      addSolidBox([-27.4, 0, -50.5], [-26.6, 1.8, -15.5], 'backyard_fence_west'),
+      addSolidBox([26.6, 0, -50.5], [27.4, 1.8, -15.5], 'backyard_fence_east'),
+      // 2. Gazebo table & 6 pillars
+      addSolidCylinder(20.0, -32.0, 0.75, 0, 1.2, 'gazebo_table'),
+      ...[0, 1, 2, 3, 4, 5].map((pi) => {
+        const ang = (pi * Math.PI * 2) / 6;
+        return addSolidCylinder(
+          20.0 + Math.cos(ang) * 2.1,
+          -32.0 + Math.sin(ang) * 2.1,
+          0.16,
+          0,
+          2.6,
+          `gazebo_pillar_${pi}`
+        );
+      }),
+      // 3. Treehouse sturdy tree trunk
+      addSolidCylinder(-18.0, -28.0, 0.9, 0, 6.0, 'treehouse_trunk'),
+      // 4. Glamping Teepee Tent
+      addSolidCylinder(-19.0, -44.0, 2.2, 0, 3.6, 'glamping_teepee'),
+      // 5. Water Slide Tower Platform Base
+      addSolidBox([7.2, 0, -38.8], [9.8, 3.8, -35.2], 'slide_tower_base'),
+      // 6. Garden swing A-frames
+      addSolidCylinder(-16.3, -22.0, 0.25, 0, 3.5, 'garden_swing_left'),
+      addSolidCylinder(-13.7, -22.0, 0.25, 0, 3.5, 'garden_swing_right'),
+    ];
+
     return () => {
       poolColliders.forEach((c) => {
         const idx = colliders.indexOf(c);
         if (idx !== -1) colliders.splice(idx, 1);
       });
+      solids.forEach((s) => removeSolidCollider(s));
     };
   }, []);
 

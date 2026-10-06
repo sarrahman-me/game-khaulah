@@ -1,8 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore, gameStore } from '../../../state/useGameStore';
+import { addSolidBox, addSolidCylinder, removeSolidCollider, SolidCollider } from '../../../state/colliders';
 
 // Animated Rotating Carousel Component
 const AnimatedCarousel: React.FC = () => {
@@ -181,6 +182,27 @@ const AnimatedFerrisWheel: React.FC = () => {
 
 export const CarnivalThemePark: React.FC = () => {
   const activeRide = useGameStore((s) => s.activeRide);
+
+  useEffect(() => {
+    const solids: SolidCollider[] = [
+      // 1. Carousel center pole (solves clipping into carousel)
+      addSolidCylinder(58, 41, 0.95, 0, 4.2, 'carnival_carousel_pillar'),
+      // 2. Ferris wheel support legs
+      addSolidCylinder(70.8, 51, 0.35, 0, 7.5, 'ferris_leg_1'),
+      addSolidCylinder(75.2, 51, 0.35, 0, 7.5, 'ferris_leg_2'),
+      // 3. Gulali & Es Krim Cart
+      addSolidBox([63.7, 0, 38.2], [66.3, 2.0, 39.8], 'carnival_candy_stall'),
+      // 4. Kolam Pancing Bebek
+      addSolidCylinder(59, 55, 2.3, 0, 0.6, 'carnival_duck_pool'),
+      // 5. Entrance Arch Pillars
+      addSolidCylinder(48.6, 38, 0.35, 0, 4.5, 'carnival_arch_left'),
+      addSolidCylinder(53.4, 38, 0.35, 0, 4.5, 'carnival_arch_right'),
+    ];
+
+    return () => {
+      solids.forEach((s) => removeSolidCollider(s));
+    };
+  }, []);
 
   useFrame(() => {
     const playerPos = gameStore.getState().playerPos;

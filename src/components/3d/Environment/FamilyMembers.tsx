@@ -1,8 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text, Billboard, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { gameStore } from '../../../state/useGameStore';
+import { addSolidBox, removeSolidCollider, SolidCollider } from '../../../state/colliders';
 
 // ============================================================================
 // 1. ABI MODEL (AYAH - 27 TAHUN, PRIA TANPA KACAMATA, KERJA DEPAN LAPTOP)
@@ -1374,6 +1375,14 @@ const FAMILY_MEMBERS = [
 
 export const FamilyMembers: React.FC = () => {
   const lastNearId = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Abi's laptop work desk
+    const desk = addSolidBox([-3.8, 0, -5.2], [-2.2, 1.4, -3.8], 'abi_work_desk');
+    return () => {
+      removeSolidCollider(desk);
+    };
+  }, []);
 
   useFrame(() => {
     const playerPos = gameStore.getState().playerPos;

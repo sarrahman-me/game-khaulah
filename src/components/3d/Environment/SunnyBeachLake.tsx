@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore, gameStore } from '../../../state/useGameStore';
-import { colliders } from '../../../state/colliders';
+import { colliders, addSolidBox, addSolidCylinder, removeSolidCollider, SolidCollider } from '../../../state/colliders';
 
 // Animated Sparkling Lake Water Surface
 const ShimmeringLake: React.FC = () => {
@@ -240,11 +240,19 @@ export const SunnyBeachLake: React.FC = () => {
     ];
     colliders.push(...beachColliders);
 
+    // Solid obstacles (Sandcastle walls, umbrella poles)
+    const solids: SolidCollider[] = [
+      addSolidBox([-79.4, 0, 48.2], [-75.6, 2.0, 51.8], 'beach_sandcastle'),
+      addSolidCylinder(-70, 36.5, 0.2, 0, 2.2, 'beach_umbrella_south'),
+      addSolidCylinder(-68, 59.5, 0.2, 0, 2.2, 'beach_umbrella_north'),
+    ];
+
     return () => {
       beachColliders.forEach((c) => {
         const idx = colliders.indexOf(c);
         if (idx !== -1) colliders.splice(idx, 1);
       });
+      solids.forEach((s) => removeSolidCollider(s));
     };
   }, []);
 

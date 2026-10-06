@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { gameStore, useGameStore } from '../../state/useGameStore';
 import { soundManager } from '../../sound/audioManager';
-import { colliders } from '../../state/colliders';
+import { colliders, resolveHorizontalCollisions } from '../../state/colliders';
 import { SwanBoatModel } from './Environment/SunnyBeachLake';
 import { MiniFireTruckModel } from './Environment/TownStreet';
 import { getTrainTrackPose } from './Environment/VillageTrain';
@@ -410,7 +410,10 @@ export const PlayerKhaulah: React.FC = () => {
 
     // Detect water status across all environments (River canal, Backyard Pool, Sunny Beach Lake)
     const waterStatus = getWaterStatus(pos.current.x, pos.current.y, pos.current.z);
-    const inWater = waterStatus.inWater && activeRide === 'none';
+    let inWater = waterStatus.inWater && activeRide === 'none';
+    if (isGrounded.current && pos.current.y >= waterStatus.surfaceY + 0.06) {
+      inWater = false;
+    }
     currentInWater.current = inWater;
     currentWaterSurfaceY.current = waterStatus.surfaceY;
 
@@ -759,9 +762,27 @@ export const PlayerKhaulah: React.FC = () => {
       facingAngle.current += diff * Math.min(dt * 18, 1);
     }
 
-    // Apply horizontal motion with speed buff
-    pos.current.x += moveDirection.x * effectiveMoveSpeed * dt * Math.min(inputLength, 1);
-    pos.current.z += moveDirection.z * effectiveMoveSpeed * dt * Math.min(inputLength, 1);
+    // Apply horizontal motion with speed buff and sub-stepped solid collision resolution
+    const playerRadius = 0.45;
+    const hSpeed = effectiveMoveSpeed * Math.min(inputLength, 1);
+    const deltaX = moveDirection.x * hSpeed * dt;
+    const deltaZ = moveDirection.z * hSpeed * dt;
+    const moveDist = Math.hypot(deltaX, deltaZ);
+
+    if (moveDist > 0.0001) {
+      // Sub-stepping when moving fast (especially on scooter) prevents tunneling through thin fences/walls
+      const steps = moveDist > 0.25 ? 3 : moveDist > 0.12 ? 2 : 1;
+      const stepX = deltaX / steps;
+      const stepZ = deltaZ / steps;
+
+      for (let s = 0; s < steps; s++) {
+        pos.current.x += stepX;
+        pos.current.z += stepZ;
+        resolveHorizontalCollisions(pos.current, playerRadius, 1.4, 0.25);
+      }
+    } else {
+      resolveHorizontalCollisions(pos.current, playerRadius, 1.4, 0.25);
+    }
 
     // 3. Jump Physics with Coyote Time and Jump Buffer
     const jumpRequested = gameStore.getState().isJumpPressed || keys.current['Space'];
@@ -801,57 +822,41 @@ export const PlayerKhaulah: React.FC = () => {
       // Clamp boat inside lake water boundary so it never glides onto land or clips through trees
       pos.current.x = THREE.MathUtils.clamp(pos.current.x, -74.5, -55.5);
       pos.current.z = THREE.MathUtils.clamp(pos.current.z, 40.5, 55.5);
-    } else if (inWater) {
-      const waterBob = Math.sin(state.clock.getElapsedTime() * 2.6) * 0.022;
-      const targetWaterY = waterStatus.surfaceY + 0.02 + waterBob;
-
-      if (velocityY.current > 0) {
-        // Leaping upward out of water
-        velocityY.current -= gravity * dt;
-        pos.current.y += velocityY.current * dt;
-      } else if (pos.current.y <= targetWaterY + 0.08) {
-        // Floating buoyant in water
-        pos.current.y = targetWaterY;
-        velocityY.current = 0;
-        groundedThisFrame = true;
-      } else {
-        // Falling towards water surface
-        velocityY.current -= gravity * dt;
-        pos.current.y += velocityY.current * dt;
-      }
     } else {
       velocityY.current -= gravity * dt;
       pos.current.y += velocityY.current * dt;
     }
 
     const playerFeet = pos.current.y;
-    const playerRadius = 0.55;
 
     // Prioritize trampoline collisions first so overlapping ground pads never override super-jump
-    for (const col of colliders) {
-      if (col.type !== 'trampoline') continue;
-      const box = col.box;
-      if (
-        pos.current.x >= box.min.x - playerRadius &&
-        pos.current.x <= box.max.x + playerRadius &&
-        pos.current.z >= box.min.z - playerRadius &&
-        pos.current.z <= box.max.z + playerRadius
-      ) {
-        const platformTop = box.max.y;
-        if (playerFeet <= platformTop + 0.4 && playerFeet >= platformTop - 1.4 && velocityY.current <= 0) {
-          pos.current.y = platformTop;
-          velocityY.current = trampolineJumpVelocity;
-          groundedThisFrame = false;
-          soundManager.playTrampoline();
-          gameStore.setMessage('WUUUSSHH! Trampolin Super Tinggi! 🚀');
-          targetSquash.current.set(0.75, 1.4, 0.75);
-          break;
+    if (activeRide !== 'boat') {
+      for (const col of colliders) {
+        if (col.type !== 'trampoline') continue;
+        const box = col.box;
+        if (
+          pos.current.x >= box.min.x - playerRadius &&
+          pos.current.x <= box.max.x + playerRadius &&
+          pos.current.z >= box.min.z - playerRadius &&
+          pos.current.z <= box.max.z + playerRadius
+        ) {
+          const platformTop = box.max.y;
+          if (playerFeet <= platformTop + 0.4 && playerFeet >= platformTop - 1.4 && velocityY.current <= 0) {
+            pos.current.y = platformTop;
+            velocityY.current = trampolineJumpVelocity;
+            groundedThisFrame = false;
+            soundManager.playTrampoline();
+            gameStore.setMessage('WUUUSSHH! Trampolin Super Tinggi! 🚀');
+            targetSquash.current.set(0.75, 1.4, 0.75);
+            break;
+          }
         }
       }
     }
 
-    // Then check standard ground platforms
-    if (!groundedThisFrame && velocityY.current <= 0) {
+    // Check standard ground platforms - always select the highest solid supporting platform directly beneath the player's feet
+    let bestPlatformTop: number | null = null;
+    if (activeRide !== 'boat' && !groundedThisFrame && velocityY.current <= 1.0) {
       for (const col of colliders) {
         if (col.type === 'trampoline') continue;
         const box = col.box;
@@ -862,15 +867,50 @@ export const PlayerKhaulah: React.FC = () => {
           pos.current.z <= box.max.z + playerRadius
         ) {
           const platformTop = box.max.y;
-          if (playerFeet <= platformTop + 0.35 && playerFeet >= platformTop - 1.2 && velocityY.current <= 0) {
-            pos.current.y = platformTop;
-            velocityY.current = 0;
-            groundedThisFrame = true;
-            break;
+          // Step-up tolerance: allows climbing up bridge ramps/curbs up to 0.40m, and landing from above
+          if (playerFeet <= platformTop + 0.40 && playerFeet >= platformTop - 1.2) {
+            if (bestPlatformTop === null || platformTop > bestPlatformTop) {
+              bestPlatformTop = platformTop;
+            }
           }
         }
       }
     }
+
+    if (bestPlatformTop !== null) {
+      pos.current.y = bestPlatformTop;
+      velocityY.current = 0;
+      groundedThisFrame = true;
+    }
+
+    // Re-evaluate water status at current post-movement position
+    const curWaterStatus = getWaterStatus(pos.current.x, pos.current.y, pos.current.z);
+    let effectiveInWater = curWaterStatus.inWater && activeRide === 'none';
+
+    // If grounded on a platform strictly above water level (e.g. bridge deck at 0.51 vs water at 0.16),
+    // strictly suppress water state so no swimming/waterstep/splash can trigger
+    if (groundedThisFrame && pos.current.y >= curWaterStatus.surfaceY + 0.06) {
+      effectiveInWater = false;
+    }
+
+    // Apply water buoyancy if player is swimming / floating in deep water without solid ground above water
+    if (activeRide !== 'boat' && effectiveInWater) {
+      const waterBob = Math.sin(state.clock.getElapsedTime() * 2.6) * 0.022;
+      const targetWaterY = curWaterStatus.surfaceY + 0.02 + waterBob;
+
+      if (velocityY.current > 0) {
+        // Leaping upward out of water
+      } else if (pos.current.y <= targetWaterY + 0.08) {
+        // Floating buoyant in water
+        pos.current.y = targetWaterY;
+        velocityY.current = 0;
+        groundedThisFrame = true;
+      }
+    }
+
+    // Synchronize inWater state for animations, particle effects, sound and store updates
+    inWater = effectiveInWater;
+    currentInWater.current = effectiveInWater;
 
     // Landing Impact Detection
     if (!wasGrounded.current && groundedThisFrame) {
@@ -895,6 +935,8 @@ export const PlayerKhaulah: React.FC = () => {
       soundManager.playFamilyChord();
       gameStore.setMessage('Hati-hati! Khaulah kembali ke tempat aman! 🌸✨');
     }
+
+    resolveHorizontalCollisions(pos.current, playerRadius, 1.4, 0.25);
 
     groupRef.current.position.copy(pos.current);
     groupRef.current.rotation.y = facingAngle.current;

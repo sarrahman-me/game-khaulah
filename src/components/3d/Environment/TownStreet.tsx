@@ -1,9 +1,10 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore, gameStore } from '../../../state/useGameStore';
 import { StreetLamp } from './StreetLamps';
+import { addSolidBox, addSolidCylinder, removeSolidCollider, SolidCollider } from '../../../state/colliders';
 
 // Mini Fire Truck Model
 export const MiniFireTruckModel: React.FC<{ isRiding?: boolean }> = () => {
@@ -82,6 +83,25 @@ export const MiniFireTruckModel: React.FC<{ isRiding?: boolean }> = () => {
 
 export const TownStreet: React.FC = () => {
   const activeRide = useGameStore((s) => s.activeRide);
+
+  useEffect(() => {
+    const solids: SolidCollider[] = [
+      // 1. Khaulah Mart Building
+      addSolidBox([53.2, 0, -12.5], [60.8, 4.5, -7.5], 'town_mart_building'),
+      // 2. Toko Roti & Kue Ceria Building
+      addSolidBox([65.5, 0, -12.5], [72.5, 4.5, -7.5], 'town_bakery_building'),
+      // 3. Pos Pemadam Cilik Building
+      addSolidBox([75.8, 0, -12.5], [82.2, 4.5, -7.5], 'town_fire_station'),
+      // 4. Outdoor Cafe Table
+      addSolidCylinder(65, -2.4, 0.7, 0, 1.0, 'town_cafe_table'),
+      // 5. Fire Hydrant
+      addSolidCylinder(76.2, -7.0, 0.25, 0, 0.9, 'town_fire_hydrant'),
+    ];
+
+    return () => {
+      solids.forEach((s) => removeSolidCollider(s));
+    };
+  }, []);
 
   useFrame(() => {
     const playerPos = gameStore.getState().playerPos;

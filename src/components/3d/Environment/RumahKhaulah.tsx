@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { colliders } from '../../../state/colliders';
+import { colliders, addSolidBox, addSolidCylinder, removeSolidCollider, SolidCollider } from '../../../state/colliders';
 
 export const RumahKhaulah: React.FC = () => {
   useEffect(() => {
@@ -10,7 +10,7 @@ export const RumahKhaulah: React.FC = () => {
       new THREE.Vector3(-5.5, -0.5, -9),
       new THREE.Vector3(5.5, 0.4, -3)
     );
-    // 2. House walls (Left wing & Right wing, leaving hallway and side paths open)
+    // 2. House walls (Left wing & Right wing, leaving hallway open)
     const leftWallBox = new THREE.Box3(
       new THREE.Vector3(-6.2, 0, -11.4),
       new THREE.Vector3(-1.1, 4.5, -8.6)
@@ -31,11 +31,30 @@ export const RumahKhaulah: React.FC = () => {
     const c4 = { box: backVerandaBox, type: 'ground' as const };
     colliders.push(c1, c2, c3, c4);
 
+    // Physical Solid Obstacles (Player cannot walk through walls, pillars, railings)
+    const solids: SolidCollider[] = [
+      // Left and right house walls
+      addSolidBox([-6.2, 0, -11.4], [-1.1, 4.5, -8.6], 'house_wall_left'),
+      addSolidBox([1.1, 0, -11.4], [6.2, 4.5, -8.6], 'house_wall_right'),
+      // Porch pillars
+      addSolidCylinder(-4.6, -3.6, 0.25, 0, 3.5, 'porch_col_left'),
+      addSolidCylinder(4.6, -3.6, 0.25, 0, 3.5, 'porch_col_right'),
+      // Garden bench on front porch
+      addSolidBox([-4.1, 0, -5.9], [-2.3, 1.1, -5.1], 'porch_bench'),
+      // Back veranda railings
+      addSolidBox([-3.7, 0, -13.9], [-3.5, 1.5, -11.3], 'veranda_rail_left'),
+      addSolidBox([3.5, 0, -13.9], [3.7, 1.5, -11.3], 'veranda_rail_right'),
+      // Pergola posts
+      addSolidCylinder(-1.7, -15.2, 0.16, 0, 3.3, 'pergola_post_left'),
+      addSolidCylinder(1.7, -15.2, 0.16, 0, 3.3, 'pergola_post_right'),
+    ];
+
     return () => {
       [c1, c2, c3, c4].forEach((c) => {
         const idx = colliders.indexOf(c);
         if (idx !== -1) colliders.splice(idx, 1);
       });
+      solids.forEach((s) => removeSolidCollider(s));
     };
   }, []);
 

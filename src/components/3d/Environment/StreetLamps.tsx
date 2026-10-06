@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useGameStore } from '../../../state/useGameStore';
+import { addSolidCylinder, removeSolidCollider, SolidCollider } from '../../../state/colliders';
 
 export interface StreetLampProps {
   pos: [number, number, number];
@@ -179,6 +180,16 @@ const STREET_LAMP_CONFIGS: StreetLampProps[] = [
 ];
 
 export const StreetLamps: React.FC = () => {
+  useEffect(() => {
+    const solids: SolidCollider[] = STREET_LAMP_CONFIGS.map((lamp, idx) =>
+      addSolidCylinder(lamp.pos[0], lamp.pos[2], 0.22, 0, 3.8, `street_lamp_${idx}`)
+    );
+
+    return () => {
+      solids.forEach((s) => removeSolidCollider(s));
+    };
+  }, []);
+
   return (
     <group>
       {STREET_LAMP_CONFIGS.map((lamp, idx) => (
