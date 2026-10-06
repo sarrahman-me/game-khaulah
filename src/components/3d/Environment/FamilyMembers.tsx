@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text, Billboard, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
@@ -6,7 +6,7 @@ import { gameStore, useGameStore, TimeOfDay } from '../../../state/useGameStore'
 import { addSolidBox, removeSolidCollider, SolidCollider } from '../../../state/colliders';
 
 // ============================================================================
-// LIVING NPC DIRECTOR: JADWAL KEHIDUPAN KELUARGA SESUAI WAKTU (SUBUH/SIANG/SORE/MALAM)
+// LIVING NPC DIRECTOR: JADWAL KEHIDUPAN KELUARGA DI RUMAH LUAS
 // ============================================================================
 export const FAMILY_SCHEDULE: Record<
   TimeOfDay,
@@ -19,96 +19,96 @@ export const FAMILY_SCHEDULE: Record<
 > = {
   subuh: {
     abi: {
-      pos: [-1.2, 0.2, -4.8],
-      status: 'Sholat & Senyum Fajar 🌅',
-      text: 'Assalamu\'alaikum Khaulah bidadari shalihah Abi! Fajar Subuh yang sejuk dan damai. Jangan lupa sholat Subuh dan selalu bersyukur ya nak! Abi sayang Khaulah!',
+      pos: [-5.2, 0.2, -15.0],
+      status: 'Sholat & Dzikir di Musholla 🌅',
+      text: 'Assalamu\'alaikum Kak Khaulah putri shalihah Abi! Fajar Subuh yang sejuk dan damai. Abi baru selesai sholat Subuh dan berdzikir mendoakan Kak Khaulah agar selalu cerdas, shalihah, dan bahagia! Abi sayang Khaulah!',
     },
     ummi: {
-      pos: [1.2, 0.2, -4.8],
-      status: 'Menyiapkan Sarapan 🧕',
-      text: 'Assalamu\'alaikum Khaulah sayang! Selamat pagi anak shalihah Ummi. Ummi sudah siapkan sarapan berkah untuk Khaulah, ayo ambil ya!',
+      pos: [5.5, 0.2, -9.5],
+      status: 'Menyiapkan Sarapan di Dapur 🧕🍳',
+      text: 'Assalamu\'alaikum Kak Khaulah bidadari shalihah Ummi! Ummi sedang menyiapkan sarapan kue pelangi dan susu hangat yang lezat di dapur. Ayo sarapan berkah dulu ya sayang!',
     },
     faqih: {
-      pos: [0.0, 0.2, -4.2],
-      status: 'Kereta Dorong Selimut 👶',
-      text: 'Uwaaa~ Cilukba! Adek Faqih bangun pagi tersenyum manis di kereta dorong hangat! 👶🍼',
+      pos: [0.0, 0.2, -4.8],
+      status: 'Cilukba di Kereta Dorong 👶🍼',
+      text: 'Uwaaa~ Cilukba! Adek Faqih bangun pagi ceria di kereta dorong hangat menyapa Kak Khaulah! 👶🍼',
     },
     khalid: {
-      pos: [-1.8, 0.2, -3.5],
-      status: 'Bangun Tidur Ceria 👦',
-      text: 'Hoaaam... Kak Khaulah! Khalid baru bangun tidur nih, tapi langsung semangat pas lihat Kak Khaulah! Ayo main bareng Khalid!',
+      pos: [5.5, 0.2, -15.5],
+      status: 'Bangun Tidur di Kasur Awan 👦💤',
+      text: 'Hoaaam... Kak Khaulah! Khalid baru bangun tidur nih di kasur, tapi langsung semangat pas lihat Kak Khaulah! Ayo main bareng Khalid!',
     },
   },
   siang: {
     abi: {
-      pos: [-3.0, 0.2, -4.5],
+      pos: [-5.2, 0.2, -9.5],
       status: 'Fokus Coding Laptop 💻',
-      text: 'Assalamu\'alaikum Khaulah putri shalihah Abi! Abi sedang fokus menyelesaikan coding dan pekerjaan di laptop untuk keluarga. Senyum ceria Khaulah bikin Abi semangat terus!',
+      text: 'Assalamu\'alaikum Kak Khaulah putri shalihah Abi! Abi sedang fokus mengetik kode dan coding di laptop untuk keluarga. Senyum ceria Kak Khaulah bikin semangat Abi berkobar terus!',
     },
     ummi: {
-      pos: [2.8, 0.2, -4.2],
-      status: 'Menyapu Teras & Bekal 🧹',
-      text: 'Assalamu\'alaikum Khaulah bidadari kecil Ummi! Kebersihan itu sebagian dari iman, nak. Ummi sudah siapkan bekal kue pelangi terenak untuk Khaulah, ayo ambil sayang!',
+      pos: [4.5, 0.2, -4.8],
+      status: 'Menyapu Teras Bersih 🧹',
+      text: 'Assalamu\'alaikum Kak Khaulah sayang! Kebersihan itu sebagian dari iman, nak. Ummi sedang menyapu teras agar rumah kita selalu asri dan rapi. Ummi sudah siapkan bekal cinta terenak untuk Khaulah, ayo ambil sayang!',
     },
     faqih: {
-      pos: [2.0, 0.2, -1.8],
-      status: 'Balap Mobil-Mobilan 🚗',
-      text: 'Ngeeeng! Brum brum pip pip! Adek Faqih lagi seru banget ngebutin mobil-mobilan di karpet! Kak Khaulah ayo balapan bareng!',
+      pos: [5.5, 0.2, -14.0],
+      status: 'Balap Mobilan di Karpet 🚗💨',
+      text: 'Ngeeeng! Brum brum pip pip! Adek Faqih lagi seru banget ngebutin mobil-mobilan di karpet sirkuit lintasan! Kak Khaulah ayo balapan bareng!',
     },
     khalid: {
-      pos: [-1.8, 0.2, -1.8],
-      status: 'Latihan Drumband 🥁',
+      pos: [-1.8, 0.2, -3.8],
+      status: 'Latihan Drumband 🥁🎶',
       text: 'Kak Khaulah lihat nih! Khalid lagi latihan drumband! Dum-tak-tak-dum ratatat! Mau ajak Khalid ikut jalan-jalan keliling desa?',
     },
   },
   sore: {
     abi: {
-      pos: [-2.2, 0.2, -3.2],
+      pos: [-4.8, 0.2, -4.8],
       status: 'Santai Minum Teh Sore 🍵',
-      text: 'Alhamdulillah, senja sore yang syahdu di Karang Tengah. Senang sekali melihat Khaulah bermain ceria dan sehat selalu!',
+      text: 'Alhamdulillah, senja sore yang syahdu di teras rumah kita di Karang Tengah. Senang sekali melihat Kak Khaulah bermain ceria dan sehat selalu!',
     },
     ummi: {
-      pos: [3.2, 0.2, -3.2],
-      status: 'Menyiram Bunga & Donat 🌸',
-      text: 'Senja sore yang indah, nak. Ummi sedang menyiram tanaman bunga agar selalu harum dan asri. Ada donat manis untuk Khaulah!',
+      pos: [6.5, 0.2, -4.2],
+      status: 'Menyiram Bunga Mekar 🌸💧',
+      text: 'Senja sore yang indah, nak. Ummi sedang menyiram pot-pot bunga teras dengan air sejuk agar selalu mekar dan wangi. Ada donat manis untuk Khaulah!',
     },
     faqih: {
-      pos: [1.5, 0.2, -2.2],
-      status: 'Main Kerincingan Lucu 🪇',
-      text: 'Kring kring! Adek Faqih goyang-goyangkan kerincingan warna-warni sambil tertawa riang! 🪇👶',
+      pos: [2.2, 0.2, -4.8],
+      status: 'Main Kerincingan Lucu 🪇✨',
+      text: 'Kring kring! Adek Faqih goyang-goyangkan kerincingan warna-warni sambil tertawa riang menyapa Kak Khaulah! 🪇👶',
     },
     khalid: {
-      pos: [-2.6, 0.2, -1.0],
-      status: 'Parade Drumband Cilik 🎶',
-      text: 'Dum-dum-tak! Adek Khalid siap mimpin parade drumband sore! Kak Khaulah ayo lari bareng Khalid!',
+      pos: [-2.5, 0.2, -2.0],
+      status: 'Parade Drumband Cilik 🎶🏃‍♂️',
+      text: 'Dum-dum-tak! Adek Khalid siap mimpin parade drumband sore di halaman! Kak Khaulah ayo lari bareng Khalid!',
     },
   },
   malam: {
     abi: {
-      pos: [-0.6, 0.2, -4.0],
-      status: 'Kumpul Hangat Keluarga 🌙',
-      text: 'MasyaAllah, malam bertabur bintang yang indah. Istirahat yang cukup ya anak pintar Abi, besok kita berpetualang lagi!',
+      pos: [-1.2, 0.2, -11.5],
+      status: 'Kumpul Hangat di Sofa 🌙📖',
+      text: 'MasyaAllah, malam bertabur bintang nan damai. Istirahat yang cukup ya anak pintar Abi, besok kita berpetualang lagi!',
     },
     ummi: {
-      pos: [0.6, 0.2, -4.0],
-      status: 'Mendongeng di Teras 🧕',
-      text: 'Malam bertabur bintang nan damai. Jangan lupa cuci kaki, sikat gigi, dan berdoa sebelum tidur ya bidadari shalihah Ummi.',
+      pos: [1.2, 0.2, -11.5],
+      status: 'Mendongeng di Karpet 🧕📖',
+      text: 'Malam bertabur bintang nan damai. Ummi sedang membacakan dongeng kisah nabi yang penuh hikmah. Jangan lupa cuci kaki, sikat gigi, dan berdoa sebelum tidur ya bidadari shalihah Ummi.',
     },
     faqih: {
-      pos: [-1.5, 0.2, -3.6],
-      status: 'Tidur Pulas di Kereta 💤',
-      text: 'Ssshh... Adek Faqih tertidur pulas memeluk mobil-mobilan kesayangannya di bawah lentera hangat! 💤👶',
+      pos: [6.5, 0.2, -16.5],
+      status: 'Tidur Pulas di Boks Bayi 💤👶',
+      text: 'Ssshh... Adek Faqih tertidur pulas memeluk mobil-mobilan kesayangannya di boks bayi yang hangat! 💤👶',
     },
     khalid: {
-      pos: [1.6, 0.2, -3.5],
-      status: 'Dengarkan Dongeng Ummi 📖',
-      text: 'Kak Khaulah sini duduk bareng Khalid! Kita dengarkan dongeng Ummi sambil melihat kunang-kunang di atas sungai!',
+      pos: [0.4, 0.2, -11.5],
+      status: 'Dengarkan Dongeng Ummi 📖🧸',
+      text: 'Kak Khaulah sini duduk bareng Khalid di karpet! Kita dengarkan dongeng Ummi sambil melihat kunang-kunang di luar!',
     },
   },
 };
 
 // ============================================================================
-// 1. ABI MODEL (AYAH - 27 TAHUN, PRIA TANPA KACAMATA, KERJA DEPAN LAPTOP)
+// 1. ABI MODEL (AYAH - 27 TAHUN, PRIA MUDA TAMPAN, MULTI-ACTIVITY PROPS)
 // ============================================================================
 const AbiModel: React.FC<{ position: [number, number, number]; statusTag?: string }> = ({ position, statusTag }) => {
   const groupRef = useRef<THREE.Group>(null);
@@ -116,12 +116,13 @@ const AbiModel: React.FC<{ position: [number, number, number]; statusTag?: strin
   const headRef = useRef<THREE.Group>(null);
   const leftArmRef = useRef<THREE.Group>(null);
   const rightArmRef = useRef<THREE.Group>(null);
-  const leftHandRef = useRef<THREE.Group>(null);
-  const rightHandRef = useRef<THREE.Group>(null);
+  const teaCupRef = useRef<THREE.Group>(null);
   const screenGlowRef = useRef<THREE.PointLight>(null);
   const eyeScale = useRef(1);
   const blinkTimer = useRef(3.0);
   const currentPos = useRef(new THREE.Vector3(position[0], position[1], position[2]));
+
+  const timeOfDay = useGameStore((s) => s.timeOfDay);
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
@@ -144,77 +145,71 @@ const AbiModel: React.FC<{ position: [number, number, number]; statusTag?: strin
       }
     }
 
-    // Distance to Khaulah
     const dx = playerPos[0] - currentPos.current.x;
     const dz = playerPos[2] - currentPos.current.z;
     const distSq = dx * dx + dz * dz;
 
-    // Screen light pulse
-    if (screenGlowRef.current) {
-      screenGlowRef.current.intensity = 0.6 + Math.sin(time * 8) * 0.15;
-    }
-
-    if (distSq < 18.0) {
-      // Look towards Khaulah & wave enthusiastically
+    if (distSq < 16.0) {
+      // Look towards Khaulah & smile warmly
       const targetAngle = Math.atan2(dx, dz);
       if (characterRef.current) {
-        characterRef.current.rotation.y = THREE.MathUtils.lerp(
-          characterRef.current.rotation.y,
-          targetAngle,
-          delta * 4
-        );
+        characterRef.current.rotation.y = THREE.MathUtils.lerp(characterRef.current.rotation.y, targetAngle, delta * 4);
       }
-
-      // Head tilts up affectionately to smile at Khaulah
       if (headRef.current) {
         headRef.current.rotation.x = -0.05 + Math.sin(time * 2.5) * 0.05;
         headRef.current.rotation.y = Math.sin(time * 2.0) * 0.08;
       }
-
-      // Right arm lifts in high-five / friendly wave
       if (rightArmRef.current) {
-        rightArmRef.current.rotation.x = -0.5;
-        rightArmRef.current.rotation.z = -1.1 + Math.sin(time * 6) * 0.35;
-        rightArmRef.current.rotation.y = 0.3;
-      }
-      // Left arm rests gently near keyboard
-      if (leftArmRef.current) {
-        leftArmRef.current.rotation.x = -0.7;
-        leftArmRef.current.rotation.z = 0.2;
+        rightArmRef.current.rotation.x = -0.6;
+        rightArmRef.current.rotation.z = -0.9 + Math.sin(time * 5) * 0.3;
       }
     } else {
-      // Normal state: Focused coding & typing on laptop
       if (characterRef.current) {
-        characterRef.current.rotation.y = THREE.MathUtils.lerp(
-          characterRef.current.rotation.y,
-          0,
-          delta * 3
-        );
+        characterRef.current.rotation.y = THREE.MathUtils.lerp(characterRef.current.rotation.y, 0, delta * 3);
       }
 
-      // Head nods slightly while analyzing code on screen
-      if (headRef.current) {
-        headRef.current.rotation.x = 0.18 + Math.sin(time * 1.6) * 0.04;
-        headRef.current.rotation.y = Math.sin(time * 1.2) * 0.03;
-      }
-
-      // Typing animation: Left and right hands tap keys alternately
-      if (leftArmRef.current && rightArmRef.current) {
-        leftArmRef.current.rotation.x = -0.72 + Math.sin(time * 13) * 0.05;
-        leftArmRef.current.rotation.z = 0.18 + Math.cos(time * 11) * 0.02;
-        leftArmRef.current.rotation.y = -0.15;
-
-        rightArmRef.current.rotation.x = -0.72 + Math.cos(time * 13 + 1.2) * 0.05;
-        rightArmRef.current.rotation.z = -0.18 - Math.sin(time * 11) * 0.02;
-        rightArmRef.current.rotation.y = 0.15;
-      }
-
-      // Finger / hand tap micro-motions
-      if (leftHandRef.current) {
-        leftHandRef.current.rotation.x = Math.sin(time * 16) * 0.1;
-      }
-      if (rightHandRef.current) {
-        rightHandRef.current.rotation.x = Math.cos(time * 16 + 1.0) * 0.1;
+      // Activity-specific natural gestures
+      if (timeOfDay === 'siang') {
+        // Typing on laptop
+        if (headRef.current) {
+          headRef.current.rotation.x = 0.18 + Math.sin(time * 1.6) * 0.04;
+          headRef.current.rotation.y = Math.sin(time * 1.2) * 0.03;
+        }
+        if (leftArmRef.current && rightArmRef.current) {
+          leftArmRef.current.rotation.x = -0.72 + Math.sin(time * 14) * 0.05;
+          rightArmRef.current.rotation.x = -0.72 + Math.cos(time * 14) * 0.05;
+          rightArmRef.current.rotation.z = -0.18;
+          leftArmRef.current.rotation.z = 0.18;
+        }
+        if (screenGlowRef.current) {
+          screenGlowRef.current.intensity = 0.6 + Math.sin(time * 8) * 0.15;
+        }
+      } else if (timeOfDay === 'sore') {
+        // Afternoon tea: lifting teacup to sip and lowering it
+        const teaSipPhase = Math.sin(time * 0.8);
+        if (rightArmRef.current) {
+          rightArmRef.current.rotation.x = -0.5 - Math.max(0, teaSipPhase) * 0.5;
+          rightArmRef.current.rotation.z = -0.3 + Math.max(0, teaSipPhase) * 0.2;
+        }
+        if (leftArmRef.current) {
+          leftArmRef.current.rotation.x = -0.3;
+          leftArmRef.current.rotation.z = 0.2;
+        }
+      } else if (timeOfDay === 'subuh') {
+        // Subuh prayer & dhikr hands raised in dua
+        if (headRef.current) {
+          headRef.current.rotation.x = 0.12 + Math.sin(time * 1.0) * 0.03;
+        }
+        if (leftArmRef.current && rightArmRef.current) {
+          leftArmRef.current.rotation.x = -0.65;
+          leftArmRef.current.rotation.z = 0.35 + Math.sin(time * 2) * 0.03;
+          rightArmRef.current.rotation.x = -0.65;
+          rightArmRef.current.rotation.z = -0.35 - Math.sin(time * 2) * 0.03;
+        }
+      } else {
+        // Malam: Relaxing
+        if (leftArmRef.current) leftArmRef.current.rotation.x = -0.3;
+        if (rightArmRef.current) rightArmRef.current.rotation.x = -0.3;
       }
     }
   });
@@ -227,158 +222,136 @@ const AbiModel: React.FC<{ position: [number, number, number]; statusTag?: strin
         <meshBasicMaterial color="#000000" transparent opacity={0.25} />
       </mesh>
 
-      {/* ========================================================= */}
-      {/* WORKSTATION: MODERN SCANDINAVIAN DESK & CHAIR */}
-      {/* ========================================================= */}
-      {/* Work Desk Tabletop */}
-      <mesh position={[0, 0.76, 0.45]} castShadow receiveShadow>
-        <boxGeometry args={[1.2, 0.06, 0.65]} />
-        <meshStandardMaterial color="#D4A373" roughness={0.5} />
-      </mesh>
-      {/* 4 Sleek Table Legs with Dark Metal Tips */}
-      {[-0.52, 0.52].map((tx, i) =>
-        [0.2, 0.7].map((tz, j) => (
-          <group key={`leg-${i}-${j}`} position={[tx, 0.38, tz]}>
-            <mesh castShadow>
-              <cylinderGeometry args={[0.025, 0.022, 0.72, 8]} />
-              <meshStandardMaterial color="#2B2D42" roughness={0.4} />
+      {/* ============================================================== */}
+      {/* ACTIVITY EQUIPMENT 1: SIANG - CODING WORKSTATION               */}
+      {/* ============================================================== */}
+      {timeOfDay === 'siang' && (
+        <group position={[0, 0, 0.45]}>
+          {/* Work Desk */}
+          <mesh position={[0, 0.76, 0]} castShadow receiveShadow>
+            <boxGeometry args={[1.2, 0.06, 0.65]} />
+            <meshStandardMaterial color="#D4A373" roughness={0.5} />
+          </mesh>
+          {/* Table Legs */}
+          {[-0.52, 0.52].map((tx, i) =>
+            [-0.22, 0.22].map((tz, j) => (
+              <mesh key={`leg-${i}-${j}`} position={[tx, 0.38, tz]} castShadow>
+                <cylinderGeometry args={[0.025, 0.022, 0.72, 8]} />
+                <meshStandardMaterial color="#2B2D42" roughness={0.4} />
+              </mesh>
+            ))
+          )}
+          {/* Modern Laptop with Glowing Code Screen */}
+          <group position={[0, 0.79, 0]}>
+            <mesh position={[0, 0.01, 0]} castShadow>
+              <boxGeometry args={[0.46, 0.018, 0.32]} />
+              <meshStandardMaterial color="#CED4DA" metalness={0.8} roughness={0.25} />
             </mesh>
-            <mesh position={[0, -0.34, 0]}>
-              <cylinderGeometry args={[0.03, 0.03, 0.08, 8]} />
-              <meshStandardMaterial color="#E9D8A6" metalness={0.7} roughness={0.3} />
-            </mesh>
+            <group position={[0, 0.018, -0.15]} rotation={[-Math.PI / 6, 0, 0]}>
+              <mesh position={[0, 0.16, 0]} castShadow>
+                <boxGeometry args={[0.46, 0.32, 0.015]} />
+                <meshStandardMaterial color="#CED4DA" metalness={0.85} roughness={0.25} />
+              </mesh>
+              {/* Screen Display */}
+              <mesh position={[0, 0.16, 0.008]}>
+                <boxGeometry args={[0.43, 0.29, 0.002]} />
+                <meshStandardMaterial color="#0F172A" emissive="#1E293B" emissiveIntensity={0.4} />
+              </mesh>
+              {/* Syntax Lines */}
+              {[-0.08, -0.04, 0, 0.04, 0.08].map((ly, idx) => (
+                <mesh key={idx} position={[0, 0.16 + ly, 0.01]}>
+                  <planeGeometry args={[0.34, 0.015]} />
+                  <meshBasicMaterial color={['#38BDF8', '#4ADE80', '#F472B6', '#FBBF24', '#60A5FA'][idx]} />
+                </mesh>
+              ))}
+              <pointLight ref={screenGlowRef} position={[0, 0.16, 0.15]} color="#38BDF8" intensity={0.7} distance={1.8} />
+            </group>
           </group>
-        ))
+          {/* Steaming Coffee Mug */}
+          <group position={[0.42, 0.79, 0]}>
+            <mesh position={[0, 0.08, 0]} castShadow>
+              <cylinderGeometry args={[0.05, 0.045, 0.14, 12]} />
+              <meshStandardMaterial color="#FFFFFF" roughness={0.3} />
+            </mesh>
+            <Sparkles count={5} position={[0, 0.22, 0]} scale={0.2} size={1.5} speed={0.5} color="#F8F9FA" />
+          </group>
+        </group>
       )}
 
-      {/* Modern Comfortable Desk Chair / Ergonomic Seat */}
-      <group position={[0, 0, -0.15]}>
-        {/* Chair Seat Cushion */}
-        <mesh position={[0, 0.48, 0]} castShadow>
-          <boxGeometry args={[0.55, 0.08, 0.52]} />
-          <meshStandardMaterial color="#1D3557" roughness={0.6} />
-        </mesh>
-        {/* Chair Backrest */}
-        <mesh position={[0, 0.85, -0.24]} rotation={[0.08, 0, 0]} castShadow>
-          <boxGeometry args={[0.5, 0.55, 0.06]} />
-          <meshStandardMaterial color="#1D3557" roughness={0.6} />
-        </mesh>
-        {/* Chair Central Stem & Base */}
-        <mesh position={[0, 0.24, 0]}>
-          <cylinderGeometry args={[0.04, 0.04, 0.46, 8]} />
-          <meshStandardMaterial color="#4A4E69" metalness={0.8} roughness={0.3} />
-        </mesh>
-        <mesh position={[0, 0.04, 0]}>
-          <cylinderGeometry args={[0.26, 0.26, 0.04, 8]} />
-          <meshStandardMaterial color="#2B2D42" metalness={0.8} roughness={0.3} />
-        </mesh>
-      </group>
-
-      {/* ========================================================= */}
-      {/* SLEEK MODERN LAPTOP (MACBOOK / THINKPAD STYLE) */}
-      {/* ========================================================= */}
-      <group position={[0, 0.79, 0.42]}>
-        {/* Laptop Bottom Aluminum Base */}
-        <mesh position={[0, 0.01, 0]} castShadow>
-          <boxGeometry args={[0.46, 0.018, 0.32]} />
-          <meshStandardMaterial color="#CED4DA" metalness={0.8} roughness={0.25} />
-        </mesh>
-        {/* Recessed Keyboard Well */}
-        <mesh position={[0, 0.021, -0.03]}>
-          <boxGeometry args={[0.4, 0.005, 0.17]} />
-          <meshStandardMaterial color="#1E1E24" roughness={0.8} />
-        </mesh>
-        {/* Keyboard Key Highlights (individual keys simulation) */}
-        {[-0.14, -0.07, 0, 0.07, 0.14].map((kx, idx) => (
-          <mesh key={`kline-${idx}`} position={[kx, 0.023, -0.03]}>
-            <boxGeometry args={[0.05, 0.004, 0.14]} />
-            <meshStandardMaterial color="#2B2D42" roughness={0.7} />
+      {/* ============================================================== */}
+      {/* ACTIVITY EQUIPMENT 2: SUBUH - SAJADAH MUSHASHOLLA              */}
+      {/* ============================================================== */}
+      {timeOfDay === 'subuh' && (
+        <group position={[0, 0.03, 0]}>
+          {/* Turkish Emerald Green Prayer Mat */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+            <planeGeometry args={[1.2, 1.8]} />
+            <meshStandardMaterial color="#1B4332" roughness={0.7} />
           </mesh>
-        ))}
-        {/* Precision Glass Trackpad */}
-        <mesh position={[0, 0.021, 0.09]}>
-          <boxGeometry args={[0.14, 0.002, 0.08]} />
-          <meshStandardMaterial color="#ADB5BD" roughness={0.4} />
-        </mesh>
-
-        {/* Laptop Display Lid (Hinged at ~115 degrees) */}
-        <group position={[0, 0.018, -0.15]} rotation={[-Math.PI / 6, 0, 0]}>
-          {/* Lid Back Cover (Aluminum) */}
-          <mesh position={[0, 0.16, 0]} castShadow>
-            <boxGeometry args={[0.46, 0.32, 0.015]} />
-            <meshStandardMaterial color="#CED4DA" metalness={0.85} roughness={0.25} />
+          {/* Golden Arch Border on Sajadah */}
+          <mesh position={[0, 0.002, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[1.0, 1.6]} />
+            <meshBasicMaterial color="#2D6A4F" />
           </mesh>
-          {/* Minimalist Logo on Lid Back */}
-          <mesh position={[0, 0.16, -0.009]}>
-            <circleGeometry args={[0.025, 12]} />
-            <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={0.5} />
+          <mesh position={[0, 0.003, -0.3]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.2, 0.35, 16]} />
+            <meshBasicMaterial color="#D4AF37" />
           </mesh>
-          {/* Glowing Display Screen (Vibrant IDE Coding Window) */}
-          <mesh position={[0, 0.16, 0.008]}>
-            <boxGeometry args={[0.43, 0.29, 0.002]} />
-            <meshStandardMaterial
-              color="#0F172A"
-              emissive="#1E293B"
-              emissiveIntensity={0.4}
-              roughness={0.2}
-            />
-          </mesh>
-          {/* Syntax Highlighted Code Lines on Screen */}
-          {[
-            { y: 0.26, w: 0.32, c: '#38BDF8' }, // Cyan function def
-            { y: 0.22, w: 0.25, c: '#4ADE80' }, // Green strings / const
-            { y: 0.18, w: 0.36, c: '#F472B6' }, // Pink JSX / logic
-            { y: 0.14, w: 0.28, c: '#FBBF24' }, // Yellow params
-            { y: 0.10, w: 0.34, c: '#60A5FA' }, // Blue calls
-            { y: 0.06, w: 0.20, c: '#34D399' }, // Emerald return
-          ].map((line, idx) => (
-            <mesh key={`code-${idx}`} position={[-0.18 + line.w / 2, line.y, 0.01]}>
-              <planeGeometry args={[line.w, 0.018]} />
-              <meshBasicMaterial color={line.c} />
-            </mesh>
-          ))}
-          {/* Soft Screen Glow casting on Abi */}
-          <pointLight
-            ref={screenGlowRef}
-            position={[0, 0.16, 0.15]}
-            color="#38BDF8"
-            intensity={0.7}
-            distance={1.8}
-          />
+          {/* Golden Tasbih Beads */}
+          <group position={[0.5, 0.02, 0.2]}>
+            {[0, 0.06, 0.12, 0.18].map((tz, ti) => (
+              <mesh key={ti} position={[0, 0, tz]}>
+                <sphereGeometry args={[0.025, 8, 8]} />
+                <meshStandardMaterial color="#DDA15E" metalness={0.4} />
+              </mesh>
+            ))}
+          </group>
+          {/* Spiritual Morning Light */}
+          <Sparkles count={8} position={[0, 0.8, 0]} scale={1.2} size={1.8} speed={0.4} color="#FEF08A" />
         </group>
-      </group>
+      )}
 
-      {/* Desk Accessories: Ceramic Coffee Mug with Warm Steam */}
-      <group position={[0.42, 0.79, 0.4]}>
-        <mesh position={[0, 0.08, 0]} castShadow>
-          <cylinderGeometry args={[0.05, 0.045, 0.14, 12]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.3} />
-        </mesh>
-        {/* Coffee Liquid */}
-        <mesh position={[0, 0.13, 0]}>
-          <cylinderGeometry args={[0.046, 0.046, 0.02, 12]} />
-          <meshStandardMaterial color="#3E2723" roughness={0.2} />
-        </mesh>
-        {/* Mug Handle */}
-        <mesh position={[0.06, 0.08, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <torusGeometry args={[0.035, 0.01, 8, 12]} />
-          <meshStandardMaterial color="#FFFFFF" />
-        </mesh>
-        {/* Rising Steam Sparkles */}
-        <Sparkles count={5} position={[0, 0.22, 0]} scale={0.2} size={1.5} speed={0.5} color="#F8F9FA" />
-      </group>
-
-      {/* Sleek Wireless Mouse & Mousepad */}
-      <group position={[0.32, 0.79, 0.5]}>
-        <mesh position={[0, 0.005, 0]}>
-          <boxGeometry args={[0.15, 0.002, 0.2]} />
-          <meshStandardMaterial color="#1E293B" roughness={0.8} />
-        </mesh>
-        <mesh position={[0, 0.02, 0]} castShadow>
-          <boxGeometry args={[0.06, 0.025, 0.1]} />
-          <meshStandardMaterial color="#E2E8F0" roughness={0.3} />
-        </mesh>
-      </group>
+      {/* ============================================================== */}
+      {/* ACTIVITY EQUIPMENT 3: SORE - AFTERNOON TEA TABLE               */}
+      {/* ============================================================== */}
+      {timeOfDay === 'sore' && (
+        <group position={[0, 0, 0.5]}>
+          {/* Terrace Round Tea Table */}
+          <mesh position={[0, 0.65, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[0.45, 0.45, 0.05, 20]} />
+            <meshStandardMaterial color="#DDB892" roughness={0.6} />
+          </mesh>
+          {/* Table Pedestal */}
+          <mesh position={[0, 0.32, 0]}>
+            <cylinderGeometry args={[0.04, 0.08, 0.62, 12]} />
+            <meshStandardMaterial color="#7F4F24" />
+          </mesh>
+          <mesh position={[0, 0.02, 0]}>
+            <cylinderGeometry args={[0.25, 0.25, 0.04, 16]} />
+            <meshStandardMaterial color="#7F4F24" />
+          </mesh>
+          {/* Porcelain Teapot */}
+          <group position={[-0.15, 0.72, 0]}>
+            <mesh castShadow>
+              <sphereGeometry args={[0.09, 12, 12]} />
+              <meshStandardMaterial color="#FFFFFF" roughness={0.2} />
+            </mesh>
+            <mesh position={[0.09, 0.02, 0]}>
+              <cylinderGeometry args={[0.015, 0.025, 0.08, 8]} />
+              <meshStandardMaterial color="#FFFFFF" />
+            </mesh>
+          </group>
+          {/* Plate with Tea Biscuits */}
+          <mesh position={[0.15, 0.68, 0]}>
+            <cylinderGeometry args={[0.1, 0.1, 0.015, 16]} />
+            <meshStandardMaterial color="#E2E8F0" />
+          </mesh>
+          <mesh position={[0.15, 0.7, 0]}>
+            <cylinderGeometry args={[0.04, 0.04, 0.02, 10]} />
+            <meshStandardMaterial color="#D4A373" />
+          </mesh>
+        </group>
+      )}
 
       {/* ========================================================= */}
       {/* ABI CHARACTER (27 TAHUN, PRIA MUDA TAMPAN, TANPA KACAMATA) */}
@@ -394,8 +367,7 @@ const AbiModel: React.FC<{ position: [number, number, number]; statusTag?: strin
           <meshStandardMaterial color="#1E1E24" roughness={0.7} />
         </mesh>
 
-        {/* Navy Trouser Legs (Bent naturally in sitting position) */}
-        {/* Lower Legs (Vertical from feet to knees) */}
+        {/* Navy Trouser Legs */}
         <mesh position={[-0.18, 0.32, 0.2]} castShadow>
           <cylinderGeometry args={[0.12, 0.13, 0.38, 10]} />
           <meshStandardMaterial color="#1D2A44" roughness={0.7} />
@@ -404,7 +376,6 @@ const AbiModel: React.FC<{ position: [number, number, number]; statusTag?: strin
           <cylinderGeometry args={[0.12, 0.13, 0.38, 10]} />
           <meshStandardMaterial color="#1D2A44" roughness={0.7} />
         </mesh>
-        {/* Thighs (Horizontal extending towards desk) */}
         <mesh position={[-0.18, 0.49, 0.08]} rotation={[Math.PI / 2, 0, 0]} castShadow>
           <cylinderGeometry args={[0.13, 0.14, 0.34, 10]} />
           <meshStandardMaterial color="#1D2A44" roughness={0.7} />
@@ -414,126 +385,93 @@ const AbiModel: React.FC<{ position: [number, number, number]; statusTag?: strin
           <meshStandardMaterial color="#1D2A44" roughness={0.7} />
         </mesh>
 
-        {/* Torso: Elegant Modern Koko Shirt in Royal Blue (Pria 27 Tahun) */}
+        {/* Torso: Elegant Modern Koko Shirt in Royal Blue */}
         <mesh position={[0, 1.05, -0.05]} castShadow>
           <boxGeometry args={[0.68, 0.82, 0.4]} />
           <meshStandardMaterial color="#2563EB" roughness={0.6} />
         </mesh>
-        {/* White Center Button Placket / Bordir Koko */}
         <mesh position={[0, 1.1, 0.155]}>
           <boxGeometry args={[0.1, 0.72, 0.02]} />
           <meshStandardMaterial color="#FFFFFF" roughness={0.5} />
         </mesh>
 
-        {/* Left Arm (Reaching forward to type on laptop) */}
+        {/* Left Arm */}
         <group ref={leftArmRef} position={[-0.38, 1.35, 0]}>
           <mesh position={[0, -0.22, 0.12]} rotation={[0.4, 0, 0]} castShadow>
             <cylinderGeometry args={[0.09, 0.08, 0.46, 10]} />
             <meshStandardMaterial color="#2563EB" roughness={0.6} />
           </mesh>
-          {/* Left Forearm & Hand */}
-          <group ref={leftHandRef} position={[0, -0.42, 0.26]}>
-            <mesh position={[0.08, 0, 0.1]} castShadow>
-              <sphereGeometry args={[0.085, 10, 10]} />
-              <meshStandardMaterial color="#E8BE96" roughness={0.6} />
-            </mesh>
-          </group>
+          <mesh position={[0, -0.42, 0.26]} castShadow>
+            <sphereGeometry args={[0.085, 10, 10]} />
+            <meshStandardMaterial color="#E8BE96" roughness={0.6} />
+          </mesh>
         </group>
 
-        {/* Right Arm (Typing / Waving to Khaulah) */}
+        {/* Right Arm */}
         <group ref={rightArmRef} position={[0.38, 1.35, 0]}>
           <mesh position={[0, -0.22, 0.12]} rotation={[0.4, 0, 0]} castShadow>
             <cylinderGeometry args={[0.09, 0.08, 0.46, 10]} />
             <meshStandardMaterial color="#2563EB" roughness={0.6} />
           </mesh>
-          {/* Right Forearm & Hand */}
-          <group ref={rightHandRef} position={[0, -0.42, 0.26]}>
-            <mesh position={[-0.08, 0, 0.1]} castShadow>
-              <sphereGeometry args={[0.085, 10, 10]} />
-              <meshStandardMaterial color="#E8BE96" roughness={0.6} />
-            </mesh>
-          </group>
+          <mesh position={[0, -0.42, 0.26]} castShadow>
+            <sphereGeometry args={[0.085, 10, 10]} />
+            <meshStandardMaterial color="#E8BE96" roughness={0.6} />
+          </mesh>
+
+          {/* Held Porcelain Teacup when timeOfDay is 'sore' */}
+          {timeOfDay === 'sore' && (
+            <group ref={teaCupRef} position={[0, -0.46, 0.32]}>
+              <mesh castShadow>
+                <cylinderGeometry args={[0.045, 0.035, 0.08, 10]} />
+                <meshStandardMaterial color="#FFFFFF" roughness={0.2} />
+              </mesh>
+            </group>
+          )}
         </group>
 
-        {/* Head Group (Pria 27 Tahun, Wajah Ramah & TANPA KACAMATA) */}
-        <group ref={headRef} position={[0, 1.62, -0.05]}>
-          {/* Neck */}
-          <mesh position={[0, -0.16, 0]}>
-            <cylinderGeometry args={[0.1, 0.12, 0.18, 10]} />
-            <meshStandardMaterial color="#E8BE96" />
-          </mesh>
-          {/* Face (Proporsi Pria 27 Tahun Bersih & Ramah) */}
+        {/* Head & Friendly Face */}
+        <group ref={headRef} position={[0, 1.72, 0]}>
           <mesh castShadow>
-            <sphereGeometry args={[0.28, 18, 18]} />
-            <meshStandardMaterial color="#F2C7A1" roughness={0.6} />
+            <sphereGeometry args={[0.26, 16, 16]} />
+            <meshStandardMaterial color="#E8BE96" roughness={0.6} />
           </mesh>
-          {/* Peci Hitam Elegan / Rambut Rapi Pemuda 27 Tahun */}
-          <mesh position={[0, 0.19, -0.02]} castShadow>
-            <cylinderGeometry args={[0.27, 0.29, 0.22, 16]} />
-            <meshStandardMaterial color="#1E1E24" roughness={0.8} />
+          {/* Short Stylish Jet-Black Hair */}
+          <mesh position={[0, 0.12, -0.04]}>
+            <sphereGeometry args={[0.27, 14, 14]} />
+            <meshStandardMaterial color="#1B1B1E" roughness={0.7} />
           </mesh>
-          {/* Alis Rapi Pria Muda */}
-          <mesh position={[-0.09, 0.09, 0.25]} rotation={[0, 0, -0.1]}>
-            <boxGeometry args={[0.08, 0.018, 0.02]} />
-            <meshStandardMaterial color="#1E1E24" />
-          </mesh>
-          <mesh position={[0.09, 0.09, 0.25]} rotation={[0, 0, 0.1]}>
-            <boxGeometry args={[0.08, 0.018, 0.02]} />
-            <meshStandardMaterial color="#1E1E24" />
-          </mesh>
-
-          {/* MATA JERNIH TANPA KACAMATA (Clear, Warm Eyes with Natural Blink) */}
-          <group scale={[1, eyeScale.current, 1]}>
-            <mesh position={[-0.09, 0.03, 0.26]}>
-              <sphereGeometry args={[0.035, 10, 10]} />
-              <meshStandardMaterial color="#111111" />
-            </mesh>
-            <mesh position={[0.09, 0.03, 0.26]}>
-              <sphereGeometry args={[0.035, 10, 10]} />
-              <meshStandardMaterial color="#111111" />
-            </mesh>
-            {/* Eye Glimmer / Catchlight */}
-            <mesh position={[-0.08, 0.045, 0.285]}>
-              <sphereGeometry args={[0.01, 6, 6]} />
-              <meshBasicMaterial color="#FFFFFF" />
-            </mesh>
-            <mesh position={[0.1, 0.045, 0.285]}>
-              <sphereGeometry args={[0.01, 6, 6]} />
-              <meshBasicMaterial color="#FFFFFF" />
-            </mesh>
-          </group>
-
-          {/* Senyum Hangat Ayah (Warm Smile) */}
-          <mesh position={[0, -0.1, 0.26]}>
-            <torusGeometry args={[0.055, 0.014, 6, 12, Math.PI]} />
-            <meshStandardMaterial color="#A64B2A" />
+          {/* Eyes with Sparkle */}
+          {[-0.09, 0.09].map((ex, i) => (
+            <group key={i} position={[ex, 0.03, 0.24]}>
+              <mesh scale={[1, eyeScale.current, 1]}>
+                <sphereGeometry args={[0.035, 8, 8]} />
+                <meshBasicMaterial color="#1E1E24" />
+              </mesh>
+              <mesh position={[0.01, 0.015, 0.03]}>
+                <sphereGeometry args={[0.01, 6, 6]} />
+                <meshBasicMaterial color="#FFFFFF" />
+              </mesh>
+            </group>
+          ))}
+          {/* Gentle Smile */}
+          <mesh position={[0, -0.1, 0.23]}>
+            <sphereGeometry args={[0.045, 8, 8]} />
+            <meshStandardMaterial color="#A84242" />
           </mesh>
         </group>
       </group>
 
-      {/* Floating Billboard Name Tag (Cukup Nama Saja, Tanpa Umur) */}
-      <Billboard position={[0, 2.15, 0]}>
+      {/* Floating Billboard Name Tag */}
+      <Billboard position={[0, 2.35, 0]}>
         <mesh>
-          <planeGeometry args={[statusTag ? 2.3 : 1.2, 0.46]} />
-          <meshBasicMaterial color="#1D3557" transparent opacity={0.88} />
+          <planeGeometry args={[statusTag ? 2.5 : 1.4, 0.46]} />
+          <meshBasicMaterial color="#1D4ED8" transparent opacity={0.88} />
         </mesh>
-        <Text
-          position={[0, statusTag ? 0.08 : 0, 0.02]}
-          fontSize={0.18}
-          color="#FFFFFF"
-          anchorX="center"
-          anchorY="middle"
-        >
+        <Text position={[0, statusTag ? 0.08 : 0, 0.02]} fontSize={0.18} color="#FFFFFF" anchorX="center" anchorY="middle">
           Abi 💻
         </Text>
         {statusTag && (
-          <Text
-            position={[0, -0.11, 0.02]}
-            fontSize={0.11}
-            color="#BAE6FD"
-            anchorX="center"
-            anchorY="middle"
-          >
+          <Text position={[0, -0.11, 0.02]} fontSize={0.11} color="#BAE6FD" anchorX="center" anchorY="middle">
             {statusTag}
           </Text>
         )}
@@ -543,30 +481,32 @@ const AbiModel: React.FC<{ position: [number, number, number]; statusTag?: strin
 };
 
 // ============================================================================
-// 2. UMMI MODEL (IBU - 26 TAHUN, BERCADAR / NIQAB, AKTIVITAS MENYAPU)
+// 2. UMMI MODEL (IBU - 26 TAHUN, BERCADAR / NIQAB, MULTI-ACTIVITY PROPS)
 // ============================================================================
 const UmmiModel: React.FC<{ position: [number, number, number]; statusTag?: string }> = ({ position, statusTag }) => {
   const groupRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
-  const broomRef = useRef<THREE.Group>(null);
   const leftArmRef = useRef<THREE.Group>(null);
   const rightArmRef = useRef<THREE.Group>(null);
+  const broomRef = useRef<THREE.Group>(null);
+  const wateringCanRef = useRef<THREE.Group>(null);
+  const spatulaRef = useRef<THREE.Group>(null);
   const eyeScale = useRef(1);
   const blinkTimer = useRef(2.5);
   const currentPos = useRef(new THREE.Vector3(position[0], position[1], position[2]));
+
+  const timeOfDay = useGameStore((s) => s.timeOfDay);
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
     const time = state.clock.getElapsedTime();
     const playerPos = gameStore.getState().playerPos;
 
-    // Smooth movement towards scheduled position
     currentPos.current.x = THREE.MathUtils.lerp(currentPos.current.x, position[0], delta * 2.2);
     currentPos.current.y = THREE.MathUtils.lerp(currentPos.current.y, position[1], delta * 2.2);
     currentPos.current.z = THREE.MathUtils.lerp(currentPos.current.z, position[2], delta * 2.2);
     groupRef.current.position.copy(currentPos.current);
 
-    // Eye blinking
     blinkTimer.current -= delta;
     if (blinkTimer.current <= 0) {
       eyeScale.current = 0.1;
@@ -580,66 +520,46 @@ const UmmiModel: React.FC<{ position: [number, number, number]; statusTag?: stri
     const dz = playerPos[2] - currentPos.current.z;
     const distSq = dx * dx + dz * dz;
 
-    // Sweeping stroke rhythm: smooth back-and-forth swing
-    const sweepPhase = Math.sin(time * 3.2);
-
-    if (distSq < 18.0) {
-      // Look affectionately at Khaulah, pause sweep, wave gently
+    if (distSq < 16.0) {
       const targetAngle = Math.atan2(dx, dz);
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(
-        groupRef.current.rotation.y,
-        targetAngle,
-        delta * 4
-      );
-
-      // Loving head tilt towards daughter
-      if (headRef.current) {
-        headRef.current.rotation.z = Math.sin(time * 2.5) * 0.08;
-        headRef.current.rotation.x = -0.05 + Math.sin(time * 1.8) * 0.03;
-      }
-
-      // Left hand waves gently in maternal greeting
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetAngle, delta * 4);
       if (leftArmRef.current) {
         leftArmRef.current.rotation.x = -0.6;
         leftArmRef.current.rotation.z = 0.8 + Math.sin(time * 5) * 0.25;
       }
-      // Right hand holds broom gracefully standing upright
-      if (rightArmRef.current) {
-        rightArmRef.current.rotation.x = -0.3;
-        rightArmRef.current.rotation.z = -0.2;
-      }
-      if (broomRef.current) {
-        broomRef.current.rotation.z = THREE.MathUtils.lerp(broomRef.current.rotation.z, 0.1, delta * 3);
-        broomRef.current.position.x = THREE.MathUtils.lerp(broomRef.current.position.x, 0.35, delta * 3);
-      }
     } else {
-      // Sweeping active animation: Broom moves side to side sweeping the floor
-      if (broomRef.current) {
-        broomRef.current.rotation.z = sweepPhase * 0.28;
-        broomRef.current.position.x = 0.35 + sweepPhase * 0.16;
-        broomRef.current.position.z = 0.32 + Math.abs(sweepPhase) * 0.08;
+      if (timeOfDay === 'siang') {
+        // Sweeping motion
+        const sweepPhase = Math.sin(time * 3.5);
+        if (broomRef.current) {
+          broomRef.current.rotation.z = sweepPhase * 0.3;
+          broomRef.current.position.x = 0.35 + sweepPhase * 0.18;
+        }
+        if (rightArmRef.current) {
+          rightArmRef.current.rotation.x = -0.5 + sweepPhase * 0.15;
+        }
+      } else if (timeOfDay === 'subuh') {
+        // Cooking stir motion
+        const cookPhase = Math.sin(time * 4);
+        if (spatulaRef.current) {
+          spatulaRef.current.rotation.z = cookPhase * 0.25;
+        }
+        if (rightArmRef.current) {
+          rightArmRef.current.rotation.x = -0.6 + cookPhase * 0.1;
+        }
+      } else if (timeOfDay === 'sore') {
+        // Watering flower can tilt
+        if (wateringCanRef.current) {
+          wateringCanRef.current.rotation.z = -0.3 + Math.sin(time * 1.5) * 0.1;
+        }
+        if (rightArmRef.current) {
+          rightArmRef.current.rotation.x = -0.6;
+        }
+      } else {
+        // Malam: Reading storybook
+        if (leftArmRef.current) leftArmRef.current.rotation.x = -0.5;
+        if (rightArmRef.current) rightArmRef.current.rotation.x = -0.5;
       }
-
-      // Hands hold and guide the broom
-      if (leftArmRef.current) {
-        leftArmRef.current.rotation.x = -0.45 + sweepPhase * 0.12;
-        leftArmRef.current.rotation.z = 0.25 - sweepPhase * 0.15;
-      }
-      if (rightArmRef.current) {
-        rightArmRef.current.rotation.x = -0.65 - sweepPhase * 0.12;
-        rightArmRef.current.rotation.z = -0.35 + sweepPhase * 0.18;
-      }
-
-      // Body & head gently sway with the sweeping cadence
-      if (headRef.current) {
-        headRef.current.rotation.y = sweepPhase * 0.08;
-        headRef.current.rotation.x = 0.12; // Looking down at floor being swept
-      }
-    }
-
-    // Breathing motion
-    if (headRef.current) {
-      headRef.current.position.y = 2.28 + Math.sin(time * 2.2) * 0.02;
     }
   });
 
@@ -647,209 +567,202 @@ const UmmiModel: React.FC<{ position: [number, number, number]; statusTag?: stri
     <group ref={groupRef} position={position}>
       {/* Floor Contact Shadow */}
       <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.75, 16]} />
+        <circleGeometry args={[0.9, 16]} />
         <meshBasicMaterial color="#000000" transparent opacity={0.25} />
       </mesh>
 
-      {/* Gamis Syar'i Anggun (Flared Floor-Length Skirt in Soft Terracotta / Peach) */}
-      <mesh position={[0, 0.75, 0]} castShadow>
-        <coneGeometry args={[0.66, 1.45, 18]} />
-        <meshStandardMaterial color="#E07A5F" roughness={0.7} />
-      </mesh>
-      {/* Gamis Torso */}
-      <mesh position={[0, 1.58, 0]} castShadow>
-        <boxGeometry args={[0.66, 0.82, 0.4]} />
-        <meshStandardMaterial color="#E07A5F" roughness={0.6} />
-      </mesh>
-
-      {/* Syar'i Khimar / Hijab Drape over Shoulders & Chest */}
-      <mesh position={[0, 1.82, 0.05]} castShadow>
-        <coneGeometry args={[0.56, 0.72, 16]} />
-        <meshStandardMaterial color="#F7EDE2" roughness={0.5} />
-      </mesh>
-
-      {/* Left Arm (Holding upper handle of broom / waving) */}
-      <group ref={leftArmRef} position={[-0.38, 1.7, 0.05]}>
-        <mesh position={[0, -0.3, 0.1]} rotation={[0.4, 0, 0]} castShadow>
-          <cylinderGeometry args={[0.08, 0.075, 0.6, 10]} />
-          <meshStandardMaterial color="#E07A5F" />
-        </mesh>
-        {/* Left Hand */}
-        <mesh position={[0, -0.6, 0.2]} castShadow>
-          <sphereGeometry args={[0.075, 8, 8]} />
-          <meshStandardMaterial color="#F2C7A1" />
-        </mesh>
-      </group>
-
-      {/* Right Arm (Holding mid handle of broom) */}
-      <group ref={rightArmRef} position={[0.38, 1.7, 0.05]}>
-        <mesh position={[0, -0.3, 0.1]} rotation={[0.4, 0, 0]} castShadow>
-          <cylinderGeometry args={[0.08, 0.075, 0.6, 10]} />
-          <meshStandardMaterial color="#E07A5F" />
-        </mesh>
-        {/* Right Hand */}
-        <mesh position={[0, -0.6, 0.2]} castShadow>
-          <sphereGeometry args={[0.075, 8, 8]} />
-          <meshStandardMaterial color="#F2C7A1" />
-        </mesh>
-      </group>
-
-      {/* ========================================================= */}
-      {/* DETAILED BROOM (SAPU LANTAI / TERAS BERSIH) */}
-      {/* ========================================================= */}
-      <group ref={broomRef} position={[0.35, 0.9, 0.32]} rotation={[0.2, 0, 0.1]}>
-        {/* Long Smooth Wooden Broom Handle */}
-        <mesh position={[0, 0.1, 0]} castShadow>
-          <cylinderGeometry args={[0.022, 0.022, 1.55, 12]} />
-          <meshStandardMaterial color="#A66B38" roughness={0.6} />
-        </mesh>
-        {/* Top Handle Hanging Cap */}
-        <mesh position={[0, 0.88, 0]}>
-          <sphereGeometry args={[0.03, 8, 8]} />
-          <meshStandardMaterial color="#3D5A80" />
-        </mesh>
-        {/* Broom Head Metal Binding Collar */}
-        <mesh position={[0, -0.58, 0]}>
-          <cylinderGeometry args={[0.06, 0.07, 0.12, 12]} />
-          <meshStandardMaterial color="#3D5A80" metalness={0.7} roughness={0.3} />
-        </mesh>
-        {/* Broom Fan Bristles (Ijuk Serat Alami Bersih) */}
-        <mesh position={[0, -0.74, 0]} castShadow>
-          <boxGeometry args={[0.34, 0.32, 0.07]} />
-          <meshStandardMaterial color="#DDA15E" roughness={0.9} />
-        </mesh>
-        {/* Bristle Straw Texture Lines */}
-        {[-0.1, 0, 0.1].map((bx, i) => (
-          <mesh key={`bristle-${i}`} position={[bx, -0.76, 0.037]}>
-            <boxGeometry args={[0.02, 0.26, 0.005]} />
-            <meshStandardMaterial color="#BC6C25" roughness={0.9} />
+      {/* ============================================================== */}
+      {/* ACTIVITY EQUIPMENT: SUBUH - KITCHEN BREAKFAST STOVE            */}
+      {/* ============================================================== */}
+      {timeOfDay === 'subuh' && (
+        <group position={[0, 0, 0.45]}>
+          <mesh position={[0, 0.45, 0]} castShadow>
+            <boxGeometry args={[0.9, 0.85, 0.5]} />
+            <meshStandardMaterial color="#F8FAFC" />
           </mesh>
-        ))}
+          <mesh position={[0, 0.88, 0]}>
+            <cylinderGeometry args={[0.16, 0.16, 0.04, 16]} />
+            <meshStandardMaterial color="#1E293B" />
+          </mesh>
+          {/* Frying Pan with Fluffy Pancake */}
+          <group position={[0, 0.91, 0]}>
+            <mesh castShadow>
+              <cylinderGeometry args={[0.14, 0.12, 0.03, 16]} />
+              <meshStandardMaterial color="#334155" />
+            </mesh>
+            <mesh position={[0.18, 0.02, 0]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.015, 0.015, 0.15, 8]} />
+              <meshStandardMaterial color="#7F4F24" />
+            </mesh>
+            <mesh position={[0, 0.02, 0]}>
+              <cylinderGeometry args={[0.1, 0.1, 0.02, 12]} />
+              <meshStandardMaterial color="#F59E0B" />
+            </mesh>
+            <Sparkles count={6} position={[0, 0.15, 0]} scale={0.3} size={1.5} speed={0.6} color="#FEF08A" />
+          </group>
+        </group>
+      )}
 
-        {/* Cleanliness Sparkles Rising as Ummi Sweeps */}
-        <Sparkles count={10} position={[0, -0.85, 0]} scale={0.7} size={2.5} speed={1.0} color="#FFD166" />
-      </group>
+      {/* ============================================================== */}
+      {/* ACTIVITY EQUIPMENT: SORE - FLOWER POTS & WATERING STREAM       */}
+      {/* ============================================================== */}
+      {timeOfDay === 'sore' && (
+        <group position={[0.4, 0, 0.4]}>
+          {/* Flower Pots */}
+          {[-0.25, 0.25].map((px, pi) => (
+            <group key={pi} position={[px, 0, 0]}>
+              <mesh position={[0, 0.15, 0]} castShadow>
+                <cylinderGeometry args={[0.14, 0.1, 0.28, 12]} />
+                <meshStandardMaterial color="#B45309" roughness={0.7} />
+              </mesh>
+              <mesh position={[0, 0.35, 0]}>
+                <sphereGeometry args={[0.12, 8, 8]} />
+                <meshStandardMaterial color={pi === 0 ? '#E11D48' : '#F59E0B'} />
+              </mesh>
+            </group>
+          ))}
+          {/* Animated Sparkling Water Droplets */}
+          <Sparkles count={10} position={[0, 0.35, 0]} scale={0.4} size={1.8} speed={1.2} color="#38BDF8" />
+        </group>
+      )}
 
-      {/* Bekal Cinta Ummi Box beside her on a small decorative stand */}
-      <group position={[-0.7, 0.32, 0.2]}>
-        {/* Wooden mini stand */}
-        <mesh position={[0, -0.15, 0]} castShadow>
-          <cylinderGeometry args={[0.22, 0.24, 0.3, 12]} />
-          <meshStandardMaterial color="#D4A373" roughness={0.6} />
-        </mesh>
-        {/* Bekal Box */}
-        <mesh position={[0, 0.08, 0]} castShadow>
-          <boxGeometry args={[0.36, 0.16, 0.26]} />
-          <meshStandardMaterial color="#FFB703" roughness={0.4} />
-        </mesh>
-        {/* Ribbon */}
-        <mesh position={[0, 0.17, 0]}>
-          <boxGeometry args={[0.12, 0.03, 0.27]} />
-          <meshStandardMaterial color="#E63946" />
-        </mesh>
-        <Sparkles count={6} scale={0.4} size={2} speed={0.8} color="#FFD166" />
-      </group>
-
-      {/* ========================================================= */}
-      {/* HEAD GROUP: UMMI (26 TAHUN, BERCADAR / NIQAB ANGGUN) */}
-      {/* ========================================================= */}
-      <group ref={headRef} position={[0, 2.28, 0]}>
-        {/* Full Syar'i Hijab Covering Head */}
-        <mesh castShadow>
-          <sphereGeometry args={[0.35, 18, 18]} />
-          <meshStandardMaterial color="#F7EDE2" roughness={0.5} />
-        </mesh>
-
-        {/* Forehead / Eye Area */}
-        <mesh position={[0, 0.04, 0.12]} castShadow>
-          <sphereGeometry args={[0.25, 16, 16]} />
-          <meshStandardMaterial color="#F2C7A1" roughness={0.6} />
-        </mesh>
-
-        {/* CADAR / NIQAB SYAR'I (Covering Nose, Mouth, and Chin) */}
-        <group position={[0, -0.1, 0.25]}>
-          {/* Main Niqab Fabric Veil */}
+      {/* ============================================================== */}
+      {/* ACTIVITY EQUIPMENT: MALAM - OPEN GOLDEN STORYBOOK              */}
+      {/* ============================================================== */}
+      {timeOfDay === 'malam' && (
+        <group position={[0, 0.75, 0.25]} rotation={[0.4, 0, 0]}>
           <mesh castShadow>
-            <boxGeometry args={[0.34, 0.28, 0.05]} />
-            <meshStandardMaterial color="#F7EDE2" roughness={0.6} />
+            <boxGeometry args={[0.42, 0.04, 0.3]} />
+            <meshStandardMaterial color="#831843" roughness={0.5} />
           </mesh>
-          {/* Niqab Lower Draped Fold */}
-          <mesh position={[0, -0.16, -0.02]} rotation={[0.2, 0, 0]}>
-            <boxGeometry args={[0.36, 0.18, 0.04]} />
-            <meshStandardMaterial color="#EDE0D4" roughness={0.6} />
+          <mesh position={[0, 0.025, 0]}>
+            <boxGeometry args={[0.4, 0.02, 0.28]} />
+            <meshStandardMaterial color="#FEF9C3" />
           </mesh>
-          {/* Niqab Headband / Upper Tie Band below eyebrows */}
-          <mesh position={[0, 0.12, 0.015]}>
-            <boxGeometry args={[0.35, 0.04, 0.05]} />
-            <meshStandardMaterial color="#E07A5F" roughness={0.5} />
+          <Sparkles count={6} position={[0, 0.1, 0]} scale={0.4} size={2.0} speed={0.4} color="#FDE047" />
+        </group>
+      )}
+
+      {/* ========================================================= */}
+      {/* UMMI CHARACTER (26 TAHUN, BERCADAR/NIQAB, ABAYA PINK BLUSH) */}
+      {/* ========================================================= */}
+      <group position={[0, 0, 0]}>
+        {/* Elegant Long Abaya Dress */}
+        <mesh position={[0, 0.85, 0]} castShadow>
+          <cylinderGeometry args={[0.26, 0.52, 1.6, 16]} />
+          <meshStandardMaterial color="#D8829D" roughness={0.6} />
+        </mesh>
+
+        {/* Hijab Syar'i (Kerudung Panjang Menutup Dada & Punggung) */}
+        <mesh position={[0, 1.45, -0.02]} castShadow>
+          <cylinderGeometry args={[0.32, 0.44, 0.85, 16]} />
+          <meshStandardMaterial color="#F4ACB7" roughness={0.65} />
+        </mesh>
+
+        {/* Head */}
+        <group ref={headRef} position={[0, 1.82, 0]}>
+          <mesh castShadow>
+            <sphereGeometry args={[0.25, 16, 16]} />
+            <meshStandardMaterial color="#F4ACB7" roughness={0.65} />
+          </mesh>
+          {/* Eyes Peeking above Niqab */}
+          {[-0.08, 0.08].map((ex, i) => (
+            <group key={i} position={[ex, 0.04, 0.23]}>
+              <mesh scale={[1, eyeScale.current, 1]}>
+                <sphereGeometry args={[0.03, 8, 8]} />
+                <meshBasicMaterial color="#2B2D42" />
+              </mesh>
+              <mesh position={[0.008, 0.012, 0.025]}>
+                <sphereGeometry args={[0.008, 6, 6]} />
+                <meshBasicMaterial color="#FFFFFF" />
+              </mesh>
+            </group>
+          ))}
+          {/* Gentle Niqab / Cadar Fabric */}
+          <mesh position={[0, -0.08, 0.22]}>
+            <boxGeometry args={[0.28, 0.22, 0.08]} />
+            <meshStandardMaterial color="#D8829D" roughness={0.65} />
           </mesh>
         </group>
 
-        {/* MATA INDAH BERCADAR (Beautiful Warm Smiling Eyes of 26-year-old mother) */}
-        <group scale={[1, eyeScale.current, 1]}>
-          {/* Almond-shaped Smiling Eyes */}
-          <mesh position={[-0.09, 0.06, 0.31]}>
-            <sphereGeometry args={[0.034, 10, 10]} />
-            <meshStandardMaterial color="#1A1520" />
+        {/* Left Arm */}
+        <group ref={leftArmRef} position={[-0.35, 1.4, 0]}>
+          <mesh position={[0, -0.22, 0.08]} rotation={[0.3, 0, 0]} castShadow>
+            <cylinderGeometry args={[0.07, 0.065, 0.45, 10]} />
+            <meshStandardMaterial color="#D8829D" roughness={0.6} />
           </mesh>
-          <mesh position={[0.09, 0.06, 0.31]}>
-            <sphereGeometry args={[0.034, 10, 10]} />
-            <meshStandardMaterial color="#1A1520" />
-          </mesh>
-          {/* Gentle Eyelashes / Eye Accent */}
-          <mesh position={[-0.09, 0.09, 0.315]} rotation={[0, 0, 0.1]}>
-            <boxGeometry args={[0.07, 0.012, 0.01]} />
-            <meshStandardMaterial color="#1A1520" />
-          </mesh>
-          <mesh position={[0.09, 0.09, 0.315]} rotation={[0, 0, -0.1]}>
-            <boxGeometry args={[0.07, 0.012, 0.01]} />
-            <meshStandardMaterial color="#1A1520" />
-          </mesh>
-          {/* Eye Sparkle Catchlights */}
-          <mesh position={[-0.08, 0.075, 0.335]}>
-            <sphereGeometry args={[0.01, 6, 6]} />
-            <meshBasicMaterial color="#FFFFFF" />
-          </mesh>
-          <mesh position={[0.1, 0.075, 0.335]}>
-            <sphereGeometry args={[0.01, 6, 6]} />
-            <meshBasicMaterial color="#FFFFFF" />
+          <mesh position={[0, -0.42, 0.16]}>
+            <sphereGeometry args={[0.065, 8, 8]} />
+            <meshStandardMaterial color="#FCE7D0" />
           </mesh>
         </group>
 
-        {/* Gentle Rosy Blushing Cheeks above the Niqab Veil */}
-        <mesh position={[-0.13, 0.02, 0.31]}>
-          <circleGeometry args={[0.04, 10]} />
-          <meshBasicMaterial color="#F48FB1" transparent opacity={0.65} />
-        </mesh>
-        <mesh position={[0.13, 0.02, 0.31]}>
-          <circleGeometry args={[0.04, 10]} />
-          <meshBasicMaterial color="#F48FB1" transparent opacity={0.65} />
-        </mesh>
+        {/* Right Arm */}
+        <group ref={rightArmRef} position={[0.35, 1.4, 0]}>
+          <mesh position={[0, -0.22, 0.08]} rotation={[0.3, 0, 0]} castShadow>
+            <cylinderGeometry args={[0.07, 0.065, 0.45, 10]} />
+            <meshStandardMaterial color="#D8829D" roughness={0.6} />
+          </mesh>
+          <mesh position={[0, -0.42, 0.16]}>
+            <sphereGeometry args={[0.065, 8, 8]} />
+            <meshStandardMaterial color="#FCE7D0" />
+          </mesh>
+
+          {/* Held Broom when timeOfDay is 'siang' */}
+          {timeOfDay === 'siang' && (
+            <group ref={broomRef} position={[0, -0.45, 0.1]}>
+              <mesh position={[0, 0.3, 0]} castShadow>
+                <cylinderGeometry args={[0.02, 0.02, 1.1, 8]} />
+                <meshStandardMaterial color="#7F4F24" />
+              </mesh>
+              <mesh position={[0, -0.3, 0]} castShadow>
+                <boxGeometry args={[0.28, 0.24, 0.08]} />
+                <meshStandardMaterial color="#DDA15E" />
+              </mesh>
+            </group>
+          )}
+
+          {/* Held Spatula when timeOfDay is 'subuh' */}
+          {timeOfDay === 'subuh' && (
+            <group ref={spatulaRef} position={[0, -0.45, 0.1]}>
+              <mesh position={[0, 0.1, 0]} castShadow>
+                <cylinderGeometry args={[0.015, 0.015, 0.32, 8]} />
+                <meshStandardMaterial color="#7F4F24" />
+              </mesh>
+              <mesh position={[0, -0.08, 0]}>
+                <boxGeometry args={[0.08, 0.1, 0.02]} />
+                <meshStandardMaterial color="#CBD5E1" metalness={0.5} />
+              </mesh>
+            </group>
+          )}
+
+          {/* Held Watering Can when timeOfDay is 'sore' */}
+          {timeOfDay === 'sore' && (
+            <group ref={wateringCanRef} position={[0, -0.45, 0.1]}>
+              <mesh position={[0, 0, 0]} castShadow>
+                <cylinderGeometry args={[0.09, 0.11, 0.18, 12]} />
+                <meshStandardMaterial color="#06D6A0" />
+              </mesh>
+              <mesh position={[0.1, 0.05, 0]} rotation={[0, 0, -Math.PI / 4]}>
+                <cylinderGeometry args={[0.02, 0.03, 0.16, 8]} />
+                <meshStandardMaterial color="#06D6A0" />
+              </mesh>
+            </group>
+          )}
+        </group>
       </group>
 
-      {/* Floating Billboard Name Tag (Cukup Nama Saja, Tanpa Umur, Aman dari Atap) */}
+      {/* Floating Billboard Name Tag */}
       <Billboard position={[0, 2.45, 0]}>
         <mesh>
-          <planeGeometry args={[statusTag ? 2.3 : 1.3, 0.46]} />
+          <planeGeometry args={[statusTag ? 2.5 : 1.3, 0.46]} />
           <meshBasicMaterial color="#E07A5F" transparent opacity={0.88} />
         </mesh>
-        <Text
-          position={[0, statusTag ? 0.08 : 0, 0.02]}
-          fontSize={0.18}
-          color="#FFFFFF"
-          anchorX="center"
-          anchorY="middle"
-        >
+        <Text position={[0, statusTag ? 0.08 : 0, 0.02]} fontSize={0.18} color="#FFFFFF" anchorX="center" anchorY="middle">
           Ummi 🧕
         </Text>
         {statusTag && (
-          <Text
-            position={[0, -0.11, 0.02]}
-            fontSize={0.11}
-            color="#FFF1F2"
-            anchorX="center"
-            anchorY="middle"
-          >
+          <Text position={[0, -0.11, 0.02]} fontSize={0.11} color="#FFF1F2" anchorX="center" anchorY="middle">
             {statusTag}
           </Text>
         )}
@@ -859,18 +772,18 @@ const UmmiModel: React.FC<{ position: [number, number, number]; statusTag?: stri
 };
 
 // ============================================================================
-// 3. KHALID MODEL (ADEK KHALID - 4 TAHUN, MAIN DRUMBAND / SNARE DRUM)
+// 3. KHALID MODEL (ADEK KHALID - 4 TAHUN, DRUMBAND & FOLLOW MODE)
 // ============================================================================
 const KhalidModel: React.FC<{ position: [number, number, number]; statusTag?: string }> = ({ position, statusTag }) => {
   const groupRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
-  const drumGroupRef = useRef<THREE.Group>(null);
   const leftArmRef = useRef<THREE.Group>(null);
   const rightArmRef = useRef<THREE.Group>(null);
   const leftLegRef = useRef<THREE.Group>(null);
   const rightLegRef = useRef<THREE.Group>(null);
 
   const isFollowing = useGameStore((s) => s.isKhalidFollowing);
+  const timeOfDay = useGameStore((s) => s.timeOfDay);
   const currentPos = useRef(new THREE.Vector3(position[0], position[1], position[2]));
   const wasFollowing = useRef(false);
   const [speechBubbleText, setSpeechBubbleText] = useState<string | null>(null);
@@ -891,18 +804,16 @@ const KhalidModel: React.FC<{ position: [number, number, number]; statusTag?: st
         bubbleTimer.current = 4.0;
       }
 
-      // Check distance to Khaulah
       const pVec = new THREE.Vector3(playerPos[0], playerPos[1], playerPos[2]);
       const distToPlayer = currentPos.current.distanceTo(pVec);
 
-      // Teleport if too far (e.g. after teleporting to another part of island)
+      // Smart Teleport if too far
       if (distToPlayer > 32.0) {
         currentPos.current.set(playerPos[0] - 1.5, Math.max(0.2, playerPos[1]), playerPos[2] - 1.5);
         setSpeechBubbleText('Wuuush! Khalid sampai! ✨');
         bubbleTimer.current = 3.0;
       }
 
-      // Target position slightly behind and beside player
       const facing = gameStore.getState().playerFacingAngle;
       const targetX = playerPos[0] - Math.sin(facing) * 1.8 + Math.cos(facing) * 0.8;
       const targetZ = playerPos[2] - Math.cos(facing) * 1.8 - Math.sin(facing) * 0.8;
@@ -913,8 +824,7 @@ const KhalidModel: React.FC<{ position: [number, number, number]; statusTag?: st
       const distToTarget = Math.hypot(dx, dz);
 
       if (distToPlayer > 2.2) {
-        // Run towards target
-        const speed = (speedBuff > 0 || isRidingScooter) ? 20.0 : 11.0;
+        const speed = speedBuff > 0 || isRidingScooter ? 20.0 : 11.0;
         const step = Math.min(distToTarget, speed * delta);
         if (distToTarget > 0.05) {
           currentPos.current.x += (dx / distToTarget) * step;
@@ -922,11 +832,9 @@ const KhalidModel: React.FC<{ position: [number, number, number]; statusTag?: st
         }
         currentPos.current.y = THREE.MathUtils.lerp(currentPos.current.y, targetY, delta * 8);
 
-        // Face movement direction
         const moveAngle = Math.atan2(dx, dz);
         groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, moveAngle, delta * 12);
 
-        // Toddler running animation
         const runCadence = time * 18;
         const runBounce = Math.abs(Math.sin(runCadence)) * 0.08;
         groupRef.current.position.y = currentPos.current.y + runBounce;
@@ -939,32 +847,20 @@ const KhalidModel: React.FC<{ position: [number, number, number]; statusTag?: st
         const drumBeat = Math.sin(time * 20);
         if (leftArmRef.current) leftArmRef.current.rotation.x = -0.7 + drumBeat * 0.45;
         if (rightArmRef.current) rightArmRef.current.rotation.x = -0.7 + Math.cos(time * 20) * 0.45;
-        if (headRef.current) headRef.current.rotation.x = 0.05 + Math.sin(runCadence) * 0.08;
 
         bubbleTimer.current -= delta;
         if (bubbleTimer.current <= 0) {
-          const quotes = [
-            'Lari Kak Khaulah! 🏃‍♂️💨',
-            'Kejar aku hehe! 😆',
-            'Seru banget! ✨',
-            'Adek Khalid gak capek! ⚡',
-          ];
+          const quotes = ['Lari Kak Khaulah! 🏃‍♂️💨', 'Kejar aku hehe! 😆', 'Seru banget! ✨', 'Adek Khalid gak capek! ⚡'];
           setSpeechBubbleText(quotes[Math.floor(Math.random() * quotes.length)]);
           bubbleTimer.current = 8.0 + Math.random() * 6.0;
         }
       } else {
-        // Arrived: face Khaulah and rest
         const faceAngle = Math.atan2(playerPos[0] - currentPos.current.x, playerPos[2] - currentPos.current.z);
         groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, faceAngle, delta * 6);
         groupRef.current.position.y = currentPos.current.y;
 
-        if (leftLegRef.current) leftLegRef.current.rotation.x = THREE.MathUtils.lerp(leftLegRef.current.rotation.x, 0, delta * 8);
-        if (rightLegRef.current) rightLegRef.current.rotation.x = THREE.MathUtils.lerp(rightLegRef.current.rotation.x, 0, delta * 8);
-
-        if (headRef.current) {
-          headRef.current.rotation.x = -0.05 + Math.sin(time * 3) * 0.05;
-          headRef.current.rotation.y = Math.sin(time * 2) * 0.08;
-        }
+        if (leftLegRef.current) leftLegRef.current.rotation.x = 0;
+        if (rightLegRef.current) rightLegRef.current.rotation.x = 0;
         if (leftArmRef.current) leftArmRef.current.rotation.x = -0.65 + Math.sin(time * 8) * 0.2;
         if (rightArmRef.current) rightArmRef.current.rotation.x = -0.65 + Math.cos(time * 8) * 0.2;
 
@@ -981,7 +877,6 @@ const KhalidModel: React.FC<{ position: [number, number, number]; statusTag?: st
 
       groupRef.current.position.x = currentPos.current.x;
       groupRef.current.position.z = currentPos.current.z;
-
       gameStore.setKhalidPos([currentPos.current.x, currentPos.current.y, currentPos.current.z]);
     } else {
       wasFollowing.current = false;
@@ -991,373 +886,15 @@ const KhalidModel: React.FC<{ position: [number, number, number]; statusTag?: st
       groupRef.current.position.copy(currentPos.current);
       gameStore.setKhalidPos([currentPos.current.x, currentPos.current.y, currentPos.current.z]);
 
-      // Drumband tempo: fast, snappy marching cadence
-      const drumBeat = Math.sin(time * 14);
-      const drumBeatAlt = Math.cos(time * 14 + 0.8);
-
-      const marchBounce = Math.abs(Math.sin(time * 6.5)) * 0.06;
-      groupRef.current.position.y += marchBounce;
-
-      if (leftLegRef.current && rightLegRef.current) {
-        leftLegRef.current.rotation.x = Math.sin(time * 6.5) * 0.35;
-        rightLegRef.current.rotation.x = -Math.sin(time * 6.5) * 0.35;
-      }
-
-      const dx = playerPos[0] - currentPos.current.x;
-      const dz = playerPos[2] - currentPos.current.z;
-      const distSq = dx * dx + dz * dz;
-
-      if (distSq < 16.0) {
-        const targetAngle = Math.atan2(dx, dz);
-        groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetAngle, delta * 5);
-        if (headRef.current) {
-          headRef.current.rotation.y = Math.sin(time * 3) * 0.1;
-          headRef.current.rotation.x = -0.1 + Math.sin(time * 7) * 0.08;
-        }
+      if (timeOfDay === 'siang') {
+        // Active drumming ratatat
+        const drumBeat = Math.sin(time * 16);
         if (leftArmRef.current) leftArmRef.current.rotation.x = -0.7 + drumBeat * 0.45;
-        if (rightArmRef.current) rightArmRef.current.rotation.x = -0.7 + drumBeatAlt * 0.45;
-      } else {
-        if (headRef.current) headRef.current.rotation.x = 0.1 + Math.sin(time * 6.5) * 0.08;
-        if (leftArmRef.current) leftArmRef.current.rotation.x = -0.65 + drumBeat * 0.35;
-        if (rightArmRef.current) rightArmRef.current.rotation.x = -0.65 + drumBeatAlt * 0.35;
-      }
-    }
-
-    if (drumGroupRef.current) {
-      drumGroupRef.current.position.y = 0.72 + Math.abs(Math.sin(time * 14)) * 0.015;
-    }
-  });
-
-  return (
-    <group ref={groupRef} position={position}>
-      {/* Floor Contact Shadow */}
-      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.55, 16]} />
-        <meshBasicMaterial color="#000000" transparent opacity={0.25} />
-      </mesh>
-
-      {/* Left Leg (4-year-old active boy) */}
-      <group ref={leftLegRef} position={[-0.14, 0.42, 0]}>
-        <mesh castShadow>
-          <cylinderGeometry args={[0.09, 0.1, 0.46, 10]} />
-          <meshStandardMaterial color="#1D3557" />
-        </mesh>
-        {/* Red & White Sneaker */}
-        <mesh position={[0, -0.3, 0.05]} castShadow>
-          <boxGeometry args={[0.15, 0.12, 0.28]} />
-          <meshStandardMaterial color="#E63946" />
-        </mesh>
-      </group>
-
-      {/* Right Leg */}
-      <group ref={rightLegRef} position={[0.14, 0.42, 0]}>
-        <mesh castShadow>
-          <cylinderGeometry args={[0.09, 0.1, 0.46, 10]} />
-          <meshStandardMaterial color="#1D3557" />
-        </mesh>
-        {/* Red & White Sneaker */}
-        <mesh position={[0, -0.3, 0.05]} castShadow>
-          <boxGeometry args={[0.15, 0.12, 0.28]} />
-          <meshStandardMaterial color="#E63946" />
-        </mesh>
-      </group>
-
-      {/* Torso: Cheerful Yellow & Red Drumband T-Shirt (4 Tahun) */}
-      <mesh position={[0, 0.95, 0]} castShadow>
-        <boxGeometry args={[0.52, 0.62, 0.34]} />
-        <meshStandardMaterial color="#FFD166" />
-      </mesh>
-      {/* Athletic Stripe on Shirt */}
-      <mesh position={[0, 0.95, 0.172]}>
-        <boxGeometry args={[0.48, 0.14, 0.01]} />
-        <meshStandardMaterial color="#E63946" />
-      </mesh>
-
-      {/* Shoulder Drumband Harness Strap (Cross-body support) */}
-      <mesh position={[0, 1.05, 0.02]} rotation={[0, 0, 0.55]}>
-        <boxGeometry args={[0.1, 0.65, 0.36]} />
-        <meshStandardMaterial color="#1D3557" roughness={0.7} />
-      </mesh>
-
-      {/* ========================================================= */}
-      {/* DRUMBAND SNARE DRUM WITH METALLIC RIMS & STRAP */}
-      {/* ========================================================= */}
-      <group ref={drumGroupRef} position={[0, 0.72, 0.3]}>
-        {/* Drum Shell Cylinder (Bold Drumband Red) */}
-        <mesh castShadow>
-          <cylinderGeometry args={[0.26, 0.26, 0.24, 18]} />
-          <meshStandardMaterial color="#E63946" roughness={0.4} />
-        </mesh>
-        {/* Top Metallic Gold Counterhoop Rim */}
-        <mesh position={[0, 0.12, 0]}>
-          <cylinderGeometry args={[0.275, 0.275, 0.025, 18]} />
-          <meshStandardMaterial color="#FFD700" metalness={0.8} roughness={0.2} />
-        </mesh>
-        {/* Bottom Metallic Gold Rim */}
-        <mesh position={[0, -0.12, 0]}>
-          <cylinderGeometry args={[0.275, 0.275, 0.025, 18]} />
-          <meshStandardMaterial color="#FFD700" metalness={0.8} roughness={0.2} />
-        </mesh>
-        {/* Top Drumhead Skin (Clean White Batter Head) */}
-        <mesh position={[0, 0.122, 0]}>
-          <cylinderGeometry args={[0.258, 0.258, 0.005, 18]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.3} />
-        </mesh>
-        {/* Tension Rods around the drum */}
-        {[-0.26, 0.26].map((tx, idx) => (
-          <mesh key={`rod-${idx}`} position={[tx, 0, 0]}>
-            <cylinderGeometry args={[0.01, 0.01, 0.22, 6]} />
-            <meshStandardMaterial color="#FFD700" metalness={0.9} roughness={0.2} />
-          </mesh>
-        ))}
-
-        {/* Musical Notes & Stars Rising from the Drum */}
-        <Sparkles count={10} position={[0, 0.3, 0]} scale={0.6} size={2.5} speed={1.2} color="#FFD166" />
-      </group>
-
-      {/* Left Arm with Wooden Drumstick */}
-      <group ref={leftArmRef} position={[-0.32, 1.1, 0.08]}>
-        <mesh position={[0, -0.18, 0.1]} rotation={[0.5, 0, -0.2]} castShadow>
-          <cylinderGeometry args={[0.065, 0.06, 0.4, 8]} />
-          <meshStandardMaterial color="#FFD166" />
-        </mesh>
-        {/* Left Hand Gripping Drumstick */}
-        <mesh position={[0.08, -0.32, 0.18]} castShadow>
-          <sphereGeometry args={[0.065, 8, 8]} />
-          <meshStandardMaterial color="#F4C7A1" />
-        </mesh>
-        {/* Left Drumstick (Stik Drum Kayu) */}
-        <group position={[0.08, -0.32, 0.18]} rotation={[0.4, 0.3, -0.5]}>
-          <mesh position={[0, 0.1, 0]}>
-            <cylinderGeometry args={[0.012, 0.012, 0.38, 8]} />
-            <meshStandardMaterial color="#D4A373" roughness={0.5} />
-          </mesh>
-          <mesh position={[0, 0.29, 0]}>
-            <sphereGeometry args={[0.02, 8, 8]} />
-            <meshStandardMaterial color="#D4A373" />
-          </mesh>
-        </group>
-      </group>
-
-      {/* Right Arm with Wooden Drumstick */}
-      <group ref={rightArmRef} position={[0.32, 1.1, 0.08]}>
-        <mesh position={[0, -0.18, 0.1]} rotation={[0.5, 0, 0.2]} castShadow>
-          <cylinderGeometry args={[0.065, 0.06, 0.4, 8]} />
-          <meshStandardMaterial color="#FFD166" />
-        </mesh>
-        {/* Right Hand Gripping Drumstick */}
-        <mesh position={[-0.08, -0.32, 0.18]} castShadow>
-          <sphereGeometry args={[0.065, 8, 8]} />
-          <meshStandardMaterial color="#F4C7A1" />
-        </mesh>
-        {/* Right Drumstick (Stik Drum Kayu) */}
-        <group position={[-0.08, -0.32, 0.18]} rotation={[0.4, -0.3, 0.5]}>
-          <mesh position={[0, 0.1, 0]}>
-            <cylinderGeometry args={[0.012, 0.012, 0.38, 8]} />
-            <meshStandardMaterial color="#D4A373" roughness={0.5} />
-          </mesh>
-          <mesh position={[0, 0.29, 0]}>
-            <sphereGeometry args={[0.02, 8, 8]} />
-            <meshStandardMaterial color="#D4A373" />
-          </mesh>
-        </group>
-      </group>
-
-      {/* Head Group: Khalid (4 Tahun, Lincah & Ceria) */}
-      <group ref={headRef} position={[0, 1.48, 0]}>
-        <mesh castShadow>
-          <sphereGeometry args={[0.26, 16, 16]} />
-          <meshStandardMaterial color="#F4C7A1" />
-        </mesh>
-        {/* Spunky Boy Haircut */}
-        <mesh position={[0, 0.14, -0.04]} castShadow>
-          <sphereGeometry args={[0.27, 14, 14]} />
-          <meshStandardMaterial color="#1E1E24" />
-        </mesh>
-        {/* Cute Marching Band Beret / Cap */}
-        <group position={[0, 0.26, 0]} rotation={[-0.1, 0, -0.15]}>
-          <mesh castShadow>
-            <cylinderGeometry args={[0.22, 0.25, 0.1, 16]} />
-            <meshStandardMaterial color="#E63946" />
-          </mesh>
-          {/* Gold Star Badge on Cap */}
-          <mesh position={[0, 0.02, 0.24]}>
-            <sphereGeometry args={[0.035, 8, 8]} />
-            <meshStandardMaterial color="#FFD700" metalness={0.9} roughness={0.2} />
-          </mesh>
-        </group>
-
-        {/* Big Energetic Sparkly Eyes */}
-        <mesh position={[-0.08, 0.03, 0.24]}>
-          <sphereGeometry args={[0.035, 8, 8]} />
-          <meshStandardMaterial color="#111111" />
-        </mesh>
-        <mesh position={[0.08, 0.03, 0.24]}>
-          <sphereGeometry args={[0.035, 8, 8]} />
-          <meshStandardMaterial color="#111111" />
-        </mesh>
-        {/* Catchlights */}
-        <mesh position={[-0.07, 0.045, 0.265]}>
-          <sphereGeometry args={[0.009, 6, 6]} />
-          <meshBasicMaterial color="#FFFFFF" />
-        </mesh>
-        <mesh position={[0.09, 0.045, 0.265]}>
-          <sphereGeometry args={[0.009, 6, 6]} />
-          <meshBasicMaterial color="#FFFFFF" />
-        </mesh>
-
-        {/* Rosy Toddler Cheeks */}
-        <mesh position={[-0.12, -0.03, 0.23]}>
-          <circleGeometry args={[0.035, 8]} />
-          <meshBasicMaterial color="#FF8FA3" transparent opacity={0.7} />
-        </mesh>
-        <mesh position={[0.12, -0.03, 0.23]}>
-          <circleGeometry args={[0.035, 8]} />
-          <meshBasicMaterial color="#FF8FA3" transparent opacity={0.7} />
-        </mesh>
-
-        {/* Wide Laughing Mouth */}
-        <mesh position={[0, -0.09, 0.24]}>
-          <sphereGeometry args={[0.06, 8, 8]} />
-          <meshStandardMaterial color="#D81159" />
-        </mesh>
-      </group>
-
-      {/* Floating Speech Bubble / Dialog above Khalid */}
-      {speechBubbleText && (
-        <Billboard position={[0, 2.38, 0]}>
-          <mesh>
-            <planeGeometry args={[Math.max(1.8, speechBubbleText.length * 0.11), 0.36]} />
-            <meshBasicMaterial color="#FFFFFF" transparent opacity={0.92} />
-          </mesh>
-          <Text
-            position={[0, 0, 0.02]}
-            fontSize={0.13}
-            color="#1F2937"
-            anchorX="center"
-            anchorY="middle"
-          >
-            {speechBubbleText}
-          </Text>
-        </Billboard>
-      )}
-
-      {/* Floating Billboard Name Tag */}
-      <Billboard position={[0, 1.95, 0]}>
-        <mesh>
-          <planeGeometry args={[statusTag || isFollowing ? 2.3 : 1.6, 0.46]} />
-          <meshBasicMaterial color={isFollowing ? '#10B981' : '#E63946'} transparent opacity={0.88} />
-        </mesh>
-        <Text
-          position={[0, (statusTag || isFollowing) ? 0.08 : 0, 0.02]}
-          fontSize={0.18}
-          color="#FFFFFF"
-          anchorX="center"
-          anchorY="middle"
-        >
-          {isFollowing ? 'Adek Khalid 🏃‍♂️' : 'Adek Khalid 🥁'}
-        </Text>
-        {(statusTag || isFollowing) && (
-          <Text
-            position={[0, -0.11, 0.02]}
-            fontSize={0.11}
-            color="#FEF08A"
-            anchorX="center"
-            anchorY="middle"
-          >
-            {isFollowing ? 'Ikut Kak Khaulah ✨' : statusTag}
-          </Text>
-        )}
-      </Billboard>
-    </group>
-  );
-};
-
-// ============================================================================
-// 4. FAQIH MODEL (ADEK FAQIH - 2 TAHUN, BALITA GEMAS, MAIN MOBILAN)
-// ============================================================================
-const FaqihModel: React.FC<{ position: [number, number, number]; statusTag?: string }> = ({ position, statusTag }) => {
-  const groupRef = useRef<THREE.Group>(null);
-  const headRef = useRef<THREE.Group>(null);
-  const toyCarRef = useRef<THREE.Group>(null);
-  const rightHandRef = useRef<THREE.Group>(null);
-  const wheelRefs = useRef<(THREE.Mesh | null)[]>([]);
-  const eyeScale = useRef(1);
-  const blinkTimer = useRef(2.2);
-  const currentPos = useRef(new THREE.Vector3(position[0], position[1], position[2]));
-
-  useFrame((state, delta) => {
-    if (!groupRef.current) return;
-    const time = state.clock.getElapsedTime();
-    const playerPos = gameStore.getState().playerPos;
-
-    // Smooth movement towards scheduled position
-    currentPos.current.x = THREE.MathUtils.lerp(currentPos.current.x, position[0], delta * 2.2);
-    currentPos.current.y = THREE.MathUtils.lerp(currentPos.current.y, position[1], delta * 2.2);
-    currentPos.current.z = THREE.MathUtils.lerp(currentPos.current.z, position[2], delta * 2.2);
-    groupRef.current.position.copy(currentPos.current);
-
-    // Blinking
-    blinkTimer.current -= delta;
-    if (blinkTimer.current <= 0) {
-      eyeScale.current = 0.1;
-      if (blinkTimer.current <= -0.14) {
-        eyeScale.current = 1.0;
-        blinkTimer.current = 2.0 + Math.random() * 2.5;
-      }
-    }
-
-    const dx = playerPos[0] - currentPos.current.x;
-    const dz = playerPos[2] - currentPos.current.z;
-    const distSq = dx * dx + dz * dz;
-
-    // Toy car cruising motion back and forth on the play mat
-    const carCycle = Math.sin(time * 2.6);
-    const carTravel = carCycle * 0.26;
-
-    if (distSq < 16.0) {
-      const targetAngle = Math.atan2(dx, dz);
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(
-        groupRef.current.rotation.y,
-        targetAngle,
-        delta * 3.5
-      );
-
-      // Faqih excitedly lifts toy car up to show Kak Khaulah!
-      if (toyCarRef.current) {
-        toyCarRef.current.position.y = 0.35 + Math.sin(time * 4) * 0.06;
-        toyCarRef.current.position.z = 0.22;
-        toyCarRef.current.rotation.x = -0.2 + Math.sin(time * 4) * 0.15;
-      }
-      if (rightHandRef.current) {
-        rightHandRef.current.rotation.x = -0.4 + Math.sin(time * 4) * 0.2;
-      }
-      if (headRef.current) {
-        headRef.current.rotation.x = -0.15 + Math.sin(time * 2) * 0.06;
-        headRef.current.rotation.z = Math.sin(time * 3) * 0.08;
-      }
-    } else {
-      // Normal playing: Pushing car back and forth on play mat
-      if (toyCarRef.current) {
-        toyCarRef.current.position.z = 0.3 + carTravel;
-        toyCarRef.current.position.y = 0.07;
-        toyCarRef.current.rotation.x = 0;
-        toyCarRef.current.rotation.y = Math.cos(time * 2.6) * 0.12;
-      }
-
-      // Wheels spin as car travels
-      wheelRefs.current.forEach((wheel) => {
-        if (wheel) {
-          wheel.rotation.x += carCycle * delta * 14;
-        }
-      });
-
-      // Faqih leans his little body and arm forward & back with the car
-      if (rightHandRef.current) {
-        rightHandRef.current.rotation.x = 0.35 + carTravel * 0.8;
-      }
-      if (headRef.current) {
-        headRef.current.rotation.x = 0.2 + carTravel * 0.3; // Looking down at car
+        if (rightArmRef.current) rightArmRef.current.rotation.x = -0.7 + Math.cos(time * 16) * 0.45;
+        groupRef.current.position.y += Math.abs(Math.sin(time * 8)) * 0.05;
+      } else if (timeOfDay === 'subuh') {
+        // Yawning / eye rub on bed
+        if (rightArmRef.current) rightArmRef.current.rotation.x = -1.2 + Math.sin(time * 2) * 0.2;
       }
     }
   });
@@ -1370,178 +907,367 @@ const FaqihModel: React.FC<{ position: [number, number, number]; statusTag?: str
         <meshBasicMaterial color="#000000" transparent opacity={0.25} />
       </mesh>
 
-      {/* ========================================================= */}
-      {/* COLORFUL PLAY MAT (KARPET BERMAIN MINI SIRKUIT MOBIL) */}
-      {/* ========================================================= */}
-      <group position={[0, 0.025, 0.1]}>
-        {/* Soft Oval Play Mat Base */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-          <circleGeometry args={[0.78, 24]} />
-          <meshStandardMaterial color="#80ED99" roughness={0.7} />
-        </mesh>
-        {/* Mini Road Track Oval Ring */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002, 0]}>
-          <ringGeometry args={[0.35, 0.65, 24]} />
-          <meshBasicMaterial color="#4A5568" />
-        </mesh>
-        {/* Road Track Dashes */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, 0]}>
-          <ringGeometry args={[0.49, 0.51, 16]} />
-          <meshBasicMaterial color="#F6E05E" />
-        </mesh>
-      </group>
+      {/* ============================================================== */}
+      {/* ACTIVITY EQUIPMENT: SUBUH - CHILDREN BED WITH STARRY BLANKET   */}
+      {/* ============================================================== */}
+      {!isFollowing && timeOfDay === 'subuh' && (
+        <group position={[0, 0, 0]}>
+          <mesh position={[0, 0.25, 0]} castShadow>
+            <boxGeometry args={[1.2, 0.35, 1.6]} />
+            <meshStandardMaterial color="#93C5FD" />
+          </mesh>
+          <mesh position={[0, 0.45, -0.5]}>
+            <boxGeometry args={[0.7, 0.12, 0.4]} />
+            <meshStandardMaterial color="#FFFFFF" />
+          </mesh>
+          <Sparkles count={5} position={[0, 0.6, 0]} scale={0.8} size={1.8} speed={0.4} color="#FDE047" />
+        </group>
+      )}
+
+      {/* ============================================================== */}
+      {/* ACTIVITY EQUIPMENT: SIANG - SNARE DRUM & DRUMSTICKS            */}
+      {/* ============================================================== */}
+      {(isFollowing || timeOfDay === 'siang') && (
+        <group position={[0, 0.72, 0.28]} rotation={[0.2, 0, 0]}>
+          <mesh castShadow>
+            <cylinderGeometry args={[0.22, 0.22, 0.18, 16]} />
+            <meshStandardMaterial color="#E63946" metalness={0.2} roughness={0.4} />
+          </mesh>
+          {/* Top Drum Head */}
+          <mesh position={[0, 0.091, 0]}>
+            <cylinderGeometry args={[0.225, 0.225, 0.01, 16]} />
+            <meshStandardMaterial color="#F8FAFC" roughness={0.3} />
+          </mesh>
+          {/* Drum Rims */}
+          <mesh position={[0, 0, 0]}>
+            <cylinderGeometry args={[0.23, 0.23, 0.03, 16]} />
+            <meshStandardMaterial color="#F1FAEE" metalness={0.8} />
+          </mesh>
+          {/* Floating Music Notes Sparkles */}
+          <Sparkles count={4} position={[0, 0.25, 0]} scale={0.4} size={2.0} speed={0.8} color="#FEF08A" />
+        </group>
+      )}
 
       {/* ========================================================= */}
-      {/* DETAILED TOY CAR (MOBIL-MOBILAN BALAP MINI KEREN) */}
-      {/* ========================================================= */}
-      <group ref={toyCarRef} position={[0.1, 0.07, 0.35]}>
-        {/* Sleek Red Sports Car Body */}
-        <mesh position={[0, 0.05, 0]} castShadow>
-          <boxGeometry args={[0.22, 0.08, 0.36]} />
-          <meshStandardMaterial color="#E63946" roughness={0.3} metalness={0.2} />
-        </mesh>
-        {/* Cockpit / Windshield (Tinted Cyan Glass) */}
-        <mesh position={[0, 0.1, -0.02]} castShadow>
-          <boxGeometry args={[0.18, 0.065, 0.18]} />
-          <meshStandardMaterial color="#A8DADC" roughness={0.2} />
-        </mesh>
-        {/* Cute Rear Spoiler */}
-        <mesh position={[0, 0.12, -0.16]}>
-          <boxGeometry args={[0.2, 0.02, 0.04]} />
-          <meshStandardMaterial color="#1D3557" />
-        </mesh>
-        {/* Front Headlights */}
-        <mesh position={[-0.07, 0.05, 0.182]}>
-          <boxGeometry args={[0.04, 0.03, 0.01]} />
-          <meshBasicMaterial color="#FFD166" />
-        </mesh>
-        <mesh position={[0.07, 0.05, 0.182]}>
-          <boxGeometry args={[0.04, 0.03, 0.01]} />
-          <meshBasicMaterial color="#FFD166" />
-        </mesh>
-
-        {/* 4 Chunky Toy Car Wheels (Animatable Rotation) */}
-        {[-0.12, 0.12].map((wx, i) =>
-          [-0.1, 0.1].map((wz, j) => {
-            const idx = i * 2 + j;
-            return (
-              <mesh
-                key={`car-wheel-${idx}`}
-                ref={(el) => (wheelRefs.current[idx] = el)}
-                position={[wx, 0.035, wz]}
-                rotation={[0, 0, Math.PI / 2]}
-                castShadow
-              >
-                <cylinderGeometry args={[0.04, 0.04, 0.03, 12]} />
-                <meshStandardMaterial color="#1E1E24" roughness={0.8} />
-              </mesh>
-            );
-          })
-        )}
-
-        {/* Mini Speed Sparkles */}
-        <Sparkles count={5} scale={0.3} size={2} speed={1.5} color="#FFD166" />
-      </group>
-
-      {/* ========================================================= */}
-      {/* ADEK FAQIH (2 TAHUN, BALITA MUNGIL DUDUK BERSILA / ONESIE) */}
+      {/* KHALID CHARACTER BODY (4 TAHUN, BALITA CERIA DRUMBAND)    */}
       {/* ========================================================= */}
       <group position={[0, 0, 0]}>
-        {/* Chubby Sitting Legs in Mint Green Onesie */}
-        <mesh position={[-0.14, 0.12, 0.12]} rotation={[0.4, -0.5, 0]} castShadow>
-          <cylinderGeometry args={[0.08, 0.09, 0.28, 10]} />
-          <meshStandardMaterial color="#57CC99" />
-        </mesh>
-        <mesh position={[0.14, 0.12, 0.12]} rotation={[0.4, 0.5, 0]} castShadow>
-          <cylinderGeometry args={[0.08, 0.09, 0.28, 10]} />
-          <meshStandardMaterial color="#57CC99" />
-        </mesh>
-        {/* Tiny Baby Booties / Socks */}
-        <mesh position={[-0.18, 0.08, 0.24]}>
-          <sphereGeometry args={[0.065, 8, 8]} />
-          <meshStandardMaterial color="#FFB703" />
-        </mesh>
-        <mesh position={[0.18, 0.08, 0.24]}>
-          <sphereGeometry args={[0.065, 8, 8]} />
-          <meshStandardMaterial color="#FFB703" />
-        </mesh>
-
-        {/* Chubby Toddler Torso (Mint Green Onesie with Yellow Pocket) */}
-        <mesh position={[0, 0.36, 0.02]} castShadow>
-          <sphereGeometry args={[0.24, 14, 14]} />
-          <meshStandardMaterial color="#57CC99" />
-        </mesh>
-        <mesh position={[0, 0.34, 0.22]}>
-          <boxGeometry args={[0.12, 0.1, 0.02]} />
-          <meshStandardMaterial color="#FFB703" />
-        </mesh>
-
-        {/* Left Arm Resting on Ground */}
-        <mesh position={[-0.22, 0.32, 0.14]} rotation={[0.5, 0, -0.3]} castShadow>
-          <cylinderGeometry args={[0.05, 0.045, 0.28, 8]} />
-          <meshStandardMaterial color="#57CC99" />
-        </mesh>
-        <mesh position={[-0.22, 0.16, 0.26]}>
-          <sphereGeometry args={[0.055, 8, 8]} />
-          <meshStandardMaterial color="#F7D6BF" />
-        </mesh>
-
-        {/* Right Arm (Pushing / Playing with the Toy Car) */}
-        <group ref={rightHandRef} position={[0.18, 0.42, 0.1]}>
-          <mesh position={[0, -0.15, 0.1]} rotation={[0.6, 0, 0.2]} castShadow>
-            <cylinderGeometry args={[0.05, 0.045, 0.32, 8]} />
-            <meshStandardMaterial color="#57CC99" />
+        {/* Legs */}
+        <group ref={leftLegRef} position={[-0.14, 0.4, 0]}>
+          <mesh position={[0, -0.2, 0]} castShadow>
+            <cylinderGeometry args={[0.075, 0.075, 0.4, 10]} />
+            <meshStandardMaterial color="#1D3557" />
           </mesh>
-          {/* Right Hand touching car */}
-          <mesh position={[0, -0.3, 0.22]} castShadow>
-            <sphereGeometry args={[0.055, 8, 8]} />
-            <meshStandardMaterial color="#F7D6BF" />
+          <mesh position={[0, -0.4, 0.06]} castShadow>
+            <boxGeometry args={[0.13, 0.09, 0.24]} />
+            <meshStandardMaterial color="#E63946" />
+          </mesh>
+        </group>
+        <group ref={rightLegRef} position={[0.14, 0.4, 0]}>
+          <mesh position={[0, -0.2, 0]} castShadow>
+            <cylinderGeometry args={[0.075, 0.075, 0.4, 10]} />
+            <meshStandardMaterial color="#1D3557" />
+          </mesh>
+          <mesh position={[0, -0.4, 0.06]} castShadow>
+            <boxGeometry args={[0.13, 0.09, 0.24]} />
+            <meshStandardMaterial color="#E63946" />
           </mesh>
         </group>
 
-        {/* Chubby Baby Head with Bear Ear Cap (2 Tahun) */}
-        <group ref={headRef} position={[0, 0.68, 0.06]}>
+        {/* Torso: Red Drumband Shirt */}
+        <mesh position={[0, 0.75, 0]} castShadow>
+          <boxGeometry args={[0.5, 0.55, 0.32]} />
+          <meshStandardMaterial color="#E63946" />
+        </mesh>
+        <mesh position={[0, 0.75, 0.165]}>
+          <boxGeometry args={[0.08, 0.5, 0.01]} />
+          <meshStandardMaterial color="#FFD166" />
+        </mesh>
+
+        {/* Arms */}
+        <group ref={leftArmRef} position={[-0.28, 0.95, 0]}>
+          <mesh position={[0, -0.16, 0.1]} rotation={[0.4, 0, 0]} castShadow>
+            <cylinderGeometry args={[0.06, 0.055, 0.35, 8]} />
+            <meshStandardMaterial color="#E63946" />
+          </mesh>
+          <mesh position={[0, -0.32, 0.22]}>
+            <sphereGeometry args={[0.06, 8, 8]} />
+            <meshStandardMaterial color="#FCD5B5" />
+          </mesh>
+        </group>
+        <group ref={rightArmRef} position={[0.28, 0.95, 0]}>
+          <mesh position={[0, -0.16, 0.1]} rotation={[0.4, 0, 0]} castShadow>
+            <cylinderGeometry args={[0.06, 0.055, 0.35, 8]} />
+            <meshStandardMaterial color="#E63946" />
+          </mesh>
+          <mesh position={[0, -0.32, 0.22]}>
+            <sphereGeometry args={[0.06, 8, 8]} />
+            <meshStandardMaterial color="#FCD5B5" />
+          </mesh>
+        </group>
+
+        {/* Head */}
+        <group ref={headRef} position={[0, 1.3, 0]}>
           <mesh castShadow>
-            <sphereGeometry args={[0.22, 16, 16]} />
-            <meshStandardMaterial color="#F7D6BF" />
+            <sphereGeometry args={[0.24, 14, 14]} />
+            <meshStandardMaterial color="#FCD5B5" />
           </mesh>
-          {/* Cute Soft Cap with Bear Ears */}
-          <mesh position={[0, 0.06, -0.02]}>
-            <sphereGeometry args={[0.228, 14, 14, 0, Math.PI * 2, 0, Math.PI / 1.7]} />
-            <meshStandardMaterial color="#FFB703" />
+          {/* Black Hair */}
+          <mesh position={[0, 0.1, -0.04]}>
+            <sphereGeometry args={[0.25, 12, 12]} />
+            <meshStandardMaterial color="#1E1E24" />
           </mesh>
-          {/* Bear Ear Left */}
-          <mesh position={[-0.14, 0.22, 0]}>
-            <sphereGeometry args={[0.055, 8, 8]} />
-            <meshStandardMaterial color="#FFB703" />
+          {/* Drumband Hat */}
+          <mesh position={[0, 0.26, 0]}>
+            <cylinderGeometry args={[0.18, 0.2, 0.18, 12]} />
+            <meshStandardMaterial color="#E63946" />
           </mesh>
-          {/* Bear Ear Right */}
-          <mesh position={[0.14, 0.22, 0]}>
-            <sphereGeometry args={[0.055, 8, 8]} />
-            <meshStandardMaterial color="#FFB703" />
+          <mesh position={[0, 0.36, 0]}>
+            <sphereGeometry args={[0.04, 8, 8]} />
+            <meshStandardMaterial color="#FFD166" />
           </mesh>
+          {/* Laughing Cheeks & Smile */}
+          <mesh position={[-0.1, -0.03, 0.22]}>
+            <circleGeometry args={[0.035, 8]} />
+            <meshBasicMaterial color="#FF8FA3" transparent opacity={0.7} />
+          </mesh>
+          <mesh position={[0.1, -0.03, 0.22]}>
+            <circleGeometry args={[0.035, 8]} />
+            <meshBasicMaterial color="#FF8FA3" transparent opacity={0.7} />
+          </mesh>
+        </group>
+      </group>
 
-          {/* Big Innocent Sparkling Baby Eyes with Blinking */}
-          <group scale={[1, eyeScale.current, 1]}>
-            <mesh position={[-0.07, 0.02, 0.2]}>
-              <sphereGeometry args={[0.035, 8, 8]} />
-              <meshStandardMaterial color="#111111" />
+      {/* Floating Speech Bubble */}
+      {speechBubbleText && (
+        <Billboard position={[0, 2.38, 0]}>
+          <mesh>
+            <planeGeometry args={[Math.max(1.8, speechBubbleText.length * 0.11), 0.36]} />
+            <meshBasicMaterial color="#FFFFFF" transparent opacity={0.92} />
+          </mesh>
+          <Text position={[0, 0, 0.02]} fontSize={0.13} color="#1F2937" anchorX="center" anchorY="middle">
+            {speechBubbleText}
+          </Text>
+        </Billboard>
+      )}
+
+      {/* Floating Billboard Name Tag */}
+      <Billboard position={[0, 1.95, 0]}>
+        <mesh>
+          <planeGeometry args={[statusTag || isFollowing ? 2.5 : 1.6, 0.46]} />
+          <meshBasicMaterial color={isFollowing ? '#10B981' : '#E63946'} transparent opacity={0.88} />
+        </mesh>
+        <Text position={[0, statusTag || isFollowing ? 0.08 : 0, 0.02]} fontSize={0.18} color="#FFFFFF" anchorX="center" anchorY="middle">
+          {isFollowing ? 'Adek Khalid 🏃‍♂️' : 'Adek Khalid 🥁'}
+        </Text>
+        {(statusTag || isFollowing) && (
+          <Text position={[0, -0.11, 0.02]} fontSize={0.11} color="#FEF08A" anchorX="center" anchorY="middle">
+            {isFollowing ? 'Ikut Kak Khaulah ✨' : statusTag}
+          </Text>
+        )}
+      </Billboard>
+    </group>
+  );
+};
+
+// ============================================================================
+// 4. FAQIH MODEL (ADEK FAQIH - 2 TAHUN, BALITA GEMAS, MULTI-ACTIVITY PROPS)
+// ============================================================================
+const FaqihModel: React.FC<{ position: [number, number, number]; statusTag?: string }> = ({ position, statusTag }) => {
+  const groupRef = useRef<THREE.Group>(null);
+  const headRef = useRef<THREE.Group>(null);
+  const toyCarRef = useRef<THREE.Group>(null);
+  const rightHandRef = useRef<THREE.Group>(null);
+  const cribBlanketRef = useRef<THREE.Mesh>(null);
+  const currentPos = useRef(new THREE.Vector3(position[0], position[1], position[2]));
+
+  const timeOfDay = useGameStore((s) => s.timeOfDay);
+
+  useFrame((state, delta) => {
+    if (!groupRef.current) return;
+    const time = state.clock.getElapsedTime();
+    const playerPos = gameStore.getState().playerPos;
+
+    currentPos.current.x = THREE.MathUtils.lerp(currentPos.current.x, position[0], delta * 2.2);
+    currentPos.current.y = THREE.MathUtils.lerp(currentPos.current.y, position[1], delta * 2.2);
+    currentPos.current.z = THREE.MathUtils.lerp(currentPos.current.z, position[2], delta * 2.2);
+    groupRef.current.position.copy(currentPos.current);
+
+    const dx = playerPos[0] - currentPos.current.x;
+    const dz = playerPos[2] - currentPos.current.z;
+    const distSq = dx * dx + dz * dz;
+
+    if (distSq < 16.0) {
+      const targetAngle = Math.atan2(dx, dz);
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetAngle, delta * 3.5);
+    }
+
+    if (timeOfDay === 'siang') {
+      // Pushing toy car forward and back
+      const carCycle = Math.sin(time * 2.6);
+      if (toyCarRef.current) {
+        toyCarRef.current.position.z = 0.3 + carCycle * 0.25;
+      }
+      if (rightHandRef.current) {
+        rightHandRef.current.rotation.x = 0.35 + carCycle * 0.2;
+      }
+    } else if (timeOfDay === 'subuh') {
+      // Peekaboo hand waving in stroller
+      if (rightHandRef.current) {
+        rightHandRef.current.rotation.x = -0.5 + Math.sin(time * 5) * 0.3;
+      }
+    } else if (timeOfDay === 'malam') {
+      // Sleeping in crib with rhythmic breathing
+      if (cribBlanketRef.current) {
+        cribBlanketRef.current.scale.y = 1.0 + Math.sin(time * 1.8) * 0.08;
+      }
+    }
+  });
+
+  return (
+    <group ref={groupRef} position={position}>
+      {/* Floor Contact Shadow */}
+      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.7, 16]} />
+        <meshBasicMaterial color="#000000" transparent opacity={0.25} />
+      </mesh>
+
+      {/* ============================================================== */}
+      {/* ACTIVITY EQUIPMENT: SUBUH - BABY STROLLER / KERETA DORONG       */}
+      {/* ============================================================== */}
+      {timeOfDay === 'subuh' && (
+        <group position={[0, 0, 0]}>
+          {/* Stroller Frame */}
+          <mesh position={[0, 0.45, 0]} castShadow>
+            <boxGeometry args={[0.65, 0.5, 0.8]} />
+            <meshStandardMaterial color="#06D6A0" roughness={0.4} />
+          </mesh>
+          {/* Stroller Canopy */}
+          <mesh position={[0, 0.78, -0.15]} rotation={[-0.3, 0, 0]}>
+            <cylinderGeometry args={[0.34, 0.34, 0.65, 12, 1, false, 0, Math.PI]} />
+            <meshStandardMaterial color="#118AB2" side={THREE.DoubleSide} />
+          </mesh>
+          {/* Stroller Wheels */}
+          {[-0.35, 0.35].map((wx, i) =>
+            [-0.3, 0.3].map((wz, j) => (
+              <mesh key={`swheel-${i}-${j}`} position={[wx, 0.12, wz]} rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.1, 0.1, 0.05, 12]} />
+                <meshStandardMaterial color="#1E293B" />
+              </mesh>
+            ))
+          )}
+          {/* Mini Baby Milk Bottle */}
+          <mesh position={[0.34, 0.6, 0.1]}>
+            <cylinderGeometry args={[0.04, 0.04, 0.14, 8]} />
+            <meshStandardMaterial color="#FFFFFF" transparent opacity={0.9} />
+          </mesh>
+        </group>
+      )}
+
+      {/* ============================================================== */}
+      {/* ACTIVITY EQUIPMENT: SIANG - TOY RACE CAR & CIRCUIT PLAY MAT    */}
+      {/* ============================================================== */}
+      {timeOfDay === 'siang' && (
+        <group position={[0, 0.025, 0]}>
+          {/* Soft Oval Play Mat */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+            <circleGeometry args={[0.85, 24]} />
+            <meshStandardMaterial color="#80ED99" roughness={0.7} />
+          </mesh>
+          {/* Race Track Ring */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002, 0]}>
+            <ringGeometry args={[0.38, 0.72, 24]} />
+            <meshBasicMaterial color="#4A5568" />
+          </mesh>
+          {/* Cruising Toy Car */}
+          <group ref={toyCarRef} position={[0, 0.08, 0.3]}>
+            <mesh castShadow>
+              <boxGeometry args={[0.22, 0.1, 0.34]} />
+              <meshStandardMaterial color="#E63946" roughness={0.3} />
             </mesh>
-            <mesh position={[0.07, 0.02, 0.2]}>
-              <sphereGeometry args={[0.035, 8, 8]} />
-              <meshStandardMaterial color="#111111" />
+            <mesh position={[0, 0.08, -0.02]}>
+              <boxGeometry args={[0.18, 0.08, 0.16]} />
+              <meshStandardMaterial color="#93C5FD" transparent opacity={0.8} />
             </mesh>
-            {/* Catchlights */}
-            <mesh position={[-0.06, 0.035, 0.22]}>
-              <sphereGeometry args={[0.009, 6, 6]} />
-              <meshBasicMaterial color="#FFFFFF" />
-            </mesh>
-            <mesh position={[0.08, 0.035, 0.22]}>
-              <sphereGeometry args={[0.009, 6, 6]} />
-              <meshBasicMaterial color="#FFFFFF" />
-            </mesh>
+            {/* 4 Wheels */}
+            {[-0.12, 0.12].map((wx, i) =>
+              [-0.1, 0.1].map((wz, j) => (
+                <mesh key={`carw-${i}-${j}`} position={[wx, -0.02, wz]} rotation={[0, 0, Math.PI / 2]}>
+                  <cylinderGeometry args={[0.045, 0.045, 0.03, 10]} />
+                  <meshStandardMaterial color="#1E1E24" />
+                </mesh>
+              ))
+            )}
           </group>
+        </group>
+      )}
 
+      {/* ============================================================== */}
+      {/* ACTIVITY EQUIPMENT: SORE - BABY RATTLE MARACAS                 */}
+      {/* ============================================================== */}
+      {timeOfDay === 'sore' && (
+        <group position={[0.22, 0.45, 0.2]}>
+          <mesh castShadow>
+            <cylinderGeometry args={[0.015, 0.015, 0.16, 8]} />
+            <meshStandardMaterial color="#FFD166" />
+          </mesh>
+          <mesh position={[0, 0.1, 0]}>
+            <sphereGeometry args={[0.06, 10, 10]} />
+            <meshStandardMaterial color="#EF476F" />
+          </mesh>
+          <Sparkles count={5} position={[0, 0.15, 0]} scale={0.3} size={1.8} speed={0.8} color="#FEF08A" />
+        </group>
+      )}
+
+      {/* ============================================================== */}
+      {/* ACTIVITY EQUIPMENT: MALAM - BABY CRIB WITH MOBILE TOY & ZZZ    */}
+      {/* ============================================================== */}
+      {timeOfDay === 'malam' && (
+        <group position={[0, 0, 0]}>
+          {/* White Wooden Crib Rails */}
+          <mesh position={[0, 0.35, 0]} castShadow>
+            <boxGeometry args={[0.8, 0.6, 1.2]} />
+            <meshStandardMaterial color="#F8FAFC" roughness={0.4} />
+          </mesh>
+          {/* Soft Mattress & Blanket */}
+          <mesh ref={cribBlanketRef} position={[0, 0.42, 0]}>
+            <boxGeometry args={[0.72, 0.18, 1.1]} />
+            <meshStandardMaterial color="#BAE6FD" roughness={0.8} />
+          </mesh>
+          {/* Soft Zzz / Star Glow */}
+          <Sparkles count={6} position={[0, 0.7, 0]} scale={0.6} size={1.5} speed={0.3} color="#C4B5FD" />
+        </group>
+      )}
+
+      {/* ========================================================= */}
+      {/* FAQIH CHARACTER BODY (2 TAHUN, BALITA GEMAS)              */}
+      {/* ========================================================= */}
+      <group position={[0, 0, 0]}>
+        {/* Chubby Torso in Mint Green Romper */}
+        <mesh position={[0, 0.38, 0]} castShadow>
+          <sphereGeometry args={[0.26, 12, 12]} />
+          <meshStandardMaterial color="#2A9D8F" roughness={0.6} />
+        </mesh>
+
+        {/* Right Arm */}
+        <group ref={rightHandRef} position={[0.22, 0.45, 0]}>
+          <mesh position={[0, -0.1, 0.08]} rotation={[0.4, 0, 0]} castShadow>
+            <cylinderGeometry args={[0.05, 0.045, 0.22, 8]} />
+            <meshStandardMaterial color="#FCD5B5" />
+          </mesh>
+        </group>
+
+        {/* Head */}
+        <group ref={headRef} position={[0, 0.74, 0]}>
+          <mesh castShadow>
+            <sphereGeometry args={[0.22, 14, 14]} />
+            <meshStandardMaterial color="#FCD5B5" />
+          </mesh>
+          {/* Tiny Brown Tuft Hair */}
+          <mesh position={[0, 0.18, -0.02]}>
+            <sphereGeometry args={[0.1, 8, 8]} />
+            <meshStandardMaterial color="#4A2810" />
+          </mesh>
           {/* Chubby Rosy Cheeks */}
           <mesh position={[-0.1, -0.04, 0.19]}>
             <circleGeometry args={[0.035, 8]} />
@@ -1551,38 +1277,20 @@ const FaqihModel: React.FC<{ position: [number, number, number]; statusTag?: str
             <circleGeometry args={[0.035, 8]} />
             <meshBasicMaterial color="#FF80AB" transparent opacity={0.75} />
           </mesh>
-
-          {/* Sweet Laughing Mouth */}
-          <mesh position={[0, -0.08, 0.2]}>
-            <sphereGeometry args={[0.035, 8, 8]} />
-            <meshStandardMaterial color="#EF476F" />
-          </mesh>
         </group>
       </group>
 
       {/* Floating Billboard Name Tag */}
       <Billboard position={[0, 1.45, 0]}>
         <mesh>
-          <planeGeometry args={[statusTag ? 2.2 : 1.5, 0.46]} />
+          <planeGeometry args={[statusTag ? 2.5 : 1.5, 0.46]} />
           <meshBasicMaterial color="#2A9D8F" transparent opacity={0.88} />
         </mesh>
-        <Text
-          position={[0, statusTag ? 0.08 : 0, 0.02]}
-          fontSize={0.18}
-          color="#FFFFFF"
-          anchorX="center"
-          anchorY="middle"
-        >
+        <Text position={[0, statusTag ? 0.08 : 0, 0.02]} fontSize={0.18} color="#FFFFFF" anchorX="center" anchorY="middle">
           Adek Faqih 🚗
         </Text>
         {statusTag && (
-          <Text
-            position={[0, -0.11, 0.02]}
-            fontSize={0.11}
-            color="#E0F2FE"
-            anchorX="center"
-            anchorY="middle"
-          >
+          <Text position={[0, -0.11, 0.02]} fontSize={0.11} color="#E0F2FE" anchorX="center" anchorY="middle">
             {statusTag}
           </Text>
         )}
@@ -1599,14 +1307,6 @@ export const FamilyMembers: React.FC = () => {
   const timeOfDay = useGameStore((s) => s.timeOfDay);
   const isKhalidFollowing = useGameStore((s) => s.isKhalidFollowing);
   const schedule = FAMILY_SCHEDULE[timeOfDay] || FAMILY_SCHEDULE.siang;
-
-  useEffect(() => {
-    // Abi's laptop work desk
-    const desk = addSolidBox([-3.8, 0, -5.2], [-2.2, 1.4, -3.8], 'abi_work_desk');
-    return () => {
-      removeSolidCollider(desk);
-    };
-  }, []);
 
   const getDynamicMembers = () => [
     {
@@ -1646,16 +1346,12 @@ export const FamilyMembers: React.FC = () => {
         : `Tekan [E] untuk Ajak Khalid Ikut! 👦🏃‍♂️ (${schedule.khalid.status})`,
       dialog: {
         speaker: 'Adek Khalid',
-        role: isKhalidFollowing
-          ? 'Sahabat Petualang Cilik 👦🏃‍♂️'
-          : `Pemain Drumband Cilik 👦🥁 (${schedule.khalid.status})`,
+        role: isKhalidFollowing ? 'Sahabat Petualang Cilik 👦🏃‍♂️' : `Pemain Drumband Cilik 👦🥁 (${schedule.khalid.status})`,
         avatarBg: 'bg-amber-500',
         text: isKhalidFollowing
           ? 'Kak Khaulah! Khalid senang banget ikut lari-larian keliling desa! Mau Khalid terus ikut petualangan, atau istirahat di sini dulu?'
           : schedule.khalid.text,
-        actionText: isKhalidFollowing
-          ? '🏠 Adek Khalid Istirahat di Teras Dulu 🌸'
-          : '🏃‍♂️ Ajak Adek Khalid Ikut Petualangan! ✨',
+        actionText: isKhalidFollowing ? '🏠 Adek Khalid Istirahat di Teras Dulu 🌸' : '🏃‍♂️ Ajak Adek Khalid Ikut Petualangan! ✨',
         actionType: 'toggle_khalid_follow' as const,
       },
     },
@@ -1687,8 +1383,7 @@ export const FamilyMembers: React.FC = () => {
         Math.pow(playerPos[0] - m.pos[0], 2) +
         Math.pow(playerPos[1] - m.pos[1], 2) +
         Math.pow(playerPos[2] - m.pos[2], 2);
-      // If Khalid is following, give non-following members a slight priority when standing close
-      const effectiveDist = (m.id === 'khalid' && isKhalidFollowing) ? distSq + 1.6 : distSq;
+      const effectiveDist = m.id === 'khalid' && isKhalidFollowing ? distSq + 1.6 : distSq;
 
       if (effectiveDist < 6.0 && effectiveDist < closestDistSq) {
         closestDistSq = effectiveDist;
@@ -1717,7 +1412,7 @@ export const FamilyMembers: React.FC = () => {
 
   return (
     <group>
-      {/* 1. Abi (Ayah 27 Tahun) */}
+      {/* 1. Abi */}
       <group
         onClick={(e) => {
           e.stopPropagation();
@@ -1734,7 +1429,7 @@ export const FamilyMembers: React.FC = () => {
         <AbiModel position={schedule.abi.pos} statusTag={schedule.abi.status} />
       </group>
 
-      {/* 2. Ummi (Ibu Bercadar 26 Tahun) */}
+      {/* 2. Ummi */}
       <group
         onClick={(e) => {
           e.stopPropagation();
@@ -1751,7 +1446,7 @@ export const FamilyMembers: React.FC = () => {
         <UmmiModel position={schedule.ummi.pos} statusTag={schedule.ummi.status} />
       </group>
 
-      {/* 3. Adek Khalid (4 Tahun, Follow Mode & Drumband) */}
+      {/* 3. Adek Khalid */}
       <group
         onClick={(e) => {
           e.stopPropagation();
@@ -1768,7 +1463,7 @@ export const FamilyMembers: React.FC = () => {
         <KhalidModel position={schedule.khalid.pos} statusTag={schedule.khalid.status} />
       </group>
 
-      {/* 4. Adek Faqih (2 Tahun, Main Mobilan) */}
+      {/* 4. Adek Faqih */}
       <group
         onClick={(e) => {
           e.stopPropagation();
