@@ -76,11 +76,6 @@ export interface FamilyDialogData {
 }
 
 export interface GameState {
-  stars: number;
-  totalStars: number;
-  collectedStarIds: string[];
-  checkpointIndex: number;
-  checkpointPosition: [number, number, number];
   playerPos: [number, number, number];
   joystickVector: { x: number; y: number };
   isJumpPressed: boolean;
@@ -118,17 +113,65 @@ export interface GameState {
   };
 }
 
-const CHECKPOINTS: [number, number, number][] = [
-  [0, 0.8, -4],      // Checkpoint 0: Halaman Rumah Khaulah bersama Abi & Ummi
-  [0, 0.8, 26],      // Checkpoint 1: Gerbang TK Karang Tengah 1 Atap
-  [0, 5.0, 96],      // Checkpoint 2: Puncak Awan Gula-Gula Skyway
-  [0, 11.0, 138],    // Checkpoint 3: Kastil Bintang Khaulah
-  [-58, 0.8, -4],    // Checkpoint 4: Peternakan & Kebun Hewan
-  [-48, 0.8, 44],    // Checkpoint 5: Danau Bebek & Pantai Pasir
-  [58, 0.8, -4],     // Checkpoint 6: Desa Pertokoan Cilik
-  [52, 0.8, 38],     // Checkpoint 7: Alun-Alun Karnaval & Theme Park
-  [0, 0.8, -20],     // Checkpoint 8: Kolam Renang & Halaman Belakang 🏊‍♀️🏡
-];
+const STORAGE_KEY_PLAYER_POS = 'khaulah_last_player_position';
+
+function loadSavedPlayerPos(): [number, number, number] {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = localStorage.getItem(STORAGE_KEY_PLAYER_POS);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length === 3) {
+          const [x, y, z] = parsed.map(Number);
+          if (!isNaN(x) && !isNaN(y) && !isNaN(z) && y > -6 && y < 100) {
+            return [x, Math.max(y, 0.4), z];
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load player position from localStorage:', e);
+  }
+  return [0, 0.8, -4]; // Lokasi awal default: Halaman Rumah Khaulah
+}
+
+let lastPosSaveTime = 0;
+let pendingPlayerPos: [number, number, number] | null = null;
+
+function savePlayerPos(pos: [number, number, number], force = false) {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return;
+    // Hindari menyimpan posisi jika pemain sedang jatuh ke jurang (y < -2)
+    if (pos[1] < -2) return;
+
+    pendingPlayerPos = pos;
+    const now = Date.now();
+
+    if (force || now - lastPosSaveTime > 800) {
+      lastPosSaveTime = now;
+      localStorage.setItem(
+        STORAGE_KEY_PLAYER_POS,
+        JSON.stringify([
+          Math.round(pos[0] * 100) / 100,
+          Math.round(pos[1] * 100) / 100,
+          Math.round(pos[2] * 100) / 100,
+        ])
+      );
+    }
+  } catch (e) {
+    console.warn('Failed to save player position to localStorage:', e);
+  }
+}
+
+// Simpan seketika jika pemain me-refresh atau menutup tab browser
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    if (pendingPlayerPos) savePlayerPos(pendingPlayerPos, true);
+  });
+  window.addEventListener('pagehide', () => {
+    if (pendingPlayerPos) savePlayerPos(pendingPlayerPos, true);
+  });
+}
 
 const STORAGE_KEY_TIME_OF_DAY = 'khaulah_time_of_day_state';
 
@@ -186,14 +229,10 @@ function saveTimeOfDay(timeOfDay: TimeOfDay, timeOfDayTimeLeft: number) {
 }
 
 const initialTime = loadSavedTimeOfDay();
+const initialPos = loadSavedPlayerPos();
 
 let state: GameState = {
-  stars: 0,
-  totalStars: 50,
-  collectedStarIds: [],
-  checkpointIndex: 0,
-  checkpointPosition: [0, 0.8, -4],
-  playerPos: [0, 0.8, -4],
+  playerPos: initialPos,
   joystickVector: { x: 0, y: 0 },
   isJumpPressed: false,
   activeAccessory: 'none',
@@ -259,71 +298,22 @@ export const gameStore = {
 
   setPlayerPos: (pos: [number, number, number]) => {
     state.playerPos = pos;
+    savePlayerPos(pos);
   },
 
   setPlayerMotion: (pos: [number, number, number], facingAngle: number, isMoving: boolean) => {
     state.playerPos = pos;
     state.playerFacingAngle = facingAngle;
     state.isPlayerMoving = isMoving;
+    savePlayerPos(pos);
   },
 
-  collectStar: (starId: string) => {
-    if (state.collectedStarIds.includes(starId)) return;
-    const newCount = state.stars + 1;
-    soundManager.playStarCollect();
-    
-    // Trigger festive mini confetti!
-    confetti({
-      particleCount: 25,
-      spread: 60,
-      origin: { y: 0.8 },
-      colors: ['#FF69B4', '#FFD700', '#00FFFF', '#FF6347', '#7B68EE']
-    });
-
-    let msg = `Hore! Khaulah dapat bintang ke-${newCount}! 🌟`;
-    if (newCount === 5) {
-      msg = 'Keren banget! 5 bintang terkumpul! 🎉';
-    } else if (newCount === 10) {
-      msg = 'Hebat Khaulah! Bando dan sayap baru terbuka di lemari! 👑';
-    } else if (newCount >= state.totalStars) {
-      msg = 'LUAR BIASA! Khaulah berhasil mengumpulkan SEMUA bintang! 🏆🌈';
-      confetti({
-        particleCount: 120,
-        spread: 100,
-        origin: { y: 0.6 }
-      });
-    }
-
-    state = {
-      ...state,
-      stars: newCount,
-      collectedStarIds: [...state.collectedStarIds, starId],
-      bubbleMessage: msg
-    };
-    emitChange();
+  getLastSafePosition: (): [number, number, number] => {
+    return loadSavedPlayerPos();
   },
 
-  reachCheckpoint: (index: number) => {
-    if (index > state.checkpointIndex) {
-      soundManager.playCheckpoint();
-      confetti({
-        particleCount: 40,
-        spread: 80,
-        origin: { y: 0.7 }
-      });
-      state = {
-        ...state,
-        checkpointIndex: index,
-        checkpointPosition: CHECKPOINTS[index] || state.checkpointPosition,
-        bubbleMessage: `Checkpoint ${index + 1} tercapai! Hebat Khaulah! 🚩`
-      };
-      emitChange();
-    }
-  },
-
-  resetToCheckpoint: () => {
-    // Respawn smoothly without penalty
-    return state.checkpointPosition;
+  savePosition: (pos: [number, number, number], force = false) => {
+    savePlayerPos(pos, force);
   },
 
   setAccessory: (acc: AccessoryType) => {
@@ -393,11 +383,11 @@ export const gameStore = {
   },
 
   triggerRespawn: () => {
-    soundManager.playCheckpoint();
+    soundManager.playFamilyChord();
     state = {
       ...state,
       respawnTrigger: state.respawnTrigger + 1,
-      bubbleMessage: 'Kembali ke checkpoint aman! 🚩✨',
+      bubbleMessage: 'Khaulah kembali ke Halaman Rumah! 🏡✨',
     };
     emitChange();
   },
@@ -659,19 +649,14 @@ export const gameStore = {
       colors: ['#FFD700', '#FF69B4', '#00FFFF', '#FF6347', '#7B68EE'],
     });
 
-    // Award 3 bonus golden stars!
-    const bonusStars = 3;
-    const nextStars = state.stars + bonusStars;
-
     state = {
       ...state,
-      stars: nextStars,
       schoolQuest: {
         ...state.schoolQuest,
         completed: true,
       },
       activeDialog: null,
-      bubbleMessage: 'MasyaAllah Khaulah murid teladan! Mendapat 3 Bintang Emas dari Ibu Santi! 🌟🏅🎒',
+      bubbleMessage: 'MasyaAllah Khaulah murid teladan! Mendapat Piagam Siswa Teladan dari Ibu Santi! 🏅🎒🌸',
     };
     emitChange();
   },

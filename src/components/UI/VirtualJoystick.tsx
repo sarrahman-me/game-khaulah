@@ -292,7 +292,7 @@ export const VirtualJoystick: React.FC = () => {
           <button
             onClick={() => gameStore.triggerRespawn()}
             className="w-11 h-11 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white shadow-lg flex items-center justify-center border-2 border-white active:scale-90 transition-all flex-col font-bold"
-            title="Kembali ke Checkpoint (R)"
+            title="Kembali ke Rumah (R)"
           >
             <RotateCcw className="w-4 h-4" />
             <span className="text-[8px] leading-tight">R</span>

@@ -2,8 +2,6 @@ import React, { useEffect } from 'react';
 import * as THREE from 'three';
 import { colliders } from '../../../state/colliders';
 import { Trampoline } from './Trampoline';
-import { CheckpointFlag } from './CheckpointFlag';
-import { StarCollectible } from './StarCollectible';
 
 interface ObbyPlatform {
   pos: [number, number, number];
@@ -76,17 +74,7 @@ export const ObbyCourse: React.FC = () => {
         </group>
       ))}
 
-      {/* 2. Checkpoints */}
-      {/* Checkpoint 0: Rumah Khaulah bersama Abi & Ummi */}
-      <CheckpointFlag index={0} position={[0, 0.3, -4]} />
-      {/* Checkpoint 1: Gerbang TK Karang Tengah 1 Atap */}
-      <CheckpointFlag index={1} position={[0, 0.3, 26]} />
-      {/* Checkpoint 2: Puncak Awan Gula-Gula Skyway */}
-      <CheckpointFlag index={2} position={[0, 5.0, 96]} />
-      {/* Checkpoint 3: Istana Bintang Khaulah */}
-      <CheckpointFlag index={3} position={[0, 11.0, 138]} />
-
-      {/* 3. Trampolines */}
+      {/* 2. Trampolines */}
       {/* Trampoline on high candy island */}
       <Trampoline position={[0, 7.5, 113]} radius={1.8} />
 
@@ -138,42 +126,6 @@ export const ObbyCourse: React.FC = () => {
           <meshStandardMaterial color="#3F37C9" />
         </mesh>
       </group>
-
-      {/* Giant Trophy Star on Top of Castle */}
-      <StarCollectible id="star_trophy" position={[0, 15.5, 138]} color="#FFD700" isBig={true} />
-
-      {/* 5. Scatter 24 Stars Across Village, School & Skyway */}
-      {/* --- RUMAH KHAULAH YARD STARS --- */}
-      <StarCollectible id="star_1" position={[-3, 1.2, -4]} color="#FFD166" />
-      <StarCollectible id="star_2" position={[3, 1.2, -4]} color="#FF6B6B" />
-      <StarCollectible id="star_3" position={[-1.8, 1.2, -1.5]} color="#4ECDC4" />
-      <StarCollectible id="star_4" position={[2.0, 1.2, -1.5]} color="#FFD166" />
-
-      {/* --- VILLAGE RIVER & BRIDGE STARS --- */}
-      <StarCollectible id="star_5" position={[0, 1.4, 18]} color="#FFB703" />
-      <StarCollectible id="star_6" position={[-6, 1.2, 18]} color="#9D4EDD" />
-      <StarCollectible id="star_7" position={[6, 1.2, 18]} color="#FF9F1C" />
-      <StarCollectible id="star_8" position={[0, 2.2, 26]} color="#2EC4B6" />
-
-      {/* --- TK KARANG TENGAH 1 ATAP PLAYGROUND STARS --- */}
-      <StarCollectible id="star_9" position={[9, 3.2, 42]} color="#FF595E" />    {/* Top of Slide! */}
-      <StarCollectible id="star_10" position={[-9, 1.8, 42]} color="#FF924C" />  {/* Swing set */}
-      <StarCollectible id="star_11" position={[-3.5, 3.2, 34]} color="#FFCA3A" /> {/* Flagpole */}
-      <StarCollectible id="star_12" position={[4, 1.6, 48]} color="#8AC926" />   {/* Seesaw */}
-
-      {/* --- RAINBOW SKYWAY STARS --- */}
-      <StarCollectible id="star_13" position={[0, 2.0, 72]} color="#1982C4" />
-      <StarCollectible id="star_14" position={[2.2, 2.8, 76]} color="#6A4C93" />
-      <StarCollectible id="star_15" position={[-2.0, 3.6, 81]} color="#FF70A6" />
-      <StarCollectible id="star_16" position={[1.5, 4.4, 86]} color="#FFD166" />
-      <StarCollectible id="star_17" position={[-2.2, 5.2, 91]} color="#70D6FF" />
-      <StarCollectible id="star_18" position={[0, 6.0, 96]} color="#FF9770" />   {/* Cloud Peak */}
-      <StarCollectible id="star_19" position={[2.5, 6.8, 102]} color="#FFD670" />
-      <StarCollectible id="star_20" position={[-2.0, 7.6, 107]} color="#E9FF70" />
-      <StarCollectible id="star_21" position={[0, 11.5, 113]} color="#FFD166" isBig={true} /> {/* High Trampoline Star! */}
-      <StarCollectible id="star_22" position={[-2.8, 9.4, 119]} color="#70D6FF" />
-      <StarCollectible id="star_23" position={[2.5, 10.3, 125]} color="#F72585" />
-      <StarCollectible id="star_24" position={[0, 12.0, 133]} color="#7209B7" />
     </group>
   );
 };

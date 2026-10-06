@@ -14,8 +14,13 @@ export const CameraController: React.FC = () => {
   const lastPointer = useRef({ x: 0, y: 0 });
   const lastManualInputTime = useRef<number>(0);
 
-  const currentCamPos = useRef(new THREE.Vector3(0, 5, -8));
-  const currentTargetPos = useRef(new THREE.Vector3(0, 1.5, 0));
+  const initialPlayerPos = gameStore.getState().playerPos;
+  const currentCamPos = useRef(
+    new THREE.Vector3(initialPlayerPos[0], initialPlayerPos[1] + 4.5, initialPlayerPos[2] - 7.5)
+  );
+  const currentTargetPos = useRef(
+    new THREE.Vector3(initialPlayerPos[0], initialPlayerPos[1] + 1.25, initialPlayerPos[2])
+  );
 
   const isShiftLock = useGameStore((s) => s.isShiftLock);
   const targetDistance = useGameStore((s) => s.cameraDistance);

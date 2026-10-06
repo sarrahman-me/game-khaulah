@@ -3,8 +3,6 @@ import { useFrame } from '@react-three/fiber';
 import { Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore, gameStore } from '../../../state/useGameStore';
-import { CheckpointFlag } from './CheckpointFlag';
-import { StarCollectible } from './StarCollectible';
 
 // Animated Rotating Carousel Component
 const AnimatedCarousel: React.FC = () => {
@@ -326,15 +324,6 @@ export const CarnivalThemePark: React.FC = () => {
           </mesh>
         ))}
       </group>
-
-      {/* --- CHECKPOINT 7 (Alun-Alun Karnaval) --- */}
-      <CheckpointFlag index={7} position={[-13, 0.3, -10]} />
-
-      {/* --- STAR COLLECTIBLES --- */}
-      <StarCollectible id="star_carnival_1" position={[-7, 1.2, -7]} color="#FF006E" />
-      <StarCollectible id="star_carnival_2" position={[0, 1.4, -9]} color="#FFD166" />
-      {/* High Sky Star on Ferris Wheel top! */}
-      <StarCollectible id="star_carnival_ferris" position={[8, 12.5, 3]} color="#FFD700" isBig={true} />
     </group>
   );
 };

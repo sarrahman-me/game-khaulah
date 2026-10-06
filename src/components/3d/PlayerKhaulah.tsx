@@ -43,8 +43,9 @@ export const PlayerKhaulah: React.FC = () => {
   const isRidingScooter = useGameStore((s) => s.isRidingScooter);
   const activeRide = useGameStore((s) => s.activeRide);
 
-  // Character physical state
-  const pos = useRef(new THREE.Vector3(0, 1, -4));
+  // Character physical state: start at saved position from localStorage
+  const initialPlayerPos = gameStore.getState().playerPos;
+  const pos = useRef(new THREE.Vector3(initialPlayerPos[0], initialPlayerPos[1], initialPlayerPos[2]));
   const velocityY = useRef(0);
   const isGrounded = useRef(false);
   const moveSpeed = 10.5;
@@ -126,8 +127,8 @@ export const PlayerKhaulah: React.FC = () => {
                 speaker: 'Ibu Santi',
                 role: 'Guru TK Karang Tengah 1 Atap 👩‍🏫',
                 avatarBg: 'bg-emerald-600',
-                text: 'MasyaAllah Khaulah hebat sekali! Tas Ransel TK, Botol Minum, dan Buku Gambar semuanya sudah lengkap dibawa! Khaulah murid teladan TK Karang Tengah 1 Atap! Ini 3 Bintang Emas untuk Khaulah!',
-                actionText: '🌟 Terima 3 Bintang Emas Penghargaan! 🏅',
+                text: 'MasyaAllah Khaulah hebat sekali! Tas Ransel TK, Botol Minum, dan Buku Gambar semuanya sudah lengkap dibawa! Khaulah murid teladan TK Karang Tengah 1 Atap! Ini Piagam Penghargaan untuk Khaulah!',
+                actionText: '🏅 Terima Piagam Penghargaan Murid Teladan! 🌸',
                 actionType: 'complete_quest',
               });
             } else {
@@ -289,9 +290,9 @@ export const PlayerKhaulah: React.FC = () => {
     const currentRespawn = gameStore.getState().respawnTrigger;
     if (currentRespawn !== lastRespawn.current) {
       lastRespawn.current = currentRespawn;
-      const respawnPoint = gameStore.getState().checkpointPosition;
-      pos.current.set(respawnPoint[0], respawnPoint[1] + 2, respawnPoint[2]);
+      pos.current.set(0, 0.8, -4);
       velocityY.current = 0;
+      gameStore.savePosition([0, 0.8, -4], true);
     }
 
     // Check Active Ride State (Perosotan / Ayunan)
@@ -688,11 +689,11 @@ export const PlayerKhaulah: React.FC = () => {
 
     // Respawn if falling
     if (pos.current.y < -12) {
-      const respawnPoint = gameStore.getState().checkpointPosition;
-      pos.current.set(respawnPoint[0], respawnPoint[1] + 2, respawnPoint[2]);
+      const respawnPoint = gameStore.getLastSafePosition();
+      pos.current.set(respawnPoint[0], respawnPoint[1] + 1.2, respawnPoint[2]);
       velocityY.current = 0;
-      soundManager.playCheckpoint();
-      gameStore.setMessage('Jangan khawatir, Khaulah kembali ke awan aman! ☁️✨');
+      soundManager.playFamilyChord();
+      gameStore.setMessage('Hati-hati! Khaulah kembali ke tempat aman! 🌸✨');
     }
 
     groupRef.current.position.copy(pos.current);

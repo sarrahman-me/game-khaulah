@@ -9,7 +9,10 @@ export const PetCompanion: React.FC = () => {
   const tailRef = useRef<THREE.Mesh>(null);
   const wingsRef = useRef<THREE.Group>(null);
 
-  const petPos = useRef(new THREE.Vector3(1.2, 1, 1.2));
+  const initialPlayerPos = gameStore.getState().playerPos;
+  const petPos = useRef(
+    new THREE.Vector3(initialPlayerPos[0] + 1.2, initialPlayerPos[1] + 0.4, initialPlayerPos[2] + 1.2)
+  );
   const targetPos = useRef(new THREE.Vector3());
 
   const lastPlayerPos = useRef(new THREE.Vector3());

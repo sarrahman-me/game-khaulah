@@ -3,8 +3,6 @@ import { useFrame } from '@react-three/fiber';
 import { Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore, gameStore } from '../../../state/useGameStore';
-import { CheckpointFlag } from './CheckpointFlag';
-import { StarCollectible } from './StarCollectible';
 import { StreetLamp } from './StreetLamps';
 
 // Mini Fire Truck Model
@@ -310,14 +308,6 @@ export const TownStreet: React.FC = () => {
           </Billboard>
         </group>
       )}
-
-      {/* --- CHECKPOINT 6 (Desa Pertokoan) --- */}
-      <CheckpointFlag index={6} position={[-7, 0.3, 2]} />
-
-      {/* --- STAR COLLECTIBLES --- */}
-      <StarCollectible id="star_town_1" position={[-8, 1.2, 0]} color="#FFD166" />
-      <StarCollectible id="star_town_2" position={[4, 1.4, 3.6]} color="#FF006E" />
-      <StarCollectible id="star_town_bakery" position={[14, 1.2, 0]} color="#4CC9F0" />
     </group>
   );
 };

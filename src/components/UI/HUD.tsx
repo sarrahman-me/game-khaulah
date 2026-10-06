@@ -2,14 +2,12 @@ import React from 'react';
 import { useGameStore, gameStore, TIME_OF_DAY_CONFIG } from '../../state/useGameStore';
 import { soundManager } from '../../sound/audioManager';
 import {
-  Star,
   Shirt,
   Volume2,
   VolumeX,
   Music,
   HelpCircle,
   Heart,
-  Flag,
   Sparkles,
   X,
   Sunrise,
@@ -19,25 +17,10 @@ import {
   Bell,
 } from 'lucide-react';
 
-const ZONE_NAMES = [
-  'Rumah Hangat Khaulah 🏡',
-  'TK Karang Tengah 1 Atap 🎒',
-  'Puncak Awan Gula-Gula ☁️',
-  'Istana Bintang Khaulah 🏰',
-  'Taman Hewan & Peternakan 🐑',
-  'Danau Bebek & Pantai Pasir 🏖️',
-  'Desa Pertokoan & Damkar 🛒',
-  'Alun-Alun Karnaval Ceria 🎡',
-  'Kolam Renang & Halaman Belakang 🏊‍♀️🌴',
-];
-
 export const HUD: React.FC = () => {
-  const stars = useGameStore((s) => s.stars);
-  const totalStars = useGameStore((s) => s.totalStars);
   const bubbleMessage = useGameStore((s) => s.bubbleMessage);
   const isMuted = useGameStore((s) => s.isMuted);
   const isBgmActive = useGameStore((s) => s.isBgmActive);
-  const checkpointIndex = useGameStore((s) => s.checkpointIndex);
   const isShiftLock = useGameStore((s) => s.isShiftLock);
   const speedBuffTimeLeft = useGameStore((s) => s.speedBuffTimeLeft);
   const nearbyInteractable = useGameStore((s) => s.nearbyInteractable);
@@ -67,8 +50,8 @@ export const HUD: React.FC = () => {
           speaker: 'Ibu Santi',
           role: 'Guru TK Karang Tengah 1 Atap 👩‍🏫',
           avatarBg: 'bg-emerald-600',
-          text: 'MasyaAllah Khaulah hebat sekali! Tas Ransel TK, Botol Minum, dan Buku Gambar semuanya sudah lengkap dibawa! Khaulah murid teladan TK Karang Tengah 1 Atap! Ini 3 Bintang Emas untuk Khaulah!',
-          actionText: '🌟 Terima 3 Bintang Emas Penghargaan! 🏅',
+          text: 'MasyaAllah Khaulah hebat sekali! Tas Ransel TK, Botol Minum, dan Buku Gambar semuanya sudah lengkap dibawa! Khaulah murid teladan TK Karang Tengah 1 Atap! Ini Piagam Penghargaan untuk Khaulah!',
+          actionText: '🏅 Terima Piagam Penghargaan Murid Teladan! 🌸',
           actionType: 'complete_quest',
         });
       } else {
@@ -227,25 +210,6 @@ export const HUD: React.FC = () => {
             <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-yellow-950 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full border border-white shadow">
               Khaulah
             </div>
-          </div>
-
-          {/* Star Counter Pill */}
-          <div className="pointer-events-auto bg-white/85 backdrop-blur-md px-4 py-2 sm:px-5 sm:py-2.5 rounded-full border-2 border-yellow-300 shadow-md flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center shadow-inner">
-              <Star className="w-5 h-5 text-yellow-950 fill-yellow-100 animate-spin" style={{ animationDuration: '8s' }} />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Bintang Ajaib</span>
-              <span className="text-lg sm:text-xl font-bubble font-bold text-pink-600 leading-tight">
-                {stars} <span className="text-gray-400 text-sm font-medium">/ {totalStars}</span>
-              </span>
-            </div>
-          </div>
-
-          {/* Checkpoint / Zone Indicator */}
-          <div className="hidden sm:flex items-center gap-1.5 bg-white/85 backdrop-blur-md px-3.5 py-2 rounded-full border border-purple-200 text-purple-800 text-xs font-bold shadow-sm">
-            <Flag className="w-4 h-4 text-purple-500 fill-purple-300" />
-            <span>{ZONE_NAMES[checkpointIndex] || `Zona ${checkpointIndex + 1}`}</span>
           </div>
 
           {/* School Prep Quest Pill */}

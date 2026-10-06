@@ -4,8 +4,6 @@ import { Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore, gameStore } from '../../../state/useGameStore';
 import { colliders } from '../../../state/colliders';
-import { CheckpointFlag } from './CheckpointFlag';
-import { StarCollectible } from './StarCollectible';
 
 // Animated Sparkling Lake Water Surface
 const ShimmeringLake: React.FC = () => {
@@ -434,9 +432,6 @@ export const SunnyBeachLake: React.FC = () => {
             </mesh>
           </group>
         ))}
-
-        {/* Golden Star Hidden inside Sandcastle! */}
-        <StarCollectible id="star_beach_castle" position={[0, 1.2, 0]} color="#FFD700" />
       </group>
 
       {/* ============================================================== */}
@@ -497,19 +492,6 @@ export const SunnyBeachLake: React.FC = () => {
           </mesh>
         </group>
       ))}
-
-      {/* ============================================================== */}
-      {/* 8. CHECKPOINT 5 (Danau & Pantai at Pier Entrance)              */}
-      {/* ============================================================== */}
-      <CheckpointFlag index={5} position={[17, 0.26, -4]} />
-
-      {/* ============================================================== */}
-      {/* 9. STAR COLLECTIBLES                                           */}
-      {/* ============================================================== */}
-      {/* Star above the Boat Dock Pier */}
-      <StarCollectible id="star_beach_1" position={[4, 1.2, -1.5]} color="#00B4D8" />
-      {/* Star at North Beach Umbrella */}
-      <StarCollectible id="star_beach_2" position={[-3, 1.2, 11.5]} color="#FFB703" />
     </group>
   );
 };

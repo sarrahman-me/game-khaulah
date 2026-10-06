@@ -3,8 +3,6 @@ import { useFrame } from '@react-three/fiber';
 import { Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore, gameStore } from '../../../state/useGameStore';
-import { CheckpointFlag } from './CheckpointFlag';
-import { StarCollectible } from './StarCollectible';
 
 // Animated hopping bunny
 const HoppingBunny: React.FC<{ pos: [number, number, number]; color: string; seed: number }> = ({ pos, color, seed }) => {
@@ -410,14 +408,6 @@ export const PettingFarm: React.FC = () => {
           </Text>
         </Billboard>
       </group>
-
-      {/* --- 6. CHECKPOINT 4 (Taman Hewan) --- */}
-      <CheckpointFlag index={4} position={[7, 0.3, 2]} />
-
-      {/* --- 7. STARS TO COLLECT --- */}
-      <StarCollectible id="star_farm_1" position={[-3, 1.2, 1]} color="#FFD166" />
-      <StarCollectible id="star_farm_2" position={[4, 1.2, -2]} color="#06D6A0" />
-      <StarCollectible id="star_farm_3" position={[-12, 1.6, 2]} color="#FF70A6" />
     </group>
   );
 };

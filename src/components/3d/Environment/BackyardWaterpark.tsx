@@ -5,8 +5,6 @@ import * as THREE from 'three';
 import { useGameStore, gameStore } from '../../../state/useGameStore';
 import { soundManager } from '../../../sound/audioManager';
 import { colliders } from '../../../state/colliders';
-import { CheckpointFlag } from './CheckpointFlag';
-import { StarCollectible } from './StarCollectible';
 
 // Animated Sparkling Pool Water
 const AnimatedPoolWater: React.FC = () => {
@@ -774,25 +772,6 @@ export const BackyardWaterpark: React.FC = () => {
       {/* 8. SUNFLOWER GARDEN & WOODEN GAZEBO                            */}
       {/* ============================================================== */}
       <SunflowerGarden />
-
-      {/* ============================================================== */}
-      {/* 9. CHECKPOINT 8 (Kolam Renang & Halaman Belakang)              */}
-      {/* ============================================================== */}
-      <CheckpointFlag index={8} position={[0, 0.3, -18]} />
-
-      {/* ============================================================== */}
-      {/* 10. NEW COLLECTIBLE STARS IN THE BACKYARD                      */}
-      {/* ============================================================== */}
-      {/* Star floating above Flamingo Float */}
-      <StarCollectible id="star_backyard_flamingo" position={[4, 1.4, -22]} color="#FF007F" />
-      {/* Star at the top of the Water Slide */}
-      <StarCollectible id="star_backyard_slide" position={[10, 4.3, -29]} color="#00F5D4" />
-      {/* Star hidden inside Secret Treehouse */}
-      <StarCollectible id="star_backyard_treehouse" position={[-14, 4.4, -24]} color="#FFD700" isBig={true} />
-      {/* Star at Glamping Picnic Camp */}
-      <StarCollectible id="star_backyard_camp" position={[-14, 1.2, -32]} color="#FFB703" />
-      {/* Star at Sunflower Gazebo */}
-      <StarCollectible id="star_backyard_gazebo" position={[14, 1.2, -32]} color="#FF6B8B" />
     </group>
   );
 };
