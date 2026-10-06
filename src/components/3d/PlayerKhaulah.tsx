@@ -186,16 +186,32 @@ export const PlayerKhaulah: React.FC = () => {
   const coyoteTimer = useRef(0);
   const jumpBufferTimer = useRef(0);
   const lastRespawn = useRef(0);
+  const lastTeleport = useRef(0);
 
   const isShiftLock = useGameStore((s) => s.isShiftLock);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger game keybinds if user is typing in an input
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
       keys.current[e.code] = true;
       if (e.code === 'Space') {
         gameStore.setJumpPressed(true);
       } else if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
         gameStore.toggleShiftLock();
+      } else if (e.code === 'KeyM') {
+        const isOpen = gameStore.getState().isMagicModalOpen;
+        if (isOpen) {
+          gameStore.closeMagicModal();
+        } else {
+          gameStore.openMagicModal();
+        }
       } else if (e.code === 'KeyH') {
         const ride = gameStore.getState().activeRide;
         if (ride === 'train') {
@@ -404,6 +420,7 @@ export const PlayerKhaulah: React.FC = () => {
 
     // Speed Buff & Scooter Speed Tick
     gameStore.tickSpeedBuff(dt);
+    gameStore.tickJumpBuff(dt);
     const speedBuff = gameStore.getState().speedBuffTimeLeft;
     const ridingScooter = gameStore.getState().isRidingScooter;
     const activeRide = gameStore.getState().activeRide;
@@ -452,6 +469,18 @@ export const PlayerKhaulah: React.FC = () => {
       pos.current.set(0, 0.8, -4);
       velocityY.current = 0;
       gameStore.savePosition([0, 0.8, -4], true);
+    }
+
+    // Check external teleport trigger (from Magic Wand / Presets)
+    const currentTeleport = gameStore.getState().teleportTrigger;
+    if (currentTeleport !== lastTeleport.current) {
+      lastTeleport.current = currentTeleport;
+      const target = gameStore.getState().teleportTarget;
+      if (target) {
+        pos.current.set(target[0], target[1], target[2]);
+        velocityY.current = 0;
+        gameStore.savePosition(target, true);
+      }
     }
 
     // Check Active Ride State (Perosotan / Ayunan)
@@ -800,12 +829,15 @@ export const PlayerKhaulah: React.FC = () => {
     }
 
     if (jumpBufferTimer.current > 0 && (isGrounded.current || coyoteTimer.current > 0)) {
-      velocityY.current = inWater ? 11.5 : jumpVelocity;
+      const hasJumpBuff = gameStore.getState().jumpBuffTimeLeft > 0;
+      velocityY.current = inWater ? 11.5 : hasJumpBuff ? 20.0 : jumpVelocity;
       isGrounded.current = false;
       coyoteTimer.current = 0;
       jumpBufferTimer.current = 0;
       if (inWater) {
         soundManager.playWaterSplash();
+      } else if (hasJumpBuff) {
+        soundManager.playTrampoline();
       } else {
         soundManager.playJump();
       }

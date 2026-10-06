@@ -112,7 +112,32 @@ export interface GameState {
     drawingBook: boolean;
     completed: boolean;
   };
+  // AI Magic & Voice Controller state
+  isMagicModalOpen: boolean;
+  jumpBuffTimeLeft: number;
+  teleportTrigger: number;
+  teleportTarget: [number, number, number] | null;
+  spawnedItems: SpawnedMagicItem[];
+  isWishlistOpen: boolean;
+  characterChatState: CharacterChatState | null;
 }
+
+export interface SpawnedMagicItem {
+  id: string;
+  type: 'balloon' | 'cake' | 'bubble' | 'star';
+  position: [number, number, number];
+  color?: string;
+  scale?: number;
+  createdAt: number;
+}
+
+export interface CharacterChatState {
+  characterId: string;
+  characterName: string;
+  role: string;
+  avatarBg: string;
+}
+
 
 const STORAGE_KEY_PLAYER_POS = 'khaulah_last_player_position';
 
@@ -264,6 +289,13 @@ let state: GameState = {
     drawingBook: false,
     completed: false,
   },
+  isMagicModalOpen: false,
+  jumpBuffTimeLeft: 0,
+  teleportTrigger: 0,
+  teleportTarget: null,
+  spawnedItems: [],
+  isWishlistOpen: false,
+  characterChatState: null,
 };
 
 // Sinkronkan tema audio awal sesuai waktu yang tersimpan di localStorage tanpa chime
@@ -536,6 +568,212 @@ export const gameStore = {
         emitChange();
       }
     }
+  },
+
+  addSpeedBuff: (seconds = 25) => {
+    soundManager.playSnackBuff();
+    state = {
+      ...state,
+      speedBuffTimeLeft: Math.max(state.speedBuffTimeLeft, seconds),
+      bubbleMessage: 'Wuzzz! Khaulah lari secepat kilat pelangi! ⚡🏃‍♀️✨',
+    };
+    emitChange();
+  },
+
+  addJumpBuff: (seconds = 25) => {
+    soundManager.playTrampoline();
+    state = {
+      ...state,
+      jumpBuffTimeLeft: Math.max(state.jumpBuffTimeLeft, seconds),
+      bubbleMessage: 'Boiiing! Khaulah bisa melompat setinggi awan! 🦘☁️✨',
+    };
+    emitChange();
+  },
+
+  tickJumpBuff: (dt: number) => {
+    if (state.jumpBuffTimeLeft > 0) {
+      const remaining = Math.max(0, state.jumpBuffTimeLeft - dt);
+      state = { ...state, jumpBuffTimeLeft: remaining };
+      if (remaining === 0) {
+        emitChange();
+      }
+    }
+  },
+
+  // --- AI MAGIC & VOICE CONTROLLER ---
+  openMagicModal: () => {
+    soundManager.playMagicSpell();
+    state = { ...state, isMagicModalOpen: true };
+    emitChange();
+  },
+
+  closeMagicModal: () => {
+    state = { ...state, isMagicModalOpen: false };
+    emitChange();
+  },
+
+  openWishlistModal: () => {
+    soundManager.playFamilyChord();
+    state = { ...state, isWishlistOpen: true };
+    emitChange();
+  },
+
+  closeWishlistModal: () => {
+    state = { ...state, isWishlistOpen: false };
+    emitChange();
+  },
+
+  openCharacterChat: (char: CharacterChatState) => {
+    soundManager.playFamilyChord();
+    state = { ...state, characterChatState: char, activeDialog: null };
+    emitChange();
+  },
+
+  closeCharacterChat: () => {
+    state = { ...state, characterChatState: null };
+    emitChange();
+  },
+
+  teleportPlayerTo: (coords: [number, number, number], locationName?: string) => {
+    soundManager.playMagicSpell();
+    confetti({
+      particleCount: 50,
+      spread: 80,
+      origin: { y: 0.6 },
+      colors: ['#A78BFA', '#F472B6', '#38BDF8', '#FBBF24'],
+    });
+    state = {
+      ...state,
+      teleportTrigger: state.teleportTrigger + 1,
+      teleportTarget: coords,
+      bubbleMessage: locationName
+        ? `Wuuush! Khaulah berpindah ke ${locationName}! ✨`
+        : 'Wuuush! Khaulah berpindah tempat seketika! ✨',
+    };
+    emitChange();
+  },
+
+  teleportToPreset: (preset: string) => {
+    const locations: Record<string, { coords: [number, number, number]; name: string }> = {
+      rumah: { coords: [0, 0.8, -4], name: 'Halaman Rumah Khaulah 🏡' },
+      tk: { coords: [0, 0.8, 38], name: 'TK Karang Tengah 1 Atap 🎒🏫' },
+      pantai: { coords: [-50, 0.8, 35], name: 'Danau & Pantai Pasir Emas 🏖️' },
+      karnaval: { coords: [55, 0.8, 35], name: 'Karnaval & Pasar Malam Ceria 🎡' },
+      kebun: { coords: [-35, 0.8, -10], name: 'Taman Hewan & Kebun Buah 🐑🍎' },
+      waterpark: { coords: [2, 0.8, -25], name: 'Waterpark Halaman Belakang 🌊' },
+      obby: { coords: [0, 1.2, 58], name: 'Gerbang Jalur Pelangi ke Langit 🌈⭐' },
+    };
+
+    const target = locations[preset] || locations['rumah'];
+    gameStore.teleportPlayerTo(target.coords, target.name);
+  },
+
+  spawnMagicItems: (type: 'balloon' | 'cake' | 'bubble' | 'star', options?: any) => {
+    soundManager.playMagicSpell();
+    const playerPos = state.playerPos;
+    const now = Date.now();
+    const newItems: SpawnedMagicItem[] = [];
+
+    if (type === 'cake') {
+      // Spawn a birthday cake right in front of player
+      newItems.push({
+        id: `cake_${now}`,
+        type: 'cake',
+        position: [playerPos[0], Math.max(0.4, playerPos[1]), playerPos[2] + 1.6],
+        scale: 1.2,
+        createdAt: now,
+      });
+    } else if (type === 'balloon') {
+      const count = options?.count || 14;
+      const colors = ['#FF6B8B', '#FFD166', '#06D6A0', '#118AB2', '#9D4EDD', '#FF9F1C'];
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2 + Math.random() * 0.5;
+        const radius = 1.2 + Math.random() * 2.8;
+        newItems.push({
+          id: `balloon_${now}_${i}`,
+          type: 'balloon',
+          position: [
+            playerPos[0] + Math.cos(angle) * radius,
+            Math.max(0.6, playerPos[1] + 0.3 + Math.random() * 1.5),
+            playerPos[2] + Math.sin(angle) * radius,
+          ],
+          color: colors[i % colors.length],
+          scale: 0.8 + Math.random() * 0.4,
+          createdAt: now,
+        });
+      }
+    } else if (type === 'bubble') {
+      const count = options?.count || 20;
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 0.8 + Math.random() * 3.5;
+        newItems.push({
+          id: `bubble_${now}_${i}`,
+          type: 'bubble',
+          position: [
+            playerPos[0] + Math.cos(angle) * radius,
+            Math.max(0.5, playerPos[1] + Math.random() * 2.2),
+            playerPos[2] + Math.sin(angle) * radius,
+          ],
+          scale: 0.4 + Math.random() * 0.6,
+          createdAt: now,
+        });
+      }
+    } else if (type === 'star') {
+      const count = options?.count || 12;
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2;
+        const radius = 1.5 + Math.random() * 2.0;
+        newItems.push({
+          id: `star_${now}_${i}`,
+          type: 'star',
+          position: [
+            playerPos[0] + Math.cos(angle) * radius,
+            Math.max(0.7, playerPos[1] + 0.5 + Math.random() * 1.2),
+            playerPos[2] + Math.sin(angle) * radius,
+          ],
+          scale: 0.7 + Math.random() * 0.5,
+          createdAt: now,
+        });
+      }
+    }
+
+    state = {
+      ...state,
+      spawnedItems: [...state.spawnedItems.slice(-30), ...newItems],
+    };
+    emitChange();
+  },
+
+  removeSpawnedItem: (id: string) => {
+    soundManager.playBalloonPop();
+    state = {
+      ...state,
+      spawnedItems: state.spawnedItems.filter((item) => item.id !== id),
+    };
+    emitChange();
+  },
+
+  clearSpawnedItems: () => {
+    state = { ...state, spawnedItems: [] };
+    emitChange();
+  },
+
+  celebrateFireworks: () => {
+    soundManager.playQuestComplete();
+    const colors = ['#FF1493', '#00FFFF', '#FFD700', '#7B68EE', '#FF4500'];
+    confetti({ particleCount: 60, spread: 100, origin: { x: 0.3, y: 0.6 }, colors });
+    setTimeout(() => {
+      confetti({ particleCount: 70, spread: 100, origin: { x: 0.7, y: 0.6 }, colors });
+    }, 250);
+    setTimeout(() => {
+      confetti({ particleCount: 90, spread: 120, origin: { x: 0.5, y: 0.5 }, colors });
+    }, 500);
+    state = {
+      ...state,
+      bubbleMessage: 'Horeee! Pesta kembang api megah untuk Khaulah! 🎆🎉🥳',
+    };
+    emitChange();
   },
 
   // --- TIME OF DAY AUTOMATION & CONTROLS ---

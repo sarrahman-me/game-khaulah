@@ -16,6 +16,9 @@ import {
   Moon,
   Bell,
 } from 'lucide-react';
+import { MagicWandModal } from './MagicWandModal';
+import { CharacterChatModal } from './CharacterChatModal';
+import { WishlistModal } from './WishlistModal';
 
 export const HUD: React.FC = () => {
   const bubbleMessage = useGameStore((s) => s.bubbleMessage);
@@ -312,6 +315,17 @@ export const HUD: React.FC = () => {
             {isMuted ? <VolumeX className="w-5 h-5 text-red-500" /> : <Volume2 className="w-5 h-5 text-emerald-600" />}
           </button>
 
+          {/* Magic Wand Button (AI Voice Controller) */}
+          <button
+            onClick={() => gameStore.openMagicModal()}
+            title="Tongkat Suara Ajaib Khaulah [M] — Ucapkan mantra apa saja!"
+            className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-amber-400 text-white font-bubble font-bold text-sm border-2 border-white shadow-lg flex items-center gap-1.5 active:scale-95 transition-transform animate-pulse-gentle hover:scale-105"
+          >
+            <Sparkles className="w-4 h-4 text-yellow-200 fill-yellow-200" />
+            <span className="hidden sm:inline">Tongkat Ajaib [M]</span>
+            <span className="sm:hidden">🪄</span>
+          </button>
+
           {/* Wardrobe / Closet Button */}
           <button
             onClick={() => gameStore.setClosetOpen(true)}
@@ -465,11 +479,34 @@ export const HUD: React.FC = () => {
             {activeDialog.actionText && activeDialog.actionType && (
               <button
                 onClick={() => gameStore.executeDialogAction(activeDialog.actionType!)}
-                className="w-full mt-5 py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white font-bubble font-bold text-base shadow-lg hover:shadow-xl border-2 border-white active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="w-full mt-4 py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white font-bubble font-bold text-base shadow-lg hover:shadow-xl border-2 border-white active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 <span>{activeDialog.actionText}</span>
               </button>
             )}
+
+            {/* Freeform AI Voice Chat Button */}
+            <button
+              onClick={() => {
+                let charId = 'other';
+                if (activeDialog.speaker.includes('Khalid')) charId = 'khalid';
+                else if (activeDialog.speaker.includes('Abi')) charId = 'abi';
+                else if (activeDialog.speaker.includes('Ummi')) charId = 'ummi';
+                else if (activeDialog.speaker.includes('Faqih')) charId = 'faqih';
+                else if (activeDialog.speaker.includes('Santi') || activeDialog.speaker.includes('Guru')) charId = 'bu_guru';
+
+                gameStore.openCharacterChat({
+                  characterId: charId,
+                  characterName: activeDialog.speaker,
+                  role: activeDialog.role,
+                  avatarBg: activeDialog.avatarBg,
+                });
+              }}
+              className="w-full mt-2.5 py-3 px-4 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-amber-500 text-white font-bubble font-bold text-sm shadow-md hover:shadow-lg border-2 border-white active:scale-95 transition-all flex items-center justify-center gap-2"
+            >
+              <Sparkles className="w-4 h-4 text-yellow-200" />
+              <span>Ajak Ngobrol Bebas / Suara 🎙️✨</span>
+            </button>
 
             {/* Dismiss Button */}
             <button
@@ -481,6 +518,15 @@ export const HUD: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* AI Voice Magic Wand Modal */}
+      <MagicWandModal />
+
+      {/* Living AI Character Conversation Modal */}
+      <CharacterChatModal />
+
+      {/* Secret Wishlist Modal (Buku Impian Khaulah untuk Abi) */}
+      <WishlistModal />
     </div>
   );
 };

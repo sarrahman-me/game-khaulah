@@ -22,6 +22,7 @@ import { TownStreet } from './Environment/TownStreet';
 import { CarnivalThemePark } from './Environment/CarnivalThemePark';
 import { VillageTrain } from './Environment/VillageTrain';
 import { StreetLamps } from './Environment/StreetLamps';
+import { MagicSpawner } from './Environment/MagicSpawner';
 
 interface AtmospherePreset {
   bg: string;
@@ -341,6 +342,7 @@ export const GameScene: React.FC = () => {
         <VillageTrain />
         <ObbyCourse />
         <AnimalFriends />
+        <MagicSpawner />
         <PlayerKhaulah />
         <PetCompanion />
         <CameraController />

@@ -78,8 +78,17 @@ Game web 3D interaktif yang dibuat dengan teknologi modern (React 18, Three.js, 
     - Di balik sekolah TK terdapat gerbang portal pelangi menuju balok-balok angkasa, trampolin pantul super tinggi, pulau awan gula-gula, dan Istana Bintang Khaulah di puncak langit!
     - 45 Bintang Ajaib yang tersebar di seluruh pulau untuk dikumpulkan!
 
-13. **🎮 Kontrol MacBook M2 yang Ramah Anak**:
+13. **🪄 Tongkat Suara Ajaib AI & Percakapan Keluarga (Voice AI Assistant)**:
+    - **Tongkat Suara Ajaib (`M`)**: Khaulah bisa berbicara langsung lewat mikrofon (*Web Speech API*) atau memilih tombol mantra cepat sekali sentuh untuk mengubah dunia game seketika.
+    - **Suara Ramah Anak (*Text-to-Speech*)**: Peri Bintang membalas hangat dengan suara manis bahasa Indonesia, tanpa membuat anak lelah membaca teks.
+    - **Aksi Magis Dunia 3D Langsung**: Mengubah waktu (Subuh/Siang/Sore/Malam), lari kilat (*speed boost*), lompat setinggi awan (*super jump*), teleportasi instan ke 7 lokasi desa, dan ganti aksesori putri.
+    - **Spawner Objek 3D Dinamis**: Menghadirkan hujan balon membal yang bisa diletuskan, kue ulang tahun bertingkat dengan lilin menyala, gelembung sabun berkilau, dan bintang emas.
+    - **Obrolan Bebas AI dengan Keluarga & Guru TK**: Khaulah bisa mengobrol bebas dan interaktif dengan Adek Khalid, Abi, Ummi, Adek Faqih, dan Ibu Santi.
+    - **Buku Impian Rahasia Khaulah**: Permintaan kreatif anak secara otomatis dicatat di *Buku Impian* agar Abi bisa mewujudkannya di masa mendatang.
+
+14. **🎮 Kontrol MacBook M2 yang Ramah Anak**:
     - `W` / `A` / `S` / `D` atau Tombol Panah: Berjalan / Mengendarai Skuter / Mengemudi Damkar / Perahu.
+    - `M`: Membuka / Menutup Tongkat Suara Ajaib AI 🪄.
     - `Spasi`: Melompat (*dengan coyote-time & jump buffer*) / Turun dari wahana.
     - `E`: Interaksi belanja, memberi makan hewan, naik/turun wahana (Kereta, Komedi Putar, Bianglala, Perahu, Skuter, Damkar).
     - `H`: Klakson & Bunyi Khas (Bel Skuter *"Kring"*, Peluit Kereta *"Tuut"*, Sirine Damkar *"Niu-niu"*, Ciprat Air Perahu).

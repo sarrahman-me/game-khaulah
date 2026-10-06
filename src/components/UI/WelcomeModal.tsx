@@ -93,12 +93,22 @@ export const WelcomeModal: React.FC = () => {
             </div>
           </div>
 
+          <div className="bg-white/90 p-3 rounded-2xl border border-purple-200 shadow-xs flex items-center gap-3">
+            <span className="text-2xl">🪄</span>
+            <div>
+              <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">Tongkat Suara Ajaib AI [M]</h4>
+              <p className="text-gray-600 text-[11px] sm:text-xs">
+                Bicara apa saja lewat mikrofon: minta malam bertabur bintang, lari kilat, hujan balon, kue ulang tahun, atau ngobrol bebas dengan <b>Adek Khalid & Keluarga</b>! 🎙️✨
+              </p>
+            </div>
+          </div>
+
           <div className="bg-white/90 p-3 rounded-2xl border border-amber-200 shadow-xs flex items-center gap-3">
             <span className="text-2xl">💻</span>
             <div>
               <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">Kontrol MacBook (Persis Roblox)</h4>
               <p className="text-gray-600 text-[11px] sm:text-xs">
-                <b>W A S D</b>: Jalan | <b>Panah / 2 Jari</b>: Kamera 🎥 | <b>Spasi</b>: Lompat | <b>E</b>: Aksi | <b>H</b>: Bel | <b>R</b>: Rumah 🏡
+                <b>W A S D</b>: Jalan | <b>M</b>: Tongkat Ajaib 🪄 | <b>Spasi</b>: Lompat | <b>E</b>: Aksi | <b>H</b>: Bel | <b>R</b>: Rumah 🏡
               </p>
             </div>
           </div>
