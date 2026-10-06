@@ -37,8 +37,8 @@ export const CharacterChatModal: React.FC = () => {
     if (charId === 'khalid') {
       return [
         'Khalid lagi main apa? 👦',
-        'Mau main petak umpet sama Mbak Khaulah? 🙈',
-        'Khalid sayang Mbak Khaulah gak? 💖',
+        'Mau main petak umpet sama Kak Khaulah? 🙈',
+        'Khalid sayang Kak Khaulah gak? 💖',
         'Ayo balapan lari bareng Khalid! 🏃‍♂️',
       ];
     }
@@ -61,7 +61,7 @@ export const CharacterChatModal: React.FC = () => {
     if (charId === 'faqih') {
       return [
         'Adek Faqih, cilukba! 👶✨',
-        'Mau balapan mobil-mobilan bareng? 🚗💨',
+        'Mau balapan mobil-mobilan bareng Kakak? 🚗💨',
         'Faqih lagi senang ya? 🍼',
       ];
     }
@@ -84,7 +84,7 @@ export const CharacterChatModal: React.FC = () => {
       // Set initial greeting
       let initialGreeting = `Assalamu'alaikum Khaulah bidadari shalihah! Ada apa sayang? Ayo ngobrol sama ${chatState.characterName}! 🌸`;
       if (chatState.characterId === 'khalid') {
-        initialGreeting = `Mbak Khaulah! Khalid lagi senang banget nih! Mbak Khaulah mau main apa hari ini? 👦🥁`;
+        initialGreeting = `Kak Khaulah! Khalid lagi senang banget nih! Kak Khaulah mau main apa hari ini? 👦🥁`;
       } else if (chatState.characterId === 'abi') {
         initialGreeting = `Assalamu'alaikum Khaulah putri kebanggaan Abi! Senang sekali Khaulah menyapa Abi. Mau cerita apa sayang? 💻👨‍👧`;
       } else if (chatState.characterId === 'ummi') {

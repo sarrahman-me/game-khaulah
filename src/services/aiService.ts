@@ -269,13 +269,13 @@ function fallbackMagicInterpreter(input: string): MagicActionResult {
   if (q.includes('khalid') || q.includes('adek')) {
     if (q.includes('berhenti') || q.includes('istirahat') || q.includes('tinggal')) {
       return {
-        speech: 'Adek Khalid istirahat di sini: "Nanti kita main lagi ya Mbak Khaulah!" 👦🌸',
+        speech: 'Adek Khalid istirahat di sini: "Nanti kita main lagi ya Kak Khaulah!" 👦🌸',
         action: 'khalid_follow',
         actionParam: false,
       };
     }
     return {
-      speech: 'Horeee! Adek Khalid langsung lari mengejar Mbak Khaulah! "Tunggu Khalid ya Mbak!" 👦🏃‍♂️💨',
+      speech: 'Horeee! Adek Khalid langsung lari mengejar Kak Khaulah! "Tunggu Khalid ya Kakak!" 👦🏃‍♂️💨',
       action: 'khalid_follow',
       actionParam: true,
     };
@@ -390,13 +390,13 @@ export async function chatWithCharacter(
 
   let rolePersona = '';
   if (characterId === 'khalid') {
-    rolePersona = 'Kamu adalah Adek Khalid (adik laki-laki Khaulah yang periang usia 3-4 tahun). Panggil dia "Mbak Khaulah". Bicara lucu, polos, antusias, suka main drumband, bola, dan petak umpet. Selalu sayang pada Mbak Khaulah.';
+    rolePersona = 'Kamu adalah Adek Khalid (adik laki-laki Khaulah yang periang usia 3-4 tahun). Panggil dia "Kakak" atau "Kak Khaulah" (JANGAN panggil Mbak, selalu panggil Kakak atau Kak Khaulah). Bicara lucu, polos, antusias, suka main drumband, bola, dan petak umpet. Selalu sayang pada Kakak Khaulah.';
   } else if (characterId === 'abi') {
     rolePersona = 'Kamu adalah Abi (Ayah Khaulah tercinta). Kamu seorang programmer/bekerja di laptop yang sangat menyayangi Khaulah. Bicara hangat, bijak, bangga pada Khaulah anak shalihah, memberi semangat dan pujian tulus.';
   } else if (characterId === 'ummi') {
     rolePersona = 'Kamu adalah Ummi (Ibu Khaulah tercinta yang bercadar). Bicara sangat lembut, penuh kasih sayang seorang ibu, mengingatkan berdoa, sopan santun, dan selalu siap memberi bekal kue pelangi terenak.';
   } else if (characterId === 'faqih') {
-    rolePersona = 'Kamu adalah Adek Faqih (adik bayi Khaulah). Bicara khas balita gemas: cilukba, tirukan suara mobil "brum brum", dan tawa riang.';
+    rolePersona = 'Kamu adalah Adek Faqih (adik balita Khaulah). Panggil Khaulah dengan sebutan "Kakak" atau "Kak Khaulah". Bicara khas balita gemas: cilukba, tirukan suara mobil "brum brum", dan tawa riang.';
   } else if (characterId === 'bu_guru') {
     rolePersona = 'Kamu adalah Ibu Santi (Guru TK Karang Tengah 1 Atap). Bicara ramah, edukatif, suka memuji kerapian dan kebaikan Khaulah, mengajak bernyanyi atau tebak-tebakan.';
   } else {
@@ -417,7 +417,7 @@ export async function chatWithCharacter(
   } catch (err) {
     console.warn('Character chat fallback:', err);
     if (characterId === 'khalid') {
-      return `Mbak Khaulah! Khalid lagi senang banget main bareng Mbak Khaulah! Ayo kita lari-larian! 👦🥁`;
+      return `Kak Khaulah! Khalid lagi senang banget main bareng Kak Khaulah! Ayo kita lari-larian! 👦🥁`;
     }
     if (characterId === 'abi') {
       return `MasyaAllah Khaulah putri shalihah Abi! Senyum ceria Khaulah selalu bikin Abi bahagia dan semangat bekerja! 💻👨‍👧`;

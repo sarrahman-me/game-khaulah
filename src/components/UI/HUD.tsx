@@ -99,7 +99,7 @@ export const HUD: React.FC = () => {
         role: isFollowing ? 'Sahabat Petualang Cilik 👦🏃‍♂️' : `Pemain Drumband Cilik 👦🥁 (${schedule.khalid.status})`,
         avatarBg: 'bg-amber-500',
         text: isFollowing
-          ? 'Mbak Khaulah! Khalid senang banget ikut lari-larian keliling desa! Mau Khalid terus ikut petualangan, atau istirahat di sini dulu?'
+          ? 'Kak Khaulah! Khalid senang banget ikut lari-larian keliling desa! Mau Khalid terus ikut petualangan, atau istirahat di sini dulu?'
           : schedule.khalid.text,
         actionText: isFollowing
           ? '🏠 Adek Khalid Istirahat di Teras Dulu 🌸'
@@ -271,7 +271,7 @@ export const HUD: React.FC = () => {
           {isKhalidFollowing && (
             <button
               onClick={() => gameStore.toggleKhalidFollow()}
-              title="Adek Khalid sedang ikut Mbak Khaulah! Klik untuk istirahat"
+              title="Adek Khalid sedang ikut Kak Khaulah! Klik untuk istirahat"
               className="pointer-events-auto bg-gradient-to-r from-amber-400 to-rose-400 text-white px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 animate-bounce-slow border-2 border-white text-xs font-bubble font-bold active:scale-95 transition-transform"
             >
               <span>👦</span>

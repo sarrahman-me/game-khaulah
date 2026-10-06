@@ -507,7 +507,7 @@ export const gameStore = {
       confetti({ particleCount: 45, spread: 70, origin: { y: 0.75 } });
       state = {
         ...state,
-        bubbleMessage: 'Ratatat! Adek Khalid dan Mbak Khaulah asyik memainkan irama drumband penuh semangat! 🥁🎶',
+        bubbleMessage: 'Ratatat! Adek Khalid dan Kakak Khaulah asyik memainkan irama drumband penuh semangat! 🥁🎶',
         activeDialog: null,
       };
       emitChange();
@@ -516,7 +516,7 @@ export const gameStore = {
       confetti({ particleCount: 35, spread: 65, origin: { y: 0.8 } });
       state = {
         ...state,
-        bubbleMessage: 'Brum brum pip pip! Adek Faqih tertawa riang balapan mobilan bareng Mbak Khaulah! 🚗💨👶',
+        bubbleMessage: 'Brum brum pip pip! Adek Faqih tertawa riang balapan mobilan bareng Kak Khaulah! 🚗💨👶',
         activeDialog: null,
       };
       emitChange();
@@ -559,8 +559,8 @@ export const gameStore = {
         isKhalidFollowing: nextFollow,
         activeDialog: null,
         bubbleMessage: nextFollow
-          ? 'Horeee! Adek Khalid ikut Mbak Khaulah berpetualang! "Ayo kita lari bareng Mbak!" 👦🏃‍♂️💨'
-          : 'Adek Khalid istirahat di sini: "Nanti main lagi bareng Khalid ya Mbak Khaulah!" 👦🌸',
+          ? 'Horeee! Adek Khalid ikut Kak Khaulah berpetualang! "Ayo kita lari bareng Kakak!" 👦🏃‍♂️💨'
+          : 'Adek Khalid istirahat di sini: "Nanti main lagi bareng Khalid ya Kak Khaulah!" 👦🌸',
       };
       emitChange();
     }
@@ -574,7 +574,7 @@ export const gameStore = {
       ...state,
       isKhalidFollowing: nextFollow,
       bubbleMessage: nextFollow
-        ? 'Horeee! Adek Khalid ikut Mbak Khaulah berpetualang! 👦🏃‍♂️💨'
+        ? 'Horeee! Adek Khalid ikut Kak Khaulah berpetualang! 👦🏃‍♂️💨'
         : 'Adek Khalid istirahat dulu di sini ya! 👦🌸',
     };
     emitChange();

@@ -43,7 +43,7 @@ const QUICK_SPELLS: QuickSpell[] = [
   { icon: '🎒', label: 'Pergi ke TK Karang Tengah', prompt: 'Bawa Khaulah terbang ke gerbang TK Karang Tengah 1 Atap!', color: 'from-emerald-500 to-teal-600 text-white' },
   { icon: '🏖️', label: 'Pergi ke Danau & Pantai', prompt: 'Bawa aku bermain ke pantai dan danau bebek!', color: 'from-cyan-500 to-blue-600 text-white' },
   { icon: '🎡', label: 'Pergi ke Karnaval', prompt: 'Bawa aku ke pasar malam komedi putar dan bianglala!', color: 'from-purple-500 to-indigo-600 text-white' },
-  { icon: '👦', label: 'Ajak Khalid Ikut', prompt: 'Adek Khalid, ayo ikut Mbak Khaulah jalan-jalan berpetualang!', color: 'from-amber-500 to-rose-400 text-white font-bold' },
+  { icon: '👦', label: 'Ajak Khalid Ikut', prompt: 'Adek Khalid, ayo ikut Kak Khaulah jalan-jalan berpetualang!', color: 'from-amber-500 to-rose-400 text-white font-bold' },
   { icon: '🎆', label: 'Pesta Kembang Api', prompt: 'Rayakan dengan pesta kembang api dan konfeti meriah!', color: 'from-violet-500 to-rose-500 text-white' },
   { icon: '❓', label: 'Tebak-tebakan Lucu', prompt: 'Peri ajaib, kasih aku tebak-tebakan anak yang seru dong!', color: 'from-amber-500 to-orange-500 text-white' },
 ];

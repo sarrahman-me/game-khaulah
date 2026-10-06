@@ -36,7 +36,7 @@ export const FAMILY_SCHEDULE: Record<
     khalid: {
       pos: [-1.8, 0.2, -3.5],
       status: 'Bangun Tidur Ceria 👦',
-      text: 'Hoaaam... Mbak Khaulah! Khalid baru bangun tidur nih, tapi langsung semangat pas lihat Mbak Khaulah! Ayo main bareng Khalid!',
+      text: 'Hoaaam... Kak Khaulah! Khalid baru bangun tidur nih, tapi langsung semangat pas lihat Kak Khaulah! Ayo main bareng Khalid!',
     },
   },
   siang: {
@@ -53,12 +53,12 @@ export const FAMILY_SCHEDULE: Record<
     faqih: {
       pos: [2.0, 0.2, -1.8],
       status: 'Balap Mobil-Mobilan 🚗',
-      text: 'Ngeeeng! Brum brum pip pip! Adek Faqih lagi seru banget ngebutin mobil-mobilan di karpet! Mbak Khaulah ayo balapan bareng!',
+      text: 'Ngeeeng! Brum brum pip pip! Adek Faqih lagi seru banget ngebutin mobil-mobilan di karpet! Kak Khaulah ayo balapan bareng!',
     },
     khalid: {
       pos: [-1.8, 0.2, -1.8],
       status: 'Latihan Drumband 🥁',
-      text: 'Mbak Khaulah lihat nih! Khalid lagi latihan drumband! Dum-tak-tak-dum ratatat! Mau ajak Khalid ikut jalan-jalan keliling desa?',
+      text: 'Kak Khaulah lihat nih! Khalid lagi latihan drumband! Dum-tak-tak-dum ratatat! Mau ajak Khalid ikut jalan-jalan keliling desa?',
     },
   },
   sore: {
@@ -80,7 +80,7 @@ export const FAMILY_SCHEDULE: Record<
     khalid: {
       pos: [-2.6, 0.2, -1.0],
       status: 'Parade Drumband Cilik 🎶',
-      text: 'Dum-dum-tak! Adek Khalid siap mimpin parade drumband sore! Mbak Khaulah ayo lari bareng Khalid!',
+      text: 'Dum-dum-tak! Adek Khalid siap mimpin parade drumband sore! Kak Khaulah ayo lari bareng Khalid!',
     },
   },
   malam: {
@@ -102,7 +102,7 @@ export const FAMILY_SCHEDULE: Record<
     khalid: {
       pos: [1.6, 0.2, -3.5],
       status: 'Dengarkan Dongeng Ummi 📖',
-      text: 'Mbak Khaulah sini duduk bareng Khalid! Kita dengarkan dongeng Ummi sambil melihat kunang-kunang di atas sungai!',
+      text: 'Kak Khaulah sini duduk bareng Khalid! Kita dengarkan dongeng Ummi sambil melihat kunang-kunang di atas sungai!',
     },
   },
 };
@@ -887,7 +887,7 @@ const KhalidModel: React.FC<{ position: [number, number, number]; statusTag?: st
     if (isFollowing) {
       if (!wasFollowing.current) {
         wasFollowing.current = true;
-        setSpeechBubbleText('Tunggu Khalid Mbak! 🏃‍♂️💨');
+        setSpeechBubbleText('Tunggu Khalid Kakak! 🏃‍♂️💨');
         bubbleTimer.current = 4.0;
       }
 
@@ -944,7 +944,7 @@ const KhalidModel: React.FC<{ position: [number, number, number]; statusTag?: st
         bubbleTimer.current -= delta;
         if (bubbleTimer.current <= 0) {
           const quotes = [
-            'Lari Mbak Khaulah! 🏃‍♂️💨',
+            'Lari Kak Khaulah! 🏃‍♂️💨',
             'Kejar aku hehe! 😆',
             'Seru banget! ✨',
             'Adek Khalid gak capek! ⚡',
@@ -970,7 +970,7 @@ const KhalidModel: React.FC<{ position: [number, number, number]; statusTag?: st
 
         bubbleTimer.current -= delta;
         if (bubbleTimer.current <= 0) {
-          setSpeechBubbleText('Main apa lagi Mbak? ✨');
+          setSpeechBubbleText('Main apa lagi Kakak? ✨');
           bubbleTimer.current = 10.0 + Math.random() * 8.0;
         }
       }
@@ -1265,7 +1265,7 @@ const KhalidModel: React.FC<{ position: [number, number, number]; statusTag?: st
             anchorX="center"
             anchorY="middle"
           >
-            {isFollowing ? 'Ikut Mbak Khaulah ✨' : statusTag}
+            {isFollowing ? 'Ikut Kak Khaulah ✨' : statusTag}
           </Text>
         )}
       </Billboard>
@@ -1323,7 +1323,7 @@ const FaqihModel: React.FC<{ position: [number, number, number]; statusTag?: str
         delta * 3.5
       );
 
-      // Faqih excitedly lifts toy car up to show Mbak Khaulah!
+      // Faqih excitedly lifts toy car up to show Kak Khaulah!
       if (toyCarRef.current) {
         toyCarRef.current.position.y = 0.35 + Math.sin(time * 4) * 0.06;
         toyCarRef.current.position.z = 0.22;
@@ -1651,7 +1651,7 @@ export const FamilyMembers: React.FC = () => {
           : `Pemain Drumband Cilik 👦🥁 (${schedule.khalid.status})`,
         avatarBg: 'bg-amber-500',
         text: isKhalidFollowing
-          ? 'Mbak Khaulah! Khalid senang banget ikut lari-larian keliling desa! Mau Khalid terus ikut petualangan, atau istirahat di sini dulu?'
+          ? 'Kak Khaulah! Khalid senang banget ikut lari-larian keliling desa! Mau Khalid terus ikut petualangan, atau istirahat di sini dulu?'
           : schedule.khalid.text,
         actionText: isKhalidFollowing
           ? '🏠 Adek Khalid Istirahat di Teras Dulu 🌸'

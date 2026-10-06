@@ -310,7 +310,7 @@ export const PlayerKhaulah: React.FC = () => {
               speaker: 'Adek Khalid',
               role: 'Pemain Drumband Cilik 👦🥁',
               avatarBg: 'bg-amber-500',
-              text: 'Mbak Khaulah lihat nih! Khalid lagi latihan drumband! Dum-tak-tak-dum ratatat! Nanti pas pawai drum band di TK, Khalid mau main paling hebat bareng Mbak Khaulah!',
+              text: 'Kak Khaulah lihat nih! Khalid lagi latihan drumband! Dum-tak-tak-dum ratatat! Nanti pas pawai drum band di TK, Khalid mau main paling hebat bareng Kak Khaulah!',
               actionText: '🥁 Main Drumband Bareng Khalid! 🎶',
               actionType: 'play_drumband',
             });
@@ -319,7 +319,7 @@ export const PlayerKhaulah: React.FC = () => {
               speaker: 'Adek Faqih',
               role: 'Adik Gemas Balap Mobilan 👶🚗',
               avatarBg: 'bg-emerald-500',
-              text: 'Ngeeeng! Brum brum pip pip! Adek Faqih lagi seru banget ngebutin mobil-mobilan di karpet lintasan! Mbak Khaulah ayo balapan mobilan bareng Faqih!',
+              text: 'Ngeeeng! Brum brum pip pip! Adek Faqih lagi seru banget ngebutin mobil-mobilan di karpet lintasan! Kak Khaulah ayo balapan mobilan bareng Faqih!',
               actionText: '🚗 Balapan Mobilan bareng Faqih! 💨',
               actionType: 'play_toycar',
             });
