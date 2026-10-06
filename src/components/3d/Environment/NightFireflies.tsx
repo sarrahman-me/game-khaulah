@@ -60,14 +60,6 @@ export const NightFireflies: React.FC = () => {
             <sphereGeometry args={[0.07, 8, 8]} />
             <meshBasicMaterial color="#CCFF00" />
           </mesh>
-          {/* Subtle point light for magical ambiance */}
-          {idx % 2 === 0 && (
-            <pointLight
-              color="#D4FF00"
-              intensity={isNight ? 0.8 : 0.4}
-              distance={2.8}
-            />
-          )}
         </group>
       ))}
 

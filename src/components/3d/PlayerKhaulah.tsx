@@ -42,6 +42,7 @@ export const PlayerKhaulah: React.FC = () => {
   const speedBuffTimeLeft = useGameStore((s) => s.speedBuffTimeLeft);
   const isRidingScooter = useGameStore((s) => s.isRidingScooter);
   const activeRide = useGameStore((s) => s.activeRide);
+  const timeOfDay = useGameStore((s) => s.timeOfDay);
 
   // Character physical state: start at saved position from localStorage
   const initialPlayerPos = gameStore.getState().playerPos;
@@ -89,7 +90,7 @@ export const PlayerKhaulah: React.FC = () => {
         if (ride !== 'none') {
           gameStore.setActiveRide('none');
           if (ride === 'boat') {
-            pos.current.set(-52, 0.4, 44);
+            pos.current.set(-56.5, 0.38, 44.0);
           } else if (ride === 'carousel') {
             pos.current.set(58, 0.4, 36);
           } else if (ride === 'ferris') {
@@ -205,6 +206,9 @@ export const PlayerKhaulah: React.FC = () => {
             });
           } else if (near.id === 'swan_boat') {
             gameStore.setActiveRide('boat');
+            pos.current.set(-61.5, 0.20, 44.0);
+            facingAngle.current = Math.PI / 2;
+            soundManager.playWaterSplash();
           } else if (near.id === 'mart_cashier') {
             gameStore.executeDialogAction('scan_grocery');
           } else if (near.id === 'bakery_cake') {
@@ -616,9 +620,12 @@ export const PlayerKhaulah: React.FC = () => {
     // Gravity & Boat lake water / Swimming Pool buoyancy
     const inPool = pos.current.x >= -2.0 && pos.current.x <= 10.0 && pos.current.z >= -28.0 && pos.current.z <= -20.0;
     if (activeRide === 'boat') {
-      pos.current.y = 0.20 + Math.sin(state.clock.getElapsedTime() * 2.5) * 0.04;
+      pos.current.y = 0.20 + Math.sin(state.clock.getElapsedTime() * 2.5) * 0.03;
       velocityY.current = 0;
       groundedThisFrame = true;
+      // Clamp boat inside lake water boundary so it never glides onto land or clips through trees
+      pos.current.x = THREE.MathUtils.clamp(pos.current.x, -74.5, -55.5);
+      pos.current.z = THREE.MathUtils.clamp(pos.current.z, 40.5, 55.5);
     } else if (inPool && activeRide === 'none') {
       pos.current.y = 0.28 + Math.sin(state.clock.getElapsedTime() * 2.8) * 0.02;
       velocityY.current = 0;
@@ -1436,7 +1443,7 @@ export const PlayerKhaulah: React.FC = () => {
       {/* 7. PERAHU BEBEK KAYUH KETIKA DIKENDARAI                  */}
       {/* ======================================================== */}
       {activeRide === 'boat' && (
-        <group position={[0, -0.15, 0]}>
+        <group position={[0, -0.15, 0]} rotation={[0, Math.PI, 0]}>
           <SwanBoatModel isRiding />
         </group>
       )}
@@ -1448,6 +1455,19 @@ export const PlayerKhaulah: React.FC = () => {
         <group position={[0, -0.2, 0]}>
           <MiniFireTruckModel isRiding />
         </group>
+      )}
+
+      {/* ======================================================== */}
+      {/* 9. COZY NIGHT LANTERN AURA DI SEKITAR KHAULAH            */}
+      {/* ======================================================== */}
+      {timeOfDay === 'malam' && (
+        <pointLight
+          position={[0, 1.4, 0]}
+          color="#FFE5A3"
+          intensity={1.15}
+          distance={9.0}
+          decay={1.6}
+        />
       )}
     </group>
   );

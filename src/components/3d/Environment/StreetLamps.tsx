@@ -118,67 +118,69 @@ export const StreetLamp: React.FC<StreetLampProps> = ({ pos, rotationY = 0, hasP
 };
 
 // Daftar jaringan lampu jalan desa di seluruh jalan raya, trotoar, dan alun-alun
+// Dioptimalkan: 6 titik hub strategis menggunakan dynamic pointLight, sementara seluruh lampu
+// tetap memiliki efek visual lentera berpijar & kolam cahaya tanah yang mempesona tanpa beban GPU
 const STREET_LAMP_CONFIGS: StreetLampProps[] = [
   // --- JALUR UTAMA 1: RUMAH KHAULAH ➔ JEMBATAN TENGAH (Z: -6 s/d 14) ---
-  { pos: [2.8, 0, -4.5], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [2.8, 0, -4.5], rotationY: -Math.PI / 2, hasPointLight: true }, // Hub 1: Depan Rumah Khaulah
   { pos: [-2.8, 0, -4.5], rotationY: Math.PI / 2, hasPointLight: false },
-  { pos: [2.8, 0, 2.0], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [2.8, 0, 2.0], rotationY: -Math.PI / 2, hasPointLight: false },
   { pos: [-2.8, 0, 2.0], rotationY: Math.PI / 2, hasPointLight: false },
-  { pos: [2.8, 0, 8.5], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [2.8, 0, 8.5], rotationY: -Math.PI / 2, hasPointLight: false },
   { pos: [-2.8, 0, 8.5], rotationY: Math.PI / 2, hasPointLight: false },
-  { pos: [2.8, 0, 13.5], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [2.8, 0, 13.5], rotationY: -Math.PI / 2, hasPointLight: true }, // Hub 2: Jembatan Sungai Desa
   { pos: [-2.8, 0, 13.5], rotationY: Math.PI / 2, hasPointLight: false },
 
   // --- JALUR UTAMA 2: JEMBATAN ➔ GERBANG TK ➔ PINTU TK (Z: 22 s/d 55) ---
-  { pos: [2.8, 0, 23.0], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [2.8, 0, 23.0], rotationY: -Math.PI / 2, hasPointLight: false },
   { pos: [-2.8, 0, 23.0], rotationY: Math.PI / 2, hasPointLight: false },
-  { pos: [2.8, 0, 30.0], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [2.8, 0, 30.0], rotationY: -Math.PI / 2, hasPointLight: true }, // Hub 3: Gerbang Masuk TK
   { pos: [-2.8, 0, 30.0], rotationY: Math.PI / 2, hasPointLight: false },
-  { pos: [2.8, 0, 40.0], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [2.8, 0, 40.0], rotationY: -Math.PI / 2, hasPointLight: false },
   { pos: [-2.8, 0, 40.0], rotationY: Math.PI / 2, hasPointLight: false },
-  { pos: [2.8, 0, 52.0], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [2.8, 0, 52.0], rotationY: -Math.PI / 2, hasPointLight: false },
   { pos: [-2.8, 0, 52.0], rotationY: Math.PI / 2, hasPointLight: false },
 
   // --- JALUR SELATAN TIMUR: KE ARAH DESA PERTOKOAN (Z: 2.4, X: 12 s/d 72) ---
-  { pos: [14, 0, 2.4], rotationY: Math.PI, hasPointLight: true },
+  { pos: [14, 0, 2.4], rotationY: Math.PI, hasPointLight: false },
   { pos: [28, 0, 2.4], rotationY: Math.PI, hasPointLight: false },
-  { pos: [42, 0, 2.4], rotationY: Math.PI, hasPointLight: true },
+  { pos: [42, 0, 2.4], rotationY: Math.PI, hasPointLight: true }, // Hub 4: Alun-Alun Pertokoan Desa
   { pos: [56, 0, 2.4], rotationY: Math.PI, hasPointLight: false },
-  { pos: [70, 0, 2.4], rotationY: Math.PI, hasPointLight: true },
+  { pos: [70, 0, 2.4], rotationY: Math.PI, hasPointLight: false },
 
   // --- JALUR SELATAN BARAT: KE ARAH PETERNAKAN HEWAN (Z: 2.4, X: -12 s/d -72) ---
-  { pos: [-14, 0, 2.4], rotationY: Math.PI, hasPointLight: true },
+  { pos: [-14, 0, 2.4], rotationY: Math.PI, hasPointLight: false },
   { pos: [-28, 0, 2.4], rotationY: Math.PI, hasPointLight: false },
-  { pos: [-42, 0, 2.4], rotationY: Math.PI, hasPointLight: true },
+  { pos: [-42, 0, 2.4], rotationY: Math.PI, hasPointLight: true }, // Hub 5: Gerbang Peternakan Hewan
   { pos: [-56, 0, 2.4], rotationY: Math.PI, hasPointLight: false },
-  { pos: [-70, 0, 2.4], rotationY: Math.PI, hasPointLight: true },
+  { pos: [-70, 0, 2.4], rotationY: Math.PI, hasPointLight: false },
 
   // --- JALUR UTARA TIMUR: KE ARAH ALUN-ALUN KARNAVAL & PASAR MALAM (Z: 22.8, X: 14 s/d 70) ---
-  { pos: [14, 0, 22.8], rotationY: 0, hasPointLight: true },
+  { pos: [14, 0, 22.8], rotationY: 0, hasPointLight: false },
   { pos: [28, 0, 22.8], rotationY: 0, hasPointLight: false },
-  { pos: [42, 0, 22.8], rotationY: 0, hasPointLight: true },
+  { pos: [42, 0, 22.8], rotationY: 0, hasPointLight: true }, // Hub 6: Pintu Masuk Karnaval Fantasi
   { pos: [56, 0, 22.8], rotationY: 0, hasPointLight: false },
-  { pos: [70, 0, 22.8], rotationY: 0, hasPointLight: true },
+  { pos: [70, 0, 22.8], rotationY: 0, hasPointLight: false },
 
   // --- JALUR UTARA BARAT: KE ARAH DANAU BEBEK & PANTAI PASIR (Z: 22.8, X: -14 s/d -70) ---
-  { pos: [-14, 0, 22.8], rotationY: 0, hasPointLight: true },
+  { pos: [-14, 0, 22.8], rotationY: 0, hasPointLight: false },
   { pos: [-28, 0, 22.8], rotationY: 0, hasPointLight: false },
-  { pos: [-42, 0, 22.8], rotationY: 0, hasPointLight: true },
+  { pos: [-42, 0, 22.8], rotationY: 0, hasPointLight: true }, // Hub 7: Pintu Masuk Pantai & Dermaga Danau Bebek
   { pos: [-56, 0, 22.8], rotationY: 0, hasPointLight: false },
-  { pos: [-70, 0, 22.8], rotationY: 0, hasPointLight: true },
+  { pos: [-70, 0, 22.8], rotationY: 0, hasPointLight: false },
 
   // --- PENGHUBUNG UTARA-SELATAN JEMBATAN BARAT (X: -47.5) ---
-  { pos: [-47.5, 0, 6.0], rotationY: Math.PI / 2, hasPointLight: true },
+  { pos: [-47.5, 0, 6.0], rotationY: Math.PI / 2, hasPointLight: false },
   { pos: [-47.5, 0, 12.0], rotationY: Math.PI / 2, hasPointLight: false },
 
   // --- PENGHUBUNG UTARA-SELATAN JEMBATAN TIMUR (X: 47.5) ---
-  { pos: [47.5, 0, 6.0], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [47.5, 0, 6.0], rotationY: -Math.PI / 2, hasPointLight: false },
   { pos: [47.5, 0, 12.0], rotationY: -Math.PI / 2, hasPointLight: false },
 
   // --- AREA KOLAM RENANG & HALAMAN BELAKANG (Z: -14 s/d -28) ---
-  { pos: [4.0, 0, -14], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [4.0, 0, -14], rotationY: -Math.PI / 2, hasPointLight: false },
   { pos: [-4.0, 0, -14], rotationY: Math.PI / 2, hasPointLight: false },
-  { pos: [4.0, 0, -26], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [4.0, 0, -26], rotationY: -Math.PI / 2, hasPointLight: false },
   { pos: [-4.0, 0, -26], rotationY: Math.PI / 2, hasPointLight: false },
 ];
 

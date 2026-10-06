@@ -11,16 +11,15 @@ interface AnimatedTreeProps {
 }
 
 const AnimatedTree: React.FC<AnimatedTreeProps> = ({ pos, leafColor, scale, seed }) => {
-  const groupRef = useRef<THREE.Group>(null);
+  const canopyRef = useRef<THREE.Group>(null);
   useFrame((state) => {
-    if (!groupRef.current) return;
+    if (!canopyRef.current) return;
     const t = state.clock.getElapsedTime();
-    groupRef.current.rotation.z = Math.sin(t * 1.3 + seed) * 0.035;
-    groupRef.current.rotation.x = Math.cos(t * 1.1 + seed) * 0.025;
+    canopyRef.current.rotation.z = Math.sin(t * 1.2 + seed) * 0.028;
   });
 
   return (
-    <group ref={groupRef} position={pos} scale={scale}>
+    <group position={pos} scale={scale}>
       {/* Natural Tree Trunk */}
       <mesh position={[0, 1.2, 0]} castShadow>
         <cylinderGeometry args={[0.26, 0.42, 2.4, 8]} />
@@ -37,21 +36,24 @@ const AnimatedTree: React.FC<AnimatedTreeProps> = ({ pos, leafColor, scale, seed
           <meshStandardMaterial color="#582F0E" roughness={0.9} />
         </mesh>
       ))}
-      {/* Natural Foliage Canopy Tier 1 */}
-      <mesh position={[0, 2.6, 0]} castShadow>
-        <sphereGeometry args={[1.4, 14, 14]} />
-        <meshStandardMaterial color={leafColor} roughness={0.65} />
-      </mesh>
-      {/* Natural Foliage Canopy Tier 2 */}
-      <mesh position={[0, 3.55, 0]} castShadow>
-        <sphereGeometry args={[1.0, 12, 12]} />
-        <meshStandardMaterial color={leafColor} roughness={0.65} />
-      </mesh>
-      {/* Top Foliage Puff */}
-      <mesh position={[0.2, 4.15, -0.1]} castShadow>
-        <sphereGeometry args={[0.65, 10, 10]} />
-        <meshStandardMaterial color={leafColor} roughness={0.65} />
-      </mesh>
+      {/* Swaying Natural Foliage Canopy */}
+      <group ref={canopyRef} position={[0, 2.6, 0]}>
+        {/* Tier 1 Primary Canopy (casts soft shadow) */}
+        <mesh position={[0, 0, 0]} castShadow>
+          <sphereGeometry args={[1.4, 12, 12]} />
+          <meshStandardMaterial color={leafColor} roughness={0.65} />
+        </mesh>
+        {/* Tier 2 Canopy */}
+        <mesh position={[0, 0.95, 0]}>
+          <sphereGeometry args={[1.0, 10, 10]} />
+          <meshStandardMaterial color={leafColor} roughness={0.65} />
+        </mesh>
+        {/* Top Foliage Puff */}
+        <mesh position={[0.2, 1.55, -0.1]}>
+          <sphereGeometry args={[0.65, 8, 8]} />
+          <meshStandardMaterial color={leafColor} roughness={0.65} />
+        </mesh>
+      </group>
     </group>
   );
 };
@@ -63,17 +65,10 @@ interface AnimatedFlowerProps {
   seed: number;
 }
 
-const AnimatedFlower: React.FC<AnimatedFlowerProps> = ({ x, z, color, seed }) => {
-  const flowerRef = useRef<THREE.Group>(null);
-  useFrame((state) => {
-    if (!flowerRef.current) return;
-    const t = state.clock.getElapsedTime();
-    flowerRef.current.rotation.z = Math.sin(t * 2.2 + seed) * 0.08;
-    flowerRef.current.rotation.x = Math.cos(t * 1.8 + seed) * 0.05;
-  });
-
+// Static flower model (zero per-frame update cost, buttery smooth rendering)
+const AnimatedFlower: React.FC<AnimatedFlowerProps> = ({ x, z, color }) => {
   return (
-    <group ref={flowerRef} position={[x, 0.26, z]}>
+    <group position={[x, 0.26, z]}>
       {/* Stem */}
       <mesh position={[0, 0.15, 0]}>
         <cylinderGeometry args={[0.025, 0.025, 0.3, 6]} />
@@ -420,10 +415,22 @@ export const GroundIsland: React.FC = () => {
       new THREE.Vector3(41.5, -0.5, 13.8),
       new THREE.Vector3(48.5, 0.5, 22.2)
     );
-    // 5. North School, Beach & Carnival Landmass (Z: 21.5 to 76, X: -100 to 100)
-    const northBox = new THREE.Box3(
-      new THREE.Vector3(-100, -1, 21.5),
+    // 5. North Landmass sections carved around Sunny Beach & Lake (-81 to -49, 34 to 62)
+    const northEastBox = new THREE.Box3(
+      new THREE.Vector3(-49.0, -1, 21.5),
       new THREE.Vector3(100, 0.25, 76)
+    );
+    const northNorthBox = new THREE.Box3(
+      new THREE.Vector3(-100, -1, 62.0),
+      new THREE.Vector3(-49.0, 0.25, 76)
+    );
+    const northSouthBox = new THREE.Box3(
+      new THREE.Vector3(-100, -1, 21.5),
+      new THREE.Vector3(-49.0, 0.25, 34.0)
+    );
+    const northWestEdgeBox = new THREE.Box3(
+      new THREE.Vector3(-100, -1, 34.0),
+      new THREE.Vector3(-81.0, 0.25, 62.0)
     );
     // 6. Walkable Riverbed Floor (shallow water splash floor; Z: 14.5 to 21.5, X: -100 to 100)
     const riverbedBox = new THREE.Box3(
@@ -435,13 +442,16 @@ export const GroundIsland: React.FC = () => {
     const c2 = { box: centralBridgeBox, type: 'ground' as const };
     const c3 = { box: westBridgeBox, type: 'ground' as const };
     const c4 = { box: eastBridgeBox, type: 'ground' as const };
-    const c5 = { box: northBox, type: 'ground' as const };
+    const c5a = { box: northEastBox, type: 'ground' as const };
+    const c5b = { box: northNorthBox, type: 'ground' as const };
+    const c5c = { box: northSouthBox, type: 'ground' as const };
+    const c5d = { box: northWestEdgeBox, type: 'ground' as const };
     const c6 = { box: riverbedBox, type: 'ground' as const };
 
-    colliders.push(c1, c2, c3, c4, c5, c6);
+    colliders.push(c1, c2, c3, c4, c5a, c5b, c5c, c5d, c6);
 
     return () => {
-      [c1, c2, c3, c4, c5, c6].forEach((c) => {
+      [c1, c2, c3, c4, c5a, c5b, c5c, c5d, c6].forEach((c) => {
         const idx = colliders.indexOf(c);
         if (idx !== -1) colliders.splice(idx, 1);
       });
@@ -483,13 +493,43 @@ export const GroundIsland: React.FC = () => {
       {/* 3. UNIFIED NORTH VILLAGE TERRAIN (Z: 21.5 to 76, X: -100 to 100) */}
       {/* Matching natural lush green grass covering School, Beach & Carnival */}
       {/* ============================================================== */}
-      <mesh position={[0, -0.2, 48.75]} receiveShadow>
-        <boxGeometry args={[200, 0.9, 54.5]} />
+      {/* 3.1 East & Center North Terrain (School, Carnival, Promenade) */}
+      <mesh position={[25.5, -0.2, 48.75]} receiveShadow>
+        <boxGeometry args={[149, 0.9, 54.5]} />
         <meshStandardMaterial color="#4C8C2B" roughness={0.78} />
       </mesh>
-      {/* Rich Fertile Earth Base beneath North Terrain */}
-      <mesh position={[0, -1.8, 48.75]}>
-        <boxGeometry args={[200.5, 2.3, 55.0]} />
+      <mesh position={[25.5, -1.8, 48.75]}>
+        <boxGeometry args={[149.5, 2.3, 55.0]} />
+        <meshStandardMaterial color="#543D2B" roughness={0.95} />
+      </mesh>
+
+      {/* 3.2 North-Behind-Beach Terrain (North Perimeter) */}
+      <mesh position={[-74.5, -0.2, 69]} receiveShadow>
+        <boxGeometry args={[51, 0.9, 14]} />
+        <meshStandardMaterial color="#4C8C2B" roughness={0.78} />
+      </mesh>
+      <mesh position={[-74.5, -1.8, 69]}>
+        <boxGeometry args={[51.5, 2.3, 14.5]} />
+        <meshStandardMaterial color="#543D2B" roughness={0.95} />
+      </mesh>
+
+      {/* 3.3 South-Of-Beach Terrain (Between River & Beach Shore) */}
+      <mesh position={[-74.5, -0.2, 27.75]} receiveShadow>
+        <boxGeometry args={[51, 0.9, 12.5]} />
+        <meshStandardMaterial color="#4C8C2B" roughness={0.78} />
+      </mesh>
+      <mesh position={[-74.5, -1.8, 27.75]}>
+        <boxGeometry args={[51.5, 2.3, 13.0]} />
+        <meshStandardMaterial color="#543D2B" roughness={0.95} />
+      </mesh>
+
+      {/* 3.4 West Outer Island Edge Terrain (West Dunes Perimeter) */}
+      <mesh position={[-90.5, -0.2, 48]} receiveShadow>
+        <boxGeometry args={[19, 0.9, 28]} />
+        <meshStandardMaterial color="#4C8C2B" roughness={0.78} />
+      </mesh>
+      <mesh position={[-90.5, -1.8, 48]}>
+        <boxGeometry args={[19.5, 2.3, 28.5]} />
         <meshStandardMaterial color="#543D2B" roughness={0.95} />
       </mesh>
 

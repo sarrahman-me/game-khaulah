@@ -12,25 +12,28 @@ const ShimmeringLake: React.FC = () => {
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
+    const waterY = 0.18 + Math.sin(t * 1.8) * 0.008;
     if (meshRef.current) {
-      meshRef.current.position.y = 0.18 + Math.sin(t * 1.8) * 0.012;
+      meshRef.current.position.y = waterY;
     }
     if (rippleRef.current) {
+      // Sync ripples slightly above water surface so they NEVER clip through
+      rippleRef.current.position.y = waterY + 0.004;
       rippleRef.current.children.forEach((child, i) => {
         const ring = child as THREE.Mesh;
         const s = 1 + ((t * 0.8 + i * 0.3) % 1) * 0.6;
         ring.scale.set(s, s, 1);
         const mat = ring.material as THREE.MeshBasicMaterial;
-        if (mat) mat.opacity = 0.5 * (1 - ((t * 0.8 + i * 0.3) % 1));
+        if (mat) mat.opacity = 0.45 * (1 - ((t * 0.8 + i * 0.3) % 1));
       });
     }
   });
 
   return (
     <group position={[0, 0, 0]}>
-      {/* Sandy Lake Bed Cavity */}
-      <mesh position={[0, -0.3, 0]}>
-        <boxGeometry args={[22.5, 0.5, 18.5]} />
+      {/* Sandy Lake Bed Cavity (Recessed below water) */}
+      <mesh position={[0, -0.28, 0]}>
+        <boxGeometry args={[22.5, 0.45, 18.5]} />
         <meshStandardMaterial color="#E9D8A6" roughness={0.9} />
       </mesh>
 
@@ -45,11 +48,12 @@ const ShimmeringLake: React.FC = () => {
           metalness={0.0}
           transparent
           opacity={0.88}
+          depthWrite={false}
         />
       </mesh>
 
-      {/* Animated Subtle Shimmer Ripples */}
-      <group ref={rippleRef} position={[0, 0.19, 0]}>
+      {/* Animated Subtle Shimmer Ripples (Synchronized height) */}
+      <group ref={rippleRef} position={[0, 0.184, 0]}>
         {[
           [-4, -3],
           [3, 4],
@@ -58,7 +62,7 @@ const ShimmeringLake: React.FC = () => {
         ].map(([rx, rz], idx) => (
           <mesh key={idx} position={[rx, 0, rz]} rotation={[-Math.PI / 2, 0, 0]}>
             <ringGeometry args={[0.5, 0.7, 16]} />
-            <meshBasicMaterial color="#E0FBFC" transparent opacity={0.35} />
+            <meshBasicMaterial color="#E0FBFC" transparent opacity={0.35} depthWrite={false} />
           </mesh>
         ))}
       </group>
@@ -194,36 +198,36 @@ export const SunnyBeachLake: React.FC = () => {
   const boatBobRef = useRef<THREE.Group>(null);
 
   useEffect(() => {
-    // Colliders for the Beach & Lake area (World coords)
-    // 1. South Beach Shore
+    // Accurate Colliders for the Beach & Lake area (World coords around [-65, 0, 48])
+    // 1. South Beach Shore (Z: 34 to 39, X: -81 to -49)
     const southBeachBox = new THREE.Box3(
-      new THREE.Vector3(-55, -1, 13.5),
-      new THREE.Vector3(-18, 0.25, 20.0)
+      new THREE.Vector3(-81.0, -1, 34.0),
+      new THREE.Vector3(-49.0, 0.25, 39.0)
     );
-    // 2. North Beach Shore
+    // 2. North Beach Shore (Z: 57 to 62, X: -81 to -49)
     const northBeachBox = new THREE.Box3(
-      new THREE.Vector3(-55, -1, 38.0),
-      new THREE.Vector3(-18, 0.25, 48.0)
+      new THREE.Vector3(-81.0, -1, 57.0),
+      new THREE.Vector3(-49.0, 0.25, 62.0)
     );
-    // 3. West Beach Dunes
+    // 3. West Beach Dunes (Z: 39 to 57, X: -81 to -76)
     const westBeachBox = new THREE.Box3(
-      new THREE.Vector3(-55, -1, 20.0),
-      new THREE.Vector3(-46.0, 0.25, 38.0)
+      new THREE.Vector3(-81.0, -1, 39.0),
+      new THREE.Vector3(-76.0, 0.25, 57.0)
     );
-    // 4. East Shore (connecting to school lawn & promenade)
+    // 4. East Shore (connecting to school lawn & promenade; Z: 39 to 57, X: -54 to -49)
     const eastShoreBox = new THREE.Box3(
-      new THREE.Vector3(-24.0, -1, 20.0),
-      new THREE.Vector3(-18.0, 0.25, 38.0)
+      new THREE.Vector3(-54.0, -1, 39.0),
+      new THREE.Vector3(-49.0, 0.25, 57.0)
     );
-    // 5. Wooden Pier Platform (Y: 0.28)
+    // 5. Wooden Pier Platform (Walkable dock deck; Z: 42.7 to 45.3, X: -61 to -53, Top Y: 0.36)
     const pierBox = new THREE.Box3(
-      new THREE.Vector3(-31.5, 0, 23.5),
-      new THREE.Vector3(-22.5, 0.32, 26.5)
+      new THREE.Vector3(-61.0, 0, 42.7),
+      new THREE.Vector3(-53.0, 0.36, 45.3)
     );
-    // 6. Lakebed Floor (shallow wading water splash floor)
+    // 6. Lakebed Floor (shallow wading water splash floor; Z: 39 to 57, X: -76 to -54, Y: 0.16)
     const lakeFloorBox = new THREE.Box3(
-      new THREE.Vector3(-46.0, -1, 20.0),
-      new THREE.Vector3(-24.0, 0.16, 38.0)
+      new THREE.Vector3(-76.0, -1, 39.0),
+      new THREE.Vector3(-54.0, 0.16, 57.0)
     );
 
     const beachColliders = [

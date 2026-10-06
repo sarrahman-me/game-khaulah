@@ -78,18 +78,77 @@ const ATMOSPHERE_PRESETS: Record<TimeOfDay, AtmospherePreset> = {
     hemiIntensity: 0.6,
   },
   malam: {
-    bg: '#0F172A', // Malam kelam berbintang
-    fogNear: 95,
-    fogFar: 300,
-    ambientColor: '#312E81',
-    ambientIntensity: 0.5,
-    sunPos: [30, 65, 25], // Rembulan temaram
-    sunColor: '#93C5FD',
-    sunIntensity: 0.65,
-    hemiSky: '#4338CA',
-    hemiGround: '#1E1B4B',
-    hemiIntensity: 0.45,
+    bg: '#141E38', // Malam sejuk sapphire menenangkan, sangat nyaman di mata
+    fogNear: 110,
+    fogFar: 350,
+    ambientColor: '#8DA4EF', // Cahaya ambient lembut terang, objek sangat jelas
+    ambientIntensity: 0.85,  // Peningkatan kecerahan agar nyaman dimainkan & tidak gelap gulita
+    sunPos: [35, 70, 25], // Rembulan perak bercahaya
+    sunColor: '#D3E0FD',
+    sunIntensity: 0.95,   // Sinar bulan jernih
+    hemiSky: '#6366F1',   // Indigo langit malam cerah
+    hemiGround: '#334155', // Permukaan tanah yang tetap terlihat jelas
+    hemiIntensity: 0.60,
   },
+};
+
+// Glowing Crescent Moon & Twinkling Stars in Night Sky
+const NightSkyElements: React.FC = () => {
+  const timeOfDay = useGameStore((s) => s.timeOfDay);
+  const moonRef = useRef<THREE.Group>(null);
+  const starsRef = useRef<THREE.Group>(null);
+
+  useFrame((state) => {
+    if (timeOfDay !== 'malam') return;
+    const t = state.clock.getElapsedTime();
+    if (moonRef.current) {
+      moonRef.current.position.y = 52 + Math.sin(t * 0.8) * 0.4;
+    }
+    if (starsRef.current) {
+      starsRef.current.rotation.y = t * 0.005;
+    }
+  });
+
+  if (timeOfDay !== 'malam') return null;
+
+  const starPositions: [number, number, number][] = [
+    [-45, 45, -30], [-15, 52, -50], [25, 48, -40], [60, 55, -20],
+    [-70, 50, 20], [-30, 56, 40], [15, 50, 60], [55, 47, 35],
+    [-50, 48, 70], [0, 58, 80], [45, 52, 75], [-20, 54, 15],
+    [35, 51, -15], [-60, 46, -60], [70, 49, -55], [10, 55, -70]
+  ];
+
+  return (
+    <group>
+      {/* Cartoon Glowing Crescent Moon */}
+      <group ref={moonRef} position={[35, 52, 25]}>
+        <mesh>
+          <sphereGeometry args={[4.2, 16, 16]} />
+          <meshStandardMaterial
+            color="#FEF08A"
+            emissive="#FDE047"
+            emissiveIntensity={0.85}
+            roughness={0.2}
+          />
+        </mesh>
+        {/* Soft Moon Glow Halo */}
+        <mesh>
+          <sphereGeometry args={[5.2, 12, 12]} />
+          <meshBasicMaterial color="#FEF08A" transparent opacity={0.15} />
+        </mesh>
+      </group>
+
+      {/* Sparkling Twinkling Stars */}
+      <group ref={starsRef}>
+        {starPositions.map((pos, idx) => (
+          <mesh key={idx} position={pos}>
+            <sphereGeometry args={[0.35 + (idx % 3) * 0.15, 6, 6]} />
+            <meshBasicMaterial color="#FDE047" />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  );
 };
 
 // Cute floating cartoon clouds in the sky
@@ -236,15 +295,15 @@ const AtmosphereController: React.FC = () => {
         color={preset.sunColor}
         intensity={preset.sunIntensity}
         castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
         shadow-camera-near={0.5}
         shadow-camera-far={320}
         shadow-camera-left={-120}
         shadow-camera-right={120}
         shadow-camera-top={120}
         shadow-camera-bottom={-120}
-        shadow-bias={-0.0004}
+        shadow-bias={-0.0003}
       />
       <hemisphereLight ref={hemiRef} args={[preset.hemiSky, preset.hemiGround, preset.hemiIntensity]} />
     </>
@@ -258,13 +317,14 @@ export const GameScene: React.FC = () => {
         shadows
         camera={{ position: [0, 5, -8], fov: 60 }}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
-        dpr={[1, 2]} // Crisp rendering on MacBook M2 retina display
+        dpr={[1, 1.5]} // Silky smooth 60-120fps on MacBook M2 retina display without thermal throttling
       >
         {/* Dynamic Atmosphere according to Time of Day with smooth lerp */}
         <AtmosphereController />
 
         {/* 3D World Elements */}
         <FloatingClouds />
+        <NightSkyElements />
         <NightFireflies />
         <StreetLamps />
         <GroundIsland />

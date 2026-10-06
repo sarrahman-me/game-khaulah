@@ -3,6 +3,8 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGameStore, gameStore } from '../../state/useGameStore';
 
+const tempPetPlayerPos = new THREE.Vector3();
+
 export const PetCompanion: React.FC = () => {
   const activePet = useGameStore((s) => s.activePet);
   const groupRef = useRef<THREE.Group>(null);
@@ -29,9 +31,9 @@ export const PetCompanion: React.FC = () => {
     const py = playerPosArray[1];
     const pz = playerPosArray[2];
 
-    const currentP = new THREE.Vector3(px, py, pz);
-    const playerSpeed = currentP.distanceTo(lastPlayerPos.current) / Math.max(dt, 0.001);
-    lastPlayerPos.current.copy(currentP);
+    tempPetPlayerPos.set(px, py, pz);
+    const playerSpeed = tempPetPlayerPos.distanceTo(lastPlayerPos.current) / Math.max(dt, 0.001);
+    lastPlayerPos.current.copy(tempPetPlayerPos);
 
     const isPlayerRunning = playerSpeed > 1.5;
     if (isPlayerRunning) {

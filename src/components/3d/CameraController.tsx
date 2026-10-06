@@ -3,6 +3,9 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGameStore, gameStore } from '../../state/useGameStore';
 
+const tempTarget = new THREE.Vector3();
+const tempDesiredCamPos = new THREE.Vector3();
+
 export const CameraController: React.FC = () => {
   const { camera, gl } = useThree();
 
@@ -176,8 +179,8 @@ export const CameraController: React.FC = () => {
     camDistance.current = THREE.MathUtils.lerp(camDistance.current, targetDistance, dt * 8);
 
     // Target is slightly above player center
-    const target = new THREE.Vector3(playerPos[0], playerPos[1] + 1.25, playerPos[2]);
-    currentTargetPos.current.lerp(target, dt * 8);
+    tempTarget.set(playerPos[0], playerPos[1] + 1.25, playerPos[2]);
+    currentTargetPos.current.lerp(tempTarget, dt * 8);
 
     // Camera spherical position offset
     const cosY = Math.cos(camAngleY.current);
@@ -186,13 +189,13 @@ export const CameraController: React.FC = () => {
     const offsetZ = -Math.cos(camAngleX.current) * cosY * camDistance.current;
     const offsetY = sinY * camDistance.current + 0.8;
 
-    const desiredCamPos = new THREE.Vector3(
+    tempDesiredCamPos.set(
       currentTargetPos.current.x + offsetX,
       currentTargetPos.current.y + offsetY,
       currentTargetPos.current.z + offsetZ
     );
 
-    currentCamPos.current.lerp(desiredCamPos, dt * 7);
+    currentCamPos.current.lerp(tempDesiredCamPos, dt * 7);
 
     camera.position.copy(currentCamPos.current);
     camera.lookAt(currentTargetPos.current);
