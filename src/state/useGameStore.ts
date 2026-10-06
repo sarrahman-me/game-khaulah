@@ -184,7 +184,7 @@ function loadSavedPlayerPos(): [number, number, number] {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length === 3) {
           const [x, y, z] = parsed.map(Number);
-          if (!isNaN(x) && !isNaN(y) && !isNaN(z) && y > -6 && y < 100) {
+          if (Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z) && y > -6 && y < 100) {
             // Relocate safely to front porch if previous save was inside old house footprint
             if (Math.abs(x) < 8.5 && z < -6.4 && z > -17.6) {
               return [0, 0.4, -4.5];
@@ -200,6 +200,8 @@ function loadSavedPlayerPos(): [number, number, number] {
   return [0, 0.8, -4]; // Lokasi awal default: Halaman Rumah Khaulah
 }
 
+let emoteTimeout: ReturnType<typeof setTimeout> | undefined;
+let spawnSequence = 0;
 let lastPosSaveTime = 0;
 let pendingPlayerPos: [number, number, number] | null = null;
 
@@ -363,6 +365,7 @@ export const gameStore = {
   },
 
   setJoystick: (vector: { x: number; y: number }) => {
+    if (state.joystickVector.x === vector.x && state.joystickVector.y === vector.y) return;
     state = { ...state, joystickVector: vector };
     emitChange();
   },
@@ -416,6 +419,7 @@ export const gameStore = {
   },
 
   triggerEmote: (emote: EmoteType) => {
+    clearTimeout(emoteTimeout);
     state = { ...state, activeEmote: emote };
     emitChange();
     if (emote === 'dance' || emote === 'cheer') {
@@ -425,7 +429,7 @@ export const gameStore = {
         origin: { y: 0.8 }
       });
     }
-    setTimeout(() => {
+    emoteTimeout = setTimeout(() => {
       if (state.activeEmote === emote) {
         state = { ...state, activeEmote: 'none' };
         emitChange();
@@ -451,7 +455,7 @@ export const gameStore = {
   toggleSound: () => {
     const nextMuted = !state.isMuted;
     soundManager.setMuted(nextMuted);
-    state = { ...state, isMuted: nextMuted };
+    state = { ...state, isMuted: nextMuted, isBgmActive: nextMuted ? false : state.isBgmActive };
     emitChange();
   },
 
@@ -472,10 +476,19 @@ export const gameStore = {
   },
 
   triggerRespawn: () => {
+    if (state.isDoorTransitioning) return;
     soundManager.playFamilyChord();
     state = {
       ...state,
       respawnTrigger: state.respawnTrigger + 1,
+      teleportTrigger: state.teleportTrigger + 1,
+      teleportTarget: [0, 0.8, -4],
+      playerPos: [0, 0.8, -4],
+      isInsideHouse: false,
+      activeRide: 'none',
+      isRidingScooter: false,
+      activeDialog: null,
+      nearbyInteractable: null,
       bubbleMessage: 'Khaulah kembali ke Halaman Rumah! 🏡✨',
     };
     emitChange();
@@ -618,6 +631,7 @@ export const gameStore = {
   },
 
   enterHouse: (fromDoor: 'front' | 'back' = 'front') => {
+    if (state.isDoorTransitioning) return;
     soundManager.playDoorOpen();
     const spawnTarget: [number, number, number] = fromDoor === 'front' ? [160, 0.4, -2.5] : [160, 0.4, -21.5];
     const transitionMsg = fromDoor === 'front'
@@ -627,6 +641,9 @@ export const gameStore = {
     state = {
       ...state,
       isDoorTransitioning: true,
+      activeRide: 'none',
+      isRidingScooter: false,
+      activeDialog: null,
       doorTransitionText: '🏡 Masuk ke Rumah Khaulah...',
       nearbyInteractable: null,
     };
@@ -655,6 +672,7 @@ export const gameStore = {
   },
 
   exitHouse: (toDoor: 'front' | 'back' = 'front') => {
+    if (state.isDoorTransitioning) return;
     soundManager.playDoorOpen();
     const spawnTarget: [number, number, number] = toDoor === 'front' ? [0, 0.4, -4.8] : [0, 0.4, -19.0];
     const transitionMsg = toDoor === 'front'
@@ -664,6 +682,9 @@ export const gameStore = {
     state = {
       ...state,
       isDoorTransitioning: true,
+      activeRide: 'none',
+      isRidingScooter: false,
+      activeDialog: null,
       doorTransitionText: toDoor === 'front' ? '🌳 Keluar ke Halaman Depan...' : '🏊‍♀️ Menuju Kolam Renang...',
       nearbyInteractable: null,
     };
@@ -801,6 +822,7 @@ export const gameStore = {
   },
 
   teleportPlayerTo: (coords: [number, number, number], locationName?: string) => {
+    if (state.isDoorTransitioning || !coords.every(Number.isFinite)) return;
     soundManager.playMagicSpell();
     confetti({
       particleCount: 50,
@@ -812,6 +834,12 @@ export const gameStore = {
       ...state,
       teleportTrigger: state.teleportTrigger + 1,
       teleportTarget: coords,
+      playerPos: coords,
+      isInsideHouse: coords[0] > 100,
+      activeRide: 'none',
+      isRidingScooter: false,
+      activeDialog: null,
+      nearbyInteractable: null,
       bubbleMessage: locationName
         ? `Wuuush! Khaulah berpindah ke ${locationName}! ✨`
         : 'Wuuush! Khaulah berpindah tempat seketika! ✨',
@@ -838,25 +866,29 @@ export const gameStore = {
     soundManager.playMagicSpell();
     const playerPos = state.playerPos;
     const now = Date.now();
+    const batchId = `${now}_${spawnSequence++}`;
+    const requestedCount = options?.count;
+    const countFor = (fallback: number) => typeof requestedCount === 'number' && Number.isFinite(requestedCount)
+      ? Math.max(1, Math.min(30, Math.floor(requestedCount))) : fallback;
     const newItems: SpawnedMagicItem[] = [];
 
     if (type === 'cake') {
       // Spawn a birthday cake right in front of player
       newItems.push({
-        id: `cake_${now}`,
+        id: `cake_${batchId}`,
         type: 'cake',
         position: [playerPos[0], Math.max(0.4, playerPos[1]), playerPos[2] + 1.6],
         scale: 1.2,
         createdAt: now,
       });
     } else if (type === 'balloon') {
-      const count = options?.count || 14;
+      const count = countFor(14);
       const colors = ['#FF6B8B', '#FFD166', '#06D6A0', '#118AB2', '#9D4EDD', '#FF9F1C'];
       for (let i = 0; i < count; i++) {
         const angle = (i / count) * Math.PI * 2 + Math.random() * 0.5;
         const radius = 1.2 + Math.random() * 2.8;
         newItems.push({
-          id: `balloon_${now}_${i}`,
+          id: `balloon_${batchId}_${i}`,
           type: 'balloon',
           position: [
             playerPos[0] + Math.cos(angle) * radius,
@@ -869,12 +901,12 @@ export const gameStore = {
         });
       }
     } else if (type === 'bubble') {
-      const count = options?.count || 20;
+      const count = countFor(20);
       for (let i = 0; i < count; i++) {
         const angle = Math.random() * Math.PI * 2;
         const radius = 0.8 + Math.random() * 3.5;
         newItems.push({
-          id: `bubble_${now}_${i}`,
+          id: `bubble_${batchId}_${i}`,
           type: 'bubble',
           position: [
             playerPos[0] + Math.cos(angle) * radius,
@@ -886,12 +918,12 @@ export const gameStore = {
         });
       }
     } else if (type === 'star') {
-      const count = options?.count || 12;
+      const count = countFor(12);
       for (let i = 0; i < count; i++) {
         const angle = (i / count) * Math.PI * 2;
         const radius = 1.5 + Math.random() * 2.0;
         newItems.push({
-          id: `star_${now}_${i}`,
+          id: `star_${batchId}_${i}`,
           type: 'star',
           position: [
             playerPos[0] + Math.cos(angle) * radius,
@@ -906,12 +938,13 @@ export const gameStore = {
 
     state = {
       ...state,
-      spawnedItems: [...state.spawnedItems.slice(-30), ...newItems],
+      spawnedItems: [...state.spawnedItems, ...newItems].slice(-50),
     };
     emitChange();
   },
 
   removeSpawnedItem: (id: string) => {
+    if (!state.spawnedItems.some((item) => item.id === id)) return;
     soundManager.playBalloonPop();
     state = {
       ...state,
@@ -1057,7 +1090,7 @@ export const gameStore = {
   },
 
   completeSchoolQuest: () => {
-    if (state.schoolQuest.completed) return;
+    if (state.schoolQuest.completed || !state.schoolQuest.backpack || !state.schoolQuest.waterBottle || !state.schoolQuest.drawingBook) return;
     soundManager.playQuestComplete();
     confetti({
       particleCount: 100,

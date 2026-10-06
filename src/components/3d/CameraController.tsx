@@ -1,3 +1,5 @@
+import { isGameInputBlocked, isTypingTarget } from '../../state/gameInput';
+import { constrainCameraPosition } from '../../state/colliders';
 import React, { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -10,18 +12,19 @@ export const CameraController: React.FC = () => {
   const { camera, gl } = useThree();
 
   const camDistance = useRef(7.5);
-  const camAngleX = useRef(0);
-  const camAngleY = useRef(0.38); // Comfortable downward tilt
+  const camAngleX = useRef(gameStore.getState().isInsideHouse ? 0 : Math.PI);
+  const camAngleY = useRef(gameStore.getState().isInsideHouse ? 0.38 : 0.08); // Start below the porch canopy.
 
   const isDragging = useRef(false);
   const lastPointer = useRef({ x: 0, y: 0 });
   const lastManualInputTime = useRef<number>(0);
   const arrowKeys = useRef<{ [key: string]: boolean }>({});
+  const lastRespawnTrigger = useRef(gameStore.getState().respawnTrigger);
   const lastTeleportTrigger = useRef(gameStore.getState().teleportTrigger);
 
   const initialPlayerPos = gameStore.getState().playerPos;
   const currentCamPos = useRef(
-    new THREE.Vector3(initialPlayerPos[0], initialPlayerPos[1] + 4.5, initialPlayerPos[2] - 7.5)
+    new THREE.Vector3(initialPlayerPos[0], initialPlayerPos[1] + 4.5, initialPlayerPos[2] - Math.cos(camAngleX.current) * 7.5)
   );
   const currentTargetPos = useRef(
     new THREE.Vector3(initialPlayerPos[0], initialPlayerPos[1] + 1.25, initialPlayerPos[2])
@@ -131,6 +134,7 @@ export const CameraController: React.FC = () => {
     // Arrow Left / Right for horizontal orbit (like 2-finger trackpad swipe)
     // I / O for zoom, < / > for rotate
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target) || isGameInputBlocked(gameStore.getState())) return;
       if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
         e.preventDefault();
         arrowKeys.current[e.code] = true;
@@ -179,6 +183,7 @@ export const CameraController: React.FC = () => {
 
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.1);
+    if (isGameInputBlocked(gameStore.getState())) arrowKeys.current = {};
     const motion = gameStore.getState();
     const playerPos = motion.playerPos;
     const isMoving = motion.isPlayerMoving;
@@ -210,6 +215,11 @@ export const CameraController: React.FC = () => {
 
     // Check external teleport trigger (Door transitions / Presets / Respawn)
     // Instantly snap camera without dragging through the void across 160 units
+    if (motion.respawnTrigger !== lastRespawnTrigger.current) {
+      lastRespawnTrigger.current = motion.respawnTrigger;
+      camAngleX.current = Math.PI;
+      camAngleY.current = 0.08;
+    }
     const currentTeleport = motion.teleportTrigger;
     if (currentTeleport !== lastTeleportTrigger.current) {
       lastTeleportTrigger.current = currentTeleport;
@@ -269,6 +279,7 @@ export const CameraController: React.FC = () => {
       tempDesiredCamPos.z = THREE.MathUtils.clamp(tempDesiredCamPos.z, INDOOR_BOUNDS.minZ, INDOOR_BOUNDS.maxZ);
     }
 
+    constrainCameraPosition(currentTargetPos.current, tempDesiredCamPos);
     currentCamPos.current.lerp(tempDesiredCamPos, dt * 8);
 
     if (motion.isInsideHouse) {
@@ -277,6 +288,7 @@ export const CameraController: React.FC = () => {
       currentCamPos.current.z = THREE.MathUtils.clamp(currentCamPos.current.z, INDOOR_BOUNDS.minZ, INDOOR_BOUNDS.maxZ);
     }
 
+    constrainCameraPosition(currentTargetPos.current, currentCamPos.current);
     camera.position.copy(currentCamPos.current);
     camera.lookAt(currentTargetPos.current);
   });

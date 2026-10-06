@@ -35,21 +35,14 @@ export interface WishlistItem {
 
 const STORAGE_WISHLIST_KEY = 'khaulah_magic_wishlist';
 
-// Get API Key and endpoints safely
-function getApiKey(): string {
-  if (typeof __AI_API_KEY__ !== 'undefined' && __AI_API_KEY__) {
-    return __AI_API_KEY__;
-  }
-  return 'sk-4cab929cfbc586c0-ftrki9-b93ed40e';
-}
-
 async function callChatCompletion(messages: Array<{ role: string; content: string }>, jsonFormat = true): Promise<string> {
-  const apiKey = getApiKey();
-  const endpoints = ['/ai-proxy/chat/completions', 'http://localhost:20128/v1/chat/completions'];
+  const endpoints = ['/ai-proxy/chat/completions'];
 
   let lastError: any = null;
 
   for (const url of endpoints) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
     try {
       const payload: any = {
         model: 'ag/gemini-3.7-flash-low',
@@ -63,9 +56,9 @@ async function callChatCompletion(messages: Array<{ role: string; content: strin
 
       const res = await fetch(url, {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify(payload),
       });
@@ -76,12 +69,14 @@ async function callChatCompletion(messages: Array<{ role: string; content: strin
 
       const data = await res.json();
       const content = data.choices?.[0]?.message?.content;
-      if (content) {
+      if (typeof content === 'string' && content.trim()) {
         return content;
       }
     } catch (err) {
       lastError = err;
-      // Continue to next endpoint attempt
+      // Use offline interpretation if the proxy is unavailable.
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
@@ -92,6 +87,17 @@ async function callChatCompletion(messages: Array<{ role: string; content: strin
 function fallbackMagicInterpreter(input: string): MagicActionResult {
   const q = input.toLowerCase().trim();
 
+  if (q.includes('karnaval') || q.includes('pasar malam')) {
+    return { speech: 'Ayo bermain di Karnaval Pasar Malam Ceria! 🎡✨', action: 'teleport', actionParam: 'karnaval' };
+  }
+  if (q.includes('kelinci') && q.includes('telinga')) {
+    return { speech: 'Bando telinga kelinci terpasang! 🐰🎀', action: 'set_accessory', actionParam: 'bunny_ears' };
+  }
+  if (q.includes('balon')) return { speech: 'Balon warna-warni muncul! 🎈✨', action: 'spawn_balloons', actionParam: { count: 16 } };
+  if (q.includes('gelembung')) return { speech: 'Gelembung ajaib bermunculan! 🫧✨', action: 'spawn_bubbles', actionParam: { count: 24 } };
+  if (q.includes('kue') || q.includes('ulang tahun')) return { speech: 'Kue ulang tahun untuk Khaulah! 🎂✨', action: 'spawn_cake' };
+  if (q.includes('hujan bintang')) return { speech: 'Bintang emas bermunculan! ⭐✨', action: 'spawn_stars', actionParam: { count: 12 } };
+  if (q.includes('tebak')) return { speech: 'Aku punya empat kaki dan suka mengeong. Siapakah aku? Kucing! 🐱', action: 'riddle' };
   if (q.includes('malam') || q.includes('bintang') || q.includes('gelap') || q.includes('tidur')) {
     return {
       speech: 'Simsalabim! Langit bertabur ribuan bintang dan rembulan bersinar untuk Khaulah! 🌙✨',
@@ -290,6 +296,24 @@ function fallbackMagicInterpreter(input: string): MagicActionResult {
   };
 }
 
+function validateMagicResult(parsed: any): void {
+  if (!parsed || typeof parsed.speech !== 'string' || !parsed.speech.trim()) throw new Error('Balasan AI tidak valid.');
+  const enums: Record<string, readonly string[]> = {
+    set_time: ['subuh', 'siang', 'sore', 'malam'],
+    teleport: ['rumah', 'tk', 'pantai', 'karnaval', 'kebun', 'waterpark', 'obby'],
+    set_accessory: ['none', 'bunny_ears', 'fairy_wings', 'princess_crown', 'cat_ears', 'star_halo'],
+    set_pet: ['none', 'puppy', 'kitten', 'fairy'],
+    play_sound: ['fire_siren', 'train', 'bell'],
+  };
+  const actions = [...Object.keys(enums), 'speed_buff', 'super_jump', 'spawn_balloons', 'spawn_cake', 'spawn_bubbles', 'spawn_stars', 'celebrate', 'riddle', 'khalid_follow', 'wishlist', 'chat_only'];
+  if (!actions.includes(parsed.action) || (enums[parsed.action] && !enums[parsed.action].includes(parsed.actionParam))) throw new Error('Aksi AI tidak valid.');
+  if (parsed.action === 'speed_buff' || parsed.action === 'super_jump') {
+    parsed.actionParam = typeof parsed.actionParam === 'number' && Number.isFinite(parsed.actionParam)
+      ? Math.max(1, Math.min(120, parsed.actionParam)) : 25;
+  }
+  if (parsed.action === 'khalid_follow' && typeof parsed.actionParam !== 'boolean') throw new Error('Parameter pengikut tidak valid.');
+}
+
 export async function processMagicPrompt(prompt: string): Promise<MagicActionResult> {
   const cleanPrompt = prompt.trim();
   if (!cleanPrompt) {
@@ -342,6 +366,7 @@ PENTING: Selalu jawab dalam format JSON valid persis seperti ini:
     // Clean JSON markdown blocks if any
     const cleanedJson = raw.replace(/```json/g, '').replace(/```/g, '').trim();
     const parsed = JSON.parse(cleanedJson);
+    validateMagicResult(parsed);
 
     const result: MagicActionResult = {
       speech: parsed.speech || 'Mantra ajaib Khaulah sudah terwujud! ✨',
@@ -433,13 +458,13 @@ export async function chatWithCharacter(
 let currentUtterance: SpeechSynthesisUtterance | null = null;
 
 export function speakText(text: string, onEnd?: () => void) {
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) { onEnd?.(); return; }
 
   try {
     window.speechSynthesis.cancel(); // Stop previous speech
 
     const clean = text.replace(/[*_~`]/g, '').trim();
-    if (!clean) return;
+    if (!clean) { onEnd?.(); return; }
 
     const utterance = new SpeechSynthesisUtterance(clean);
     utterance.lang = 'id-ID';

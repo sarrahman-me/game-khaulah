@@ -12,12 +12,16 @@ class SoundEngine {
   private currentTimeOfDay: TimeCyclePeriod = 'siang';
 
   private initCtx() {
-    if (!this.ctx) {
-      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      this.ctx = new AudioContextClass();
-    }
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
+    try {
+      if (!this.ctx) {
+        if (typeof window === 'undefined') return;
+        const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        if (!AudioContextClass) return;
+        this.ctx = new AudioContextClass();
+      }
+      if (this.ctx.state === 'suspended') void this.ctx.resume().catch(() => {});
+    } catch {
+      this.ctx = null;
     }
   }
 
@@ -855,6 +859,7 @@ class SoundEngine {
     }
     if (this.bgmPlaying || this.isMuted) return;
     this.initCtx();
+    if (!this.ctx) return;
     this.bgmPlaying = true;
     this.startBgmTrack(this.currentTimeOfDay);
   }
@@ -1227,7 +1232,7 @@ class SoundEngine {
       return false;
     } else {
       this.startBgm(time);
-      return true;
+      return this.bgmPlaying;
     }
   }
 

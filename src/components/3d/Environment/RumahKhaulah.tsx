@@ -37,6 +37,9 @@ export const RumahKhaulahExterior: React.FC = () => {
     colliders.push(cPorch, cVeranda);
 
     const solids: SolidCollider[] = [
+      // Match the porch canopy so the camera cannot pass through its underside.
+      addSolidBox([-8.7, 3.475, -6.8], [8.7, 3.825, -2.2], 'porch_canopy'),
+
       // Solid Front Wall (Completely closes the exterior house)
       addSolidBox([-8.6, 0, -6.8], [8.6, 4.5, -6.2], 'ext_wall_front'),
 
@@ -82,7 +85,7 @@ export const RumahKhaulahExterior: React.FC = () => {
     const distBack = Math.hypot(playerPos[0] - 0, playerPos[2] - (-18.6));
 
     if (distFront < 2.6) {
-      if (lastNearDoorRef.current !== 'front') {
+      if (lastNearDoorRef.current !== 'front' || gameStore.getState().nearbyInteractable === null) {
         lastNearDoorRef.current = 'front';
         gameStore.setNearbyInteractable({
           id: 'house_front_door',
@@ -91,7 +94,7 @@ export const RumahKhaulahExterior: React.FC = () => {
         });
       }
     } else if (distBack < 2.6) {
-      if (lastNearDoorRef.current !== 'back') {
+      if (lastNearDoorRef.current !== 'back' || gameStore.getState().nearbyInteractable === null) {
         lastNearDoorRef.current = 'back';
         gameStore.setNearbyInteractable({
           id: 'house_back_door',

@@ -159,3 +159,24 @@ export function resolveHorizontalCollisions(
 
   return anyResolved;
 }
+
+const cameraRay = new THREE.Ray();
+const cameraDirection = new THREE.Vector3();
+const cameraHit = new THREE.Vector3();
+
+/** Keep the camera on the player's side of solid walls and furniture. */
+export function constrainCameraPosition(target: THREE.Vector3, position: THREE.Vector3): void {
+  cameraDirection.subVectors(position, target);
+  const distance = cameraDirection.length();
+  if (distance < 0.001) return;
+  cameraDirection.divideScalar(distance);
+  cameraRay.set(target, cameraDirection);
+  let allowedDistance = distance;
+  for (const collider of solidColliders) {
+    if (collider.type !== 'box' || collider.box.containsPoint(target)) continue;
+    if (cameraRay.intersectBox(collider.box, cameraHit)) {
+      allowedDistance = Math.min(allowedDistance, Math.max(0.1, target.distanceTo(cameraHit) - 0.25));
+    }
+  }
+  if (allowedDistance < distance) position.copy(target).addScaledVector(cameraDirection, allowedDistance);
+}

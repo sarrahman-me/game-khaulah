@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useGameStore, gameStore } from '../../state/useGameStore';
+import { isGameInputBlocked, isTypingTarget } from '../../state/gameInput';
 import { ArrowUp, Sparkles, Smile, RotateCcw, Target, ZoomIn, ZoomOut } from 'lucide-react';
 
 export const VirtualJoystick: React.FC = () => {
@@ -9,6 +10,7 @@ export const VirtualJoystick: React.FC = () => {
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [activeKeys, setActiveKeys] = useState<{ [key: string]: boolean }>({});
 
+  const inputBlocked = useGameStore(isGameInputBlocked);
   const isShiftLock = useGameStore((s) => s.isShiftLock);
 
   useEffect(() => {
@@ -18,6 +20,7 @@ export const VirtualJoystick: React.FC = () => {
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.repeat || isTypingTarget(e.target) || isGameInputBlocked(gameStore.getState())) return;
       setActiveKeys((prev) => ({ ...prev, [e.code]: true }));
     };
 
@@ -25,16 +28,29 @@ export const VirtualJoystick: React.FC = () => {
       setActiveKeys((prev) => ({ ...prev, [e.code]: false }));
     };
 
+    const resetInput = () => {
+      setActiveKeys({});
+      setTouchId(null);
+      setKnobPos({ x: 0, y: 0 });
+      gameStore.setJoystick({ x: 0, y: 0 });
+      gameStore.setJumpPressed(false);
+    };
+    const unsubscribe = gameStore.subscribe(() => {
+      if (isGameInputBlocked(gameStore.getState())) resetInput();
+    });
+    window.addEventListener('blur', resetInput);
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     return () => {
+      unsubscribe();
+      window.removeEventListener('blur', resetInput);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (touchId !== null) return;
+    if (touchId !== null || isGameInputBlocked(gameStore.getState())) return;
     const touch = e.changedTouches[0];
     setTouchId(touch.identifier);
     updateKnob(touch.clientX, touch.clientY);
@@ -106,6 +122,8 @@ export const VirtualJoystick: React.FC = () => {
   const isLeft = activeKeys['KeyA'];
   const isRight = activeKeys['KeyD'];
   const isJump = activeKeys['Space'];
+
+  if (inputBlocked) return null;
 
   return (
     <div className="absolute inset-0 pointer-events-none select-none z-20">
@@ -188,7 +206,7 @@ export const VirtualJoystick: React.FC = () => {
       </div>
 
       {/* --- BOTTOM CENTER: MACBOOK ROBLOX CONTROL DOCK --- */}
-      <div className="hidden lg:flex absolute bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/75 backdrop-blur-md px-5 py-2.5 rounded-full text-white text-xs gap-3 pointer-events-none items-center border border-white/20 shadow-2xl">
+      <div className="hidden 2xl:flex whitespace-nowrap absolute bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/75 backdrop-blur-md px-5 py-2.5 rounded-full text-white text-xs gap-3 pointer-events-none items-center border border-white/20 shadow-2xl">
         <div className="flex items-center gap-1.5">
           <kbd className="px-2 py-0.5 bg-white/20 rounded font-mono text-[11px] font-bold">W A S D</kbd>
           <span className="text-white/80">Jalan</span>
@@ -301,7 +319,9 @@ export const VirtualJoystick: React.FC = () => {
 
         {/* Big Jump Button (Spacebar) */}
         <button
-          onPointerDown={() => gameStore.setJumpPressed(true)}
+          onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); gameStore.setJumpPressed(true); }}
+          onPointerCancel={() => gameStore.setJumpPressed(false)}
+          onLostPointerCapture={() => gameStore.setJumpPressed(false)}
           onPointerUp={() => gameStore.setJumpPressed(false)}
           onPointerLeave={() => gameStore.setJumpPressed(false)}
           className={`w-24 h-24 sm:w-28 sm:h-28 rounded-3xl border-4 border-white shadow-2xl flex flex-col items-center justify-center text-white active:scale-95 transition-all select-none touch-none ${

@@ -1,5 +1,6 @@
 import React from 'react';
 import { GameScene } from './components/3d/GameScene';
+import { VirtualJoystick } from './components/UI/VirtualJoystick';
 import { HUD } from './components/UI/HUD';
 import { ClosetModal } from './components/UI/ClosetModal';
 import { WelcomeModal } from './components/UI/WelcomeModal';
@@ -11,6 +12,7 @@ export const App: React.FC = () => {
       <GameScene />
 
       {/* 2D User Interface Layers */}
+      <VirtualJoystick />
       <HUD />
       <ClosetModal />
       <WelcomeModal />

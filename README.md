@@ -127,3 +127,16 @@ Buka browser di `http://localhost:3000` untuk mulai bermain!
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **Audio**: Web Audio API sintetis (zero-lag, marimba sound generator)
 - **Bundler**: [Vite](https://vitejs.dev/)
+
+
+### Validasi dan koneksi AI lokal
+
+Jalankan `npm test` untuk memeriksa regresi perpindahan lokasi, tabrakan kamera,
+prasyarat misi sekolah, batas efek ajaib, dan interpretasi mantra tanpa koneksi AI.
+Jalankan `npm run build` untuk memeriksa TypeScript dan membuat build produksi.
+
+Server pengembangan membaca `AI_API_KEY` dan `AI_API_URL` dari `.env` dan meneruskan
+permintaan `/ai-proxy` ke server AI. Kunci akses tidak dimasukkan ke JavaScript browser.
+Hosting produksi perlu menyediakan proxy server untuk `/ai-proxy/chat/completions`;
+preview statis tidak menyediakan proxy tersebut. Saat proxy gagal atau melewati batas
+8 detik, game memakai balasan/mantra cadangan.

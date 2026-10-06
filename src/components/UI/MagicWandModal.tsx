@@ -55,9 +55,12 @@ export const MagicWandModal: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [responseResult, setResponseResult] = useState<MagicActionResult | null>(null);
   const [speechRecognizedText, setSpeechRecognizedText] = useState('');
+  const requestVersion = useRef(0);
   const recognizerRef = useRef<any>(null);
 
   useEffect(() => {
+    requestVersion.current++;
+    setIsLoading(false);
     if (!isOpen) {
       stopSpeaking();
       if (recognizerRef.current) {
@@ -121,20 +124,24 @@ export const MagicWandModal: React.FC = () => {
   const handleCastSpell = async (promptToUse: string) => {
     if (!promptToUse.trim() || isLoading) return;
 
+    const version = ++requestVersion.current;
     setIsLoading(true);
     setSpeechRecognizedText('');
     soundManager.playMagicSpell();
 
     try {
       const result = await processMagicPrompt(promptToUse);
+      if (version !== requestVersion.current || !gameStore.getState().isMagicModalOpen) return;
       setResponseResult(result);
       handleExecuteAction(result);
       speakText(result.speech);
     } catch (e) {
       console.warn('Error casting spell:', e);
     } finally {
-      setIsLoading(false);
-      setInputText('');
+      if (version === requestVersion.current) {
+        setIsLoading(false);
+        setInputText('');
+      }
     }
   };
 

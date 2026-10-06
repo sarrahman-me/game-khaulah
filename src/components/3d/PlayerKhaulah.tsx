@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { gameStore, useGameStore } from '../../state/useGameStore';
+import { isGameInputBlocked, isTypingTarget } from '../../state/gameInput';
 import { soundManager } from '../../sound/audioManager';
 import { colliders, resolveHorizontalCollisions } from '../../state/colliders';
 import { SwanBoatModel } from './Environment/SunnyBeachLake';
@@ -192,13 +193,9 @@ export const PlayerKhaulah: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger game keybinds if user is typing in an input
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      ) {
-        return;
-      }
+      if (isTypingTarget(e.target) || isGameInputBlocked(gameStore.getState())) return;
+      if (['Space', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault();
+      if (e.repeat) return;
 
       keys.current[e.code] = true;
       if (e.code === 'Space') {
@@ -464,15 +461,27 @@ export const PlayerKhaulah: React.FC = () => {
       }
     };
 
+    const resetInput = () => {
+      keys.current = {};
+      gameStore.setJumpPressed(false);
+      gameStore.setJoystick({ x: 0, y: 0 });
+    };
+    const unsubscribe = gameStore.subscribe(() => {
+      if (isGameInputBlocked(gameStore.getState())) resetInput();
+    });
+    window.addEventListener('blur', resetInput);
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     return () => {
+      unsubscribe();
+      window.removeEventListener('blur', resetInput);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
 
   const footstepTimer = useRef(0);
+  const movementVectors = useRef({ forward: new THREE.Vector3(), right: new THREE.Vector3(), direction: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), unitScale: new THREE.Vector3(1, 1, 1) });
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
@@ -955,22 +964,23 @@ export const PlayerKhaulah: React.FC = () => {
 
     // 2. Camera-relative direction calculation
     const camera = state.camera;
-    const camForward = new THREE.Vector3();
+    const camForward = movementVectors.current.forward;
     camera.getWorldDirection(camForward);
     camForward.y = 0;
     camForward.normalize();
 
     // Camera-relative Right vector (screen right)
-    const camRight = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), camForward).negate().normalize();
+    const camRight = movementVectors.current.right.crossVectors(movementVectors.current.up, camForward).negate().normalize();
 
-    const moveDirection = new THREE.Vector3();
+    const moveDirection = movementVectors.current.direction.set(0, 0, 0);
     if (isMoving) {
       const normX = moveX / (inputLength > 1 ? inputLength : 1);
       const normZ = moveZ / (inputLength > 1 ? inputLength : 1);
 
       moveDirection.addScaledVector(camForward, normZ);
       moveDirection.addScaledVector(camRight, normX);
-      moveDirection.normalize();
+      // Preserve analog joystick magnitude; keyboard diagonals are already clamped.
+      moveDirection.clampLength(0, 1);
 
       if (!isShiftLock) {
         const targetAngle = Math.atan2(moveDirection.x, moveDirection.z);
@@ -1227,7 +1237,7 @@ export const PlayerKhaulah: React.FC = () => {
       modelRef.current.rotation.z = currentBankAngle.current;
 
       // Squash & Stretch Spring Interpolation dengan batas aman
-      targetSquash.current.lerp(new THREE.Vector3(1, 1, 1), Math.min(dt * 7, 1.0));
+      targetSquash.current.lerp(movementVectors.current.unitScale, Math.min(dt * 7, 1.0));
       squashScale.current.lerp(targetSquash.current, Math.min(dt * 14, 1.0));
       squashScale.current.x = THREE.MathUtils.clamp(squashScale.current.x, 0.7, 1.35);
       squashScale.current.y = THREE.MathUtils.clamp(squashScale.current.y, 0.7, 1.35);

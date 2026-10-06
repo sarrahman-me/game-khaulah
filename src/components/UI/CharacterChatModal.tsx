@@ -29,6 +29,7 @@ export const CharacterChatModal: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const requestVersion = useRef(0);
   const recognizerRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -76,6 +77,13 @@ export const CharacterChatModal: React.FC = () => {
   };
 
   useEffect(() => {
+    requestVersion.current++;
+    setIsLoading(false);
+    setInputText('');
+    if (recognizerRef.current) {
+      try { recognizerRef.current.abort(); } catch {}
+    }
+    setIsListening(false);
     if (!chatState) {
       stopSpeaking();
       setMessages([]);
@@ -106,6 +114,7 @@ export const CharacterChatModal: React.FC = () => {
     const clean = textToSend.trim();
     if (!clean || isLoading) return;
 
+    const version = ++requestVersion.current;
     const userMsg: ChatMessage = {
       id: 'k_' + Date.now(),
       sender: 'khaulah',
@@ -128,6 +137,7 @@ export const CharacterChatModal: React.FC = () => {
         history
       );
 
+      if (version !== requestVersion.current) return;
       const charMsg: ChatMessage = {
         id: 'c_' + Date.now(),
         sender: 'character',
@@ -139,7 +149,7 @@ export const CharacterChatModal: React.FC = () => {
     } catch (e) {
       console.warn('Chat error:', e);
     } finally {
-      setIsLoading(false);
+      if (version === requestVersion.current) setIsLoading(false);
     }
   };
 
