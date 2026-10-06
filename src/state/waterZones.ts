@@ -9,10 +9,10 @@ export interface WaterStatus {
  * and returns the water surface height and zone name.
  */
 export function getWaterStatus(x: number, y: number, z: number): WaterStatus {
-  // 1. Backyard Waterpark Swimming Pool
-  if (x >= -2.0 && x <= 10.0 && z >= -28.0 && z <= -20.0) {
+  // 1. Backyard Waterpark Swimming Pool (Expanded & Centered behind house)
+  if (x >= -8.0 && x <= 8.0 && z >= -37.0 && z <= -25.0) {
     // Marble deck coping borders around pool are at Y = 0.36
-    if (y < 0.34) {
+    if (y < 0.36) {
       return { inWater: true, surfaceY: 0.28, zone: 'pool' };
     }
   }

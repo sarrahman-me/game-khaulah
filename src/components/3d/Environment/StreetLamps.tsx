@@ -176,12 +176,6 @@ const STREET_LAMP_CONFIGS: StreetLampProps[] = [
   // --- PENGHUBUNG UTARA-SELATAN JEMBATAN TIMUR (X: 47.5) ---
   { pos: [47.5, 0, 6.0], rotationY: -Math.PI / 2, hasPointLight: false },
   { pos: [47.5, 0, 12.0], rotationY: -Math.PI / 2, hasPointLight: false },
-
-  // --- AREA KOLAM RENANG & HALAMAN BELAKANG (Z: -14 s/d -28) ---
-  { pos: [4.0, 0, -14], rotationY: -Math.PI / 2, hasPointLight: false },
-  { pos: [-4.0, 0, -14], rotationY: Math.PI / 2, hasPointLight: false },
-  { pos: [4.0, 0, -26], rotationY: -Math.PI / 2, hasPointLight: false },
-  { pos: [-4.0, 0, -26], rotationY: Math.PI / 2, hasPointLight: false },
 ];
 
 export const StreetLamps: React.FC = () => {

@@ -156,8 +156,7 @@ export const HUD: React.FC = () => {
     } else if (id === 'flamingo_float') {
       gameStore.setActiveRide('flamingo');
     } else if (id === 'treehouse') {
-      const cur = gameStore.getState().playerPos;
-      gameStore.setPlayerMotion([-14, 3.8, -24], 0, false);
+      gameStore.setPlayerMotion([-20, 3.8, -28], 0, false);
       soundManager.playJump();
       gameStore.setMessage('Khaulah memanjat ke Rumah Pohon Rahasia! Pemandangannya indah sekali! 🏡🌳✨');
     } else if (id === 'marshmallow') {
@@ -396,6 +395,10 @@ export const HUD: React.FC = () => {
                   ? '🚂 Turun Kereta [E]'
                   : activeRide === 'boat'
                   ? '🦢 Turun Perahu [E]'
+                  : activeRide === 'pool_slide'
+                  ? '🛝 Turun dari Seluncuran [E]'
+                  : activeRide === 'flamingo'
+                  ? '🦩 Turun Pelampung [SPASI / E]'
                   : '🚒 Turun Damkar [E]'}
               </span>
             </button>

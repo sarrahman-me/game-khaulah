@@ -7,6 +7,7 @@ import { colliders } from '../../state/colliders';
 import { SwanBoatModel } from './Environment/SunnyBeachLake';
 import { MiniFireTruckModel } from './Environment/TownStreet';
 import { getTrainTrackPose } from './Environment/VillageTrain';
+import { getWaterSlidePose } from './Environment/waterSlideTrajectory';
 import { getWaterStatus } from '../../state/waterZones';
 
 interface WaterRippleEffectsProps {
@@ -170,6 +171,7 @@ export const PlayerKhaulah: React.FC = () => {
   const gravity = 25;
   const facingAngle = useRef(0);
   const slideTimer = useRef(0);
+  const poolSlideTimer = useRef(0);
 
   // Water interaction state refs
   const wasInWater = useRef(false);
@@ -221,7 +223,7 @@ export const PlayerKhaulah: React.FC = () => {
           } else if (ride === 'flamingo') {
             pos.current.set(4, 0.4, -20);
           } else if (ride === 'pool_slide') {
-            pos.current.set(5, 0.4, -24);
+            pos.current.set(2.2, 0.4, -28.6);
           } else if (ride === 'swing') {
             pos.current.set(-7.9, 0.4, 43.8);
           }
@@ -356,11 +358,12 @@ export const PlayerKhaulah: React.FC = () => {
           } else if (near.id === 'village_train') {
             gameStore.setActiveRide('train');
           } else if (near.id === 'pool_slide') {
+            poolSlideTimer.current = 0;
             gameStore.setActiveRide('pool_slide');
           } else if (near.id === 'flamingo_float') {
             gameStore.setActiveRide('flamingo');
           } else if (near.id === 'treehouse') {
-            pos.current.set(-14, 3.8, -24);
+            pos.current.set(-20, 3.8, -28);
             soundManager.playJump();
             gameStore.setMessage('Khaulah memanjat ke Rumah Pohon Rahasia! Pemandangannya indah sekali! 🏡🌳✨');
           } else if (near.id === 'marshmallow') {
@@ -612,60 +615,73 @@ export const PlayerKhaulah: React.FC = () => {
       return;
     }
 
-    // Backyard Waterpark: Water Slide ride
+    // Backyard Waterpark: Grand Waterpark Castle Slide
     if (activeRide === 'pool_slide') {
-      slideTimer.current += dt * 0.85;
-      if (slideTimer.current < 0.28) {
-        // Climbing ladder
-        const t = slideTimer.current / 0.28;
-        pos.current.set(10, 0.4 + t * 3.0, -27.8 - t * 1.2);
-        facingAngle.current = Math.PI;
+      poolSlideTimer.current += dt * 0.72;
+      if (poolSlideTimer.current < 0.28) {
+        // Phase 1: Climbing stairs (Stairs from Z: -40.5 to Z: -37.8, Y: 0.4 to 4.05)
+        const t = poolSlideTimer.current / 0.28;
+        pos.current.set(8.5, 0.4 + t * 3.65, -40.5 + t * 2.7);
+        facingAngle.current = 0; // facing North towards deck
 
-        const climb = Math.sin(slideTimer.current * 30);
+        const climb = Math.sin(poolSlideTimer.current * 30);
         if (leftArmRef.current) leftArmRef.current.rotation.x = climb * 0.7;
         if (rightArmRef.current) rightArmRef.current.rotation.x = -climb * 0.7;
         if (leftLegRef.current) leftLegRef.current.rotation.x = -climb * 0.6;
         if (rightLegRef.current) rightLegRef.current.rotation.x = climb * 0.6;
-      } else if (slideTimer.current < 0.42) {
-        // Sitting at top of water slide
-        pos.current.set(10, 3.4, -29);
-        facingAngle.current = 0;
+        if (groupRef.current) groupRef.current.rotation.z = 0;
+      } else if (poolSlideTimer.current < 0.40) {
+        // Phase 2: Sitting ready at slide entrance launch tub (at [8.0, 4.0, -36.0])
+        const walkT = (poolSlideTimer.current - 0.28) / 0.12;
+        pos.current.set(8.5 - walkT * 0.5, 4.05 - walkT * 0.05, -37.8 + walkT * 1.8);
+        const startPose = getWaterSlidePose(0);
+        facingAngle.current = startPose.heading;
+
         if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.5; leftArmRef.current.rotation.z = -0.3; }
         if (rightArmRef.current) { rightArmRef.current.rotation.x = -0.5; rightArmRef.current.rotation.z = 0.3; }
         if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.45;
         if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.45;
         if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.35;
-      } else if (slideTimer.current < 0.88) {
-        // Sliding down water slide wuuush!
-        const t = (slideTimer.current - 0.42) / 0.46;
-        pos.current.set(10 - t * 4.0, 3.4 - t * 3.2, -29 + t * 5.2);
-        facingAngle.current = 0.3;
+        if (groupRef.current) groupRef.current.rotation.z = 0;
+      } else if (poolSlideTimer.current < 0.88) {
+        // Phase 3: Sliding down the exact 3D parametric flume curve wuuush!
+        const progress = (poolSlideTimer.current - 0.40) / 0.48;
+        const eased = Math.pow(progress, 1.25);
+        const pose = getWaterSlidePose(eased);
 
+        pos.current.set(pose.pos.x, pose.pos.y + 0.14, pose.pos.z);
+        facingAngle.current = pose.heading;
+        if (groupRef.current) groupRef.current.rotation.z = pose.bankAngle;
+
+        // Joyful arms raised high in the air (\o/)
         if (leftArmRef.current) { leftArmRef.current.rotation.x = -Math.PI * 0.85; leftArmRef.current.rotation.z = -0.35; }
         if (rightArmRef.current) { rightArmRef.current.rotation.x = -Math.PI * 0.85; rightArmRef.current.rotation.z = 0.35; }
         if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.45;
         if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.45;
         if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.35;
-        if (hijabDrapeRef.current) hijabDrapeRef.current.rotation.x = 0.35;
+        if (hijabDrapeRef.current) hijabDrapeRef.current.rotation.x = 0.4;
       } else {
-        // Splashing down into the pool byuuur!
-        pos.current.set(6, 0.2, -24);
-        slideTimer.current = 0;
+        // Phase 4: Splashing down into the pool water byuuur!
+        pos.current.set(2.2, 0.28, -28.6);
+        poolSlideTimer.current = 0;
+        if (groupRef.current) groupRef.current.rotation.z = 0;
         soundManager.playWaterSplash();
         gameStore.setActiveRide('none');
-        gameStore.setMessage('BYUUUUUR! Hore, Khaulah meluncur seru ke kolam renang! 🛝🌊✨');
+        gameStore.setMessage('BYUUUUUR! 🌊 Hore, Khaulah meluncur super seru di Seluncuran Istana Air! 🛝✨');
       }
       groupRef.current.position.copy(pos.current);
       groupRef.current.rotation.y = facingAngle.current;
       gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, true);
       return;
+    } else {
+      poolSlideTimer.current = 0;
     }
 
     // Backyard Waterpark: Flamingo Float ride
     if (activeRide === 'flamingo') {
       const time = state.clock.getElapsedTime();
       const bob = Math.sin(time * 2.0) * 0.04;
-      pos.current.set(4, 0.28 + bob, -22);
+      pos.current.set(-3.0, 0.28 + bob, -30.0);
       facingAngle.current = 0;
 
       if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.6; leftArmRef.current.rotation.z = -0.2; }
