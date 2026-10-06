@@ -56,11 +56,21 @@ export const SchoolTK: React.FC = () => {
     }
 
     // 2. Playful Swings swinging gently
-    if (swing1Ref.current) {
-      swing1Ref.current.rotation.x = Math.sin(time * 2.2) * 0.35;
-    }
-    if (swing2Ref.current) {
-      swing2Ref.current.rotation.x = Math.cos(time * 2.5) * 0.28;
+    const activeRide = gameStore.getState().activeRide;
+    if (activeRide === 'swing') {
+      if (swing2Ref.current) {
+        swing2Ref.current.rotation.x = Math.sin(time * 2.4) * 0.52;
+      }
+      if (swing1Ref.current) {
+        swing1Ref.current.rotation.x = Math.sin(time * 1.6 + 0.8) * 0.16;
+      }
+    } else {
+      if (swing1Ref.current) {
+        swing1Ref.current.rotation.x = Math.sin(time * 1.8) * 0.22;
+      }
+      if (swing2Ref.current) {
+        swing2Ref.current.rotation.x = Math.sin(time * 1.8 + 1.2) * 0.22;
+      }
     }
 
     // 3. Seesaw gentle rocking
@@ -75,8 +85,6 @@ export const SchoolTK: React.FC = () => {
     const distSlideSq = Math.pow(playerPos[0] - 9, 2) + Math.pow(playerPos[2] - 42, 2);
     // Swing location: [-9, 0, 42]
     const distSwingSq = Math.pow(playerPos[0] - (-9), 2) + Math.pow(playerPos[2] - 42, 2);
-
-    const activeRide = gameStore.getState().activeRide;
 
     if (distSlideSq < 10.0 && activeRide === 'none') {
       gameStore.setNearbyInteractable({

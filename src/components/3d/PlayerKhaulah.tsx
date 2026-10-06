@@ -99,6 +99,8 @@ export const PlayerKhaulah: React.FC = () => {
             pos.current.set(4, 0.4, -20);
           } else if (ride === 'pool_slide') {
             pos.current.set(5, 0.4, -24);
+          } else if (ride === 'swing') {
+            pos.current.set(-7.9, 0.4, 43.8);
           }
           gameStore.setMessage('Hore! Khaulah selesai bermain wahana! ✨');
           return;
@@ -316,7 +318,7 @@ export const PlayerKhaulah: React.FC = () => {
       } else if (slideTimer.current < 0.42) {
         // Sitting at top
         pos.current.set(9, 2.5, 42.0);
-        facingAngle.current = 0;
+        facingAngle.current = Math.PI;
         if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.5; leftArmRef.current.rotation.z = -0.3; }
         if (rightArmRef.current) { rightArmRef.current.rotation.x = -0.5; rightArmRef.current.rotation.z = 0.3; }
         if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.45;
@@ -326,7 +328,7 @@ export const PlayerKhaulah: React.FC = () => {
         // Sliding down chute wuuush: joyful hands in the air!
         const t = (slideTimer.current - 0.42) / 0.46;
         pos.current.set(9, 2.5 - t * 2.1, 42.0 - t * 3.8);
-        facingAngle.current = 0;
+        facingAngle.current = Math.PI;
 
         if (leftArmRef.current) { leftArmRef.current.rotation.x = -Math.PI * 0.85; leftArmRef.current.rotation.z = -0.35; }
         if (rightArmRef.current) { rightArmRef.current.rotation.x = -Math.PI * 0.85; rightArmRef.current.rotation.z = 0.35; }
@@ -351,24 +353,31 @@ export const PlayerKhaulah: React.FC = () => {
 
     if (activeRide === 'swing') {
       const time = state.clock.getElapsedTime();
-      const swingPhase = Math.sin(time * 2.5);
-      const swingZ = 42 + swingPhase * 1.3;
-      const swingY = 1.0 + Math.abs(swingPhase) * 0.25;
-      pos.current.set(-7.9, swingY, swingZ);
+      const swingAngle = Math.sin(time * 2.4) * 0.52;
+      const L = 2.6;
+      const seatY = 3.7 - L * Math.cos(swingAngle);
+      const seatZ = 42.0 - L * Math.sin(swingAngle);
+
+      pos.current.set(-7.9, seatY - 0.42, seatZ);
       facingAngle.current = 0;
 
-      // Realistic sitting pose holding chains & swinging legs
-      if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.7; leftArmRef.current.rotation.z = -0.15; }
-      if (rightArmRef.current) { rightArmRef.current.rotation.x = -0.7; rightArmRef.current.rotation.z = 0.15; }
-      if (leftLegRef.current) leftLegRef.current.rotation.x = -0.55 + swingPhase * 0.55;
-      if (rightLegRef.current) rightLegRef.current.rotation.x = -0.55 + swingPhase * 0.55;
-      if (skirtRef.current) skirtRef.current.rotation.x = -0.45;
-      if (headRef.current) headRef.current.rotation.x = -0.15;
+      // Body dynamic lean: bersandar ke belakang saat ayunan melambung ke depan, condong ke depan saat mengayun ke belakang
+      if (modelRef.current) {
+        modelRef.current.rotation.x = swingAngle * 0.75;
+      }
+
+      // Pose duduk memegang rantai ayunan & menendang kaki ke depan saat melambung
+      if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.75 + swingAngle * 0.2; leftArmRef.current.rotation.z = -0.18; }
+      if (rightArmRef.current) { rightArmRef.current.rotation.x = -0.75 + swingAngle * 0.2; rightArmRef.current.rotation.z = 0.18; }
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.38 + swingAngle * 0.45;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.38 + swingAngle * 0.45;
+      if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.32;
+      if (headRef.current) headRef.current.rotation.x = -swingAngle * 0.35;
 
       if (keys.current['Space'] || gameStore.getState().isJumpPressed) {
         gameStore.setActiveRide('none');
-        velocityY.current = 8;
-        pos.current.z -= 1.2;
+        velocityY.current = 7.5;
+        pos.current.z += 1.3;
         gameStore.setMessage('Hoppp! Khaulah melompat turun dari ayunan! 🎡✨');
       }
 
@@ -383,8 +392,8 @@ export const PlayerKhaulah: React.FC = () => {
       const time = state.clock.getElapsedTime();
       const angle = time * 0.45;
       const r = 2.8;
-      pos.current.set(58 + Math.cos(angle) * r, 1.2 + Math.sin(time * 3) * 0.2, 41 + Math.sin(angle) * r);
-      facingAngle.current = -angle + Math.PI / 2;
+      pos.current.set(58 + Math.cos(angle) * r, 1.25 + Math.sin(time * 3) * 0.18, 41 - Math.sin(angle) * r);
+      facingAngle.current = angle - Math.PI;
 
       if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.7; leftArmRef.current.rotation.z = -0.2; }
       if (rightArmRef.current) { rightArmRef.current.rotation.x = -Math.PI * 0.7 + Math.sin(time * 6) * 0.3; rightArmRef.current.rotation.z = 0.4; }
@@ -1352,7 +1361,7 @@ export const PlayerKhaulah: React.FC = () => {
       {/* 6. SKUTER PINK KHAULAH (KENDARAAN KETIKA DIKENDARAI)     */}
       {/* ======================================================== */}
       {isRidingScooter && (
-        <group position={[0, 0.02, 0]}>
+        <group position={[0, 0.02, 0]} rotation={[0, Math.PI, 0]}>
           {/* Deck (Pijakan Kaki Pink) */}
           <mesh position={[0, 0.06, 0]} castShadow>
             <boxGeometry args={[0.3, 0.05, 0.96]} />
@@ -1443,7 +1452,7 @@ export const PlayerKhaulah: React.FC = () => {
       {/* 7. PERAHU BEBEK KAYUH KETIKA DIKENDARAI                  */}
       {/* ======================================================== */}
       {activeRide === 'boat' && (
-        <group position={[0, -0.15, 0]} rotation={[0, Math.PI, 0]}>
+        <group position={[0, -0.15, 0.2]} rotation={[0, Math.PI, 0]}>
           <SwanBoatModel isRiding />
         </group>
       )}
@@ -1452,7 +1461,7 @@ export const PlayerKhaulah: React.FC = () => {
       {/* 8. MOBIL DAMKAR CILIK KETIKA DIKENDARAI                  */}
       {/* ======================================================== */}
       {activeRide === 'firetruck' && (
-        <group position={[0, -0.2, 0]}>
+        <group position={[0, -0.2, 0]} rotation={[0, Math.PI, 0]}>
           <MiniFireTruckModel isRiding />
         </group>
       )}

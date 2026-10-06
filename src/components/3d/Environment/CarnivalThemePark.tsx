@@ -7,10 +7,18 @@ import { useGameStore, gameStore } from '../../../state/useGameStore';
 // Animated Rotating Carousel Component
 const AnimatedCarousel: React.FC = () => {
   const carouselRef = useRef<THREE.Group>(null);
+  const horsesGroupRef = useRef<THREE.Group>(null);
 
-  useFrame((_, delta) => {
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime();
     if (carouselRef.current) {
-      carouselRef.current.rotation.y += delta * 0.45;
+      carouselRef.current.rotation.y = t * 0.45;
+    }
+    if (horsesGroupRef.current) {
+      // Gentle bobbing on horses matching carousel music rhythm
+      horsesGroupRef.current.children.forEach((child, idx) => {
+        child.position.y = Math.sin(t * 3 + idx * (Math.PI / 2)) * 0.18;
+      });
     }
   });
 
@@ -52,39 +60,41 @@ const AnimatedCarousel: React.FC = () => {
           <meshStandardMaterial color="#FFD166" metalness={0.8} roughness={0.2} />
         </mesh>
 
-        {/* 4 Carousel Horses */}
-        {horses.map((h, idx) => {
-          const r = 2.8;
-          const x = Math.cos(h.angle) * r;
-          const z = Math.sin(h.angle) * r;
-          return (
-            <group key={idx} position={[x, 0, z]} rotation={[0, -h.angle + Math.PI / 2, 0]}>
-              {/* Golden Pole */}
-              <mesh position={[0, 2.1, 0]}>
-                <cylinderGeometry args={[0.05, 0.05, 3.8, 8]} />
-                <meshStandardMaterial color="#FFD166" metalness={0.7} roughness={0.2} />
-              </mesh>
-              {/* Horse Model */}
-              <group position={[0, 1.2, 0]}>
-                {/* Horse Body */}
-                <mesh castShadow>
-                  <capsuleGeometry args={[0.26, 0.65, 6, 8]} />
-                  <meshStandardMaterial color={h.color} />
+        {/* 4 Carousel Horses (Synchronized with riding direction) */}
+        <group ref={horsesGroupRef}>
+          {horses.map((h, idx) => {
+            const r = 2.8;
+            const x = Math.cos(h.angle) * r;
+            const z = Math.sin(h.angle) * r;
+            return (
+              <group key={idx} position={[x, 0, z]} rotation={[0, -h.angle, 0]}>
+                {/* Golden Pole */}
+                <mesh position={[0, 2.1, 0]}>
+                  <cylinderGeometry args={[0.05, 0.05, 3.8, 8]} />
+                  <meshStandardMaterial color="#FFD166" metalness={0.7} roughness={0.2} />
                 </mesh>
-                {/* Head */}
-                <mesh position={[0, 0.38, -0.32]} rotation={[-0.3, 0, 0]} castShadow>
-                  <sphereGeometry args={[0.18, 8, 8]} />
-                  <meshStandardMaterial color={h.color} />
-                </mesh>
-                {/* Saddle */}
-                <mesh position={[0, 0.12, 0]}>
-                  <boxGeometry args={[0.35, 0.1, 0.4]} />
-                  <meshStandardMaterial color="#8338EC" />
-                </mesh>
+                {/* Horse Model (Positioned horizontally along riding path) */}
+                <group position={[0, 1.25, 0]}>
+                  {/* Horse Body */}
+                  <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
+                    <capsuleGeometry args={[0.26, 0.65, 6, 8]} />
+                    <meshStandardMaterial color={h.color} />
+                  </mesh>
+                  {/* Head facing forward (-Z in local space) */}
+                  <mesh position={[0, 0.38, -0.42]} rotation={[-0.3, 0, 0]} castShadow>
+                    <sphereGeometry args={[0.18, 8, 8]} />
+                    <meshStandardMaterial color={h.color} />
+                  </mesh>
+                  {/* Saddle where player sits */}
+                  <mesh position={[0, 0.22, 0]}>
+                    <boxGeometry args={[0.35, 0.1, 0.4]} />
+                    <meshStandardMaterial color="#8338EC" />
+                  </mesh>
+                </group>
               </group>
-            </group>
-          );
-        })}
+            );
+          })}
+        </group>
       </group>
     </group>
   );
@@ -94,9 +104,9 @@ const AnimatedCarousel: React.FC = () => {
 const AnimatedFerrisWheel: React.FC = () => {
   const wheelRef = useRef<THREE.Group>(null);
 
-  useFrame((_, delta) => {
+  useFrame((state) => {
     if (wheelRef.current) {
-      wheelRef.current.rotation.z += delta * 0.22;
+      wheelRef.current.rotation.z = state.clock.getElapsedTime() * 0.22;
     }
   });
 

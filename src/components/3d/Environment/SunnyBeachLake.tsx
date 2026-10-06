@@ -166,7 +166,7 @@ export const SwanBoatModel: React.FC<{ isRiding?: boolean }> = ({ isRiding }) =>
         <meshStandardMaterial color="#FFF" />
       </mesh>
       {/* Orange Beak */}
-      <mesh position={[0, 1.45, -1.25]} rotation={[Math.PI / 2, 0, 0]}>
+      <mesh position={[0, 1.45, -1.25]} rotation={[-Math.PI / 2, 0, 0]}>
         <coneGeometry args={[0.12, 0.35, 8]} />
         <meshStandardMaterial color="#FB8500" />
       </mesh>
