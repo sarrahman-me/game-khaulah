@@ -17,6 +17,7 @@ export interface MagicActionResult {
     | 'celebrate'
     | 'play_sound'
     | 'riddle'
+    | 'khalid_follow'
     | 'wishlist'
     | 'chat_only';
   actionParam?: any;
@@ -265,6 +266,20 @@ function fallbackMagicInterpreter(input: string): MagicActionResult {
       actionParam: 'train',
     };
   }
+  if (q.includes('khalid') || q.includes('adek')) {
+    if (q.includes('berhenti') || q.includes('istirahat') || q.includes('tinggal')) {
+      return {
+        speech: 'Adek Khalid istirahat di sini: "Nanti kita main lagi ya Mbak Khaulah!" 👦🌸',
+        action: 'khalid_follow',
+        actionParam: false,
+      };
+    }
+    return {
+      speech: 'Horeee! Adek Khalid langsung lari mengejar Mbak Khaulah! "Tunggu Khalid ya Mbak!" 👦🏃‍♂️💨',
+      action: 'khalid_follow',
+      actionParam: true,
+    };
+  }
 
   // If complex wish
   return {
@@ -305,6 +320,7 @@ Tugasmu:
    - "celebrate": Pesta konfeti & kembang api meriah.
    - "play_sound": Bunyikan suara khas ("fire_siren", "train", "bell").
    - "riddle": Memberikan tebak-tebakan anak lucu yang seru.
+   - "khalid_follow": Ajak Adek Khalid berlari mengekor dan ikut berpetualang bareng Khaulah. actionParam: true (ikut) atau false (istirahat).
    - "wishlist": Jika Khaulah meminta hal baru di luar aset yang ada (seperti dinosaurus, istana es, mobil terbang, kolam susu cokelat, roket luar angkasa), katakan dengan gembira bahwa mantranya telah disimpan di Buku Impian Khaulah agar Abi bisa membuatnya nanti!
    - "chat_only": Hanya obrolan/cerita santai.
 

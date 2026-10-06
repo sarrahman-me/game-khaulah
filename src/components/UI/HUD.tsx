@@ -19,6 +19,7 @@ import {
 import { MagicWandModal } from './MagicWandModal';
 import { CharacterChatModal } from './CharacterChatModal';
 import { WishlistModal } from './WishlistModal';
+import { FAMILY_SCHEDULE } from '../3d/Environment/FamilyMembers';
 
 export const HUD: React.FC = () => {
   const bubbleMessage = useGameStore((s) => s.bubbleMessage);
@@ -33,6 +34,7 @@ export const HUD: React.FC = () => {
   const timeOfDayTimeLeft = useGameStore((s) => s.timeOfDayTimeLeft);
   const isRidingScooter = useGameStore((s) => s.isRidingScooter);
   const schoolQuest = useGameStore((s) => s.schoolQuest);
+  const isKhalidFollowing = useGameStore((s) => s.isKhalidFollowing);
 
   const handleInteract = () => {
     if (!nearbyInteractable) return;
@@ -70,38 +72,47 @@ export const HUD: React.FC = () => {
         });
       }
     } else if (id === 'abi') {
+      const schedule = FAMILY_SCHEDULE[timeOfDay] || FAMILY_SCHEDULE.siang;
       gameStore.openDialog({
         speaker: 'Abi',
-        role: 'Ayah Tercinta 💻',
+        role: `Ayah Tercinta 💻 (${schedule.abi.status})`,
         avatarBg: 'bg-blue-600',
-        text: 'Assalamu\'alaikum Khaulah putri shalihah Abi! Abi sedang fokus menyelesaikan pekerjaan dan coding di laptop untuk keluarga. Tapi melihat senyum ceria Khaulah membuat lelah Abi langsung hilang! Semangat selalu ya nak!',
+        text: schedule.abi.text,
         actionText: '💻 Tos Semangat sama Abi! ✨',
         actionType: 'high_five',
       });
     } else if (id === 'ummi') {
+      const schedule = FAMILY_SCHEDULE[timeOfDay] || FAMILY_SCHEDULE.siang;
       gameStore.openDialog({
         speaker: 'Ummi',
-        role: 'Ibu Tercinta Bercadar 🧕',
+        role: `Ibu Tercinta Bercadar 🧕 (${schedule.ummi.status})`,
         avatarBg: 'bg-rose-500',
-        text: 'Assalamu\'alaikum Khaulah bidadari kecil Ummi! Kebersihan itu sebagian dari iman, nak. Ummi sedang menyapu teras agar rumah kita selalu asri dan rapi. Ummi sudah siapkan bekal cinta terenak untuk Khaulah, ayo ambil sayang!',
+        text: schedule.ummi.text,
         actionText: '🧹 Ambil Bekal Berkah Ummi! (+Speed Boost ⚡)',
         actionType: 'take_snack',
       });
     } else if (id === 'khalid') {
+      const schedule = FAMILY_SCHEDULE[timeOfDay] || FAMILY_SCHEDULE.siang;
+      const isFollowing = gameStore.getState().isKhalidFollowing;
       gameStore.openDialog({
         speaker: 'Adek Khalid',
-        role: 'Pemain Drumband Cilik 👦🥁',
+        role: isFollowing ? 'Sahabat Petualang Cilik 👦🏃‍♂️' : `Pemain Drumband Cilik 👦🥁 (${schedule.khalid.status})`,
         avatarBg: 'bg-amber-500',
-        text: 'Mbak Khaulah lihat nih! Khalid lagi latihan drumband! Dum-tak-tak-dum ratatat! Nanti pas pawai drum band di TK, Khalid mau main paling hebat bareng Mbak Khaulah!',
-        actionText: '🥁 Main Drumband Bareng Khalid! 🎶',
-        actionType: 'play_drumband',
+        text: isFollowing
+          ? 'Mbak Khaulah! Khalid senang banget ikut lari-larian keliling desa! Mau Khalid terus ikut petualangan, atau istirahat di sini dulu?'
+          : schedule.khalid.text,
+        actionText: isFollowing
+          ? '🏠 Adek Khalid Istirahat di Teras Dulu 🌸'
+          : '🏃‍♂️ Ajak Adek Khalid Ikut Petualangan! ✨',
+        actionType: 'toggle_khalid_follow',
       });
     } else if (id === 'faqih') {
+      const schedule = FAMILY_SCHEDULE[timeOfDay] || FAMILY_SCHEDULE.siang;
       gameStore.openDialog({
         speaker: 'Adek Faqih',
-        role: 'Adik Gemas Balap Mobilan 👶🚗',
+        role: `Adik Gemas Balap Mobilan 👶🚗 (${schedule.faqih.status})`,
         avatarBg: 'bg-emerald-500',
-        text: 'Ngeeeng! Brum brum pip pip! Adek Faqih lagi seru banget ngebutin mobil-mobilan di karpet lintasan! Mbak Khaulah ayo balapan mobilan bareng Faqih!',
+        text: schedule.faqih.text,
         actionText: '🚗 Balapan Mobilan bareng Faqih! 💨',
         actionType: 'play_toycar',
       });
@@ -254,6 +265,18 @@ export const HUD: React.FC = () => {
               <Sparkles className="w-4 h-4" />
               <span>Bekal Ummi ({Math.ceil(speedBuffTimeLeft)}s ⚡)</span>
             </div>
+          )}
+
+          {/* Adek Khalid Following Pill */}
+          {isKhalidFollowing && (
+            <button
+              onClick={() => gameStore.toggleKhalidFollow()}
+              title="Adek Khalid sedang ikut Mbak Khaulah! Klik untuk istirahat"
+              className="pointer-events-auto bg-gradient-to-r from-amber-400 to-rose-400 text-white px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 animate-bounce-slow border-2 border-white text-xs font-bubble font-bold active:scale-95 transition-transform"
+            >
+              <span>👦</span>
+              <span>Khalid Ikut! 🏃‍♂️</span>
+            </button>
           )}
         </div>
 

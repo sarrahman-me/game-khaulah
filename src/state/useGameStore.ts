@@ -66,13 +66,26 @@ export const TIME_OF_DAY_MESSAGES: Record<TimeOfDay, string> = {
   malam: 'Malam berbintang ajaib! Kunang-kunang dan lentera mulai menyala! 🌙✨🕯️',
 };
 
+export type DialogActionType =
+  | 'high_five'
+  | 'take_snack'
+  | 'play_ball'
+  | 'cuddle_baby'
+  | 'play_drumband'
+  | 'play_toycar'
+  | 'complete_quest'
+  | 'feed_animal'
+  | 'buy_icecream'
+  | 'scan_grocery'
+  | 'toggle_khalid_follow';
+
 export interface FamilyDialogData {
   speaker: string;
   role: string;
   avatarBg: string;
   text: string;
   actionText?: string;
-  actionType?: 'high_five' | 'take_snack' | 'play_ball' | 'cuddle_baby' | 'play_drumband' | 'play_toycar' | 'complete_quest' | 'feed_animal' | 'buy_icecream' | 'scan_grocery';
+  actionType?: DialogActionType;
 }
 
 export interface GameState {
@@ -120,6 +133,9 @@ export interface GameState {
   spawnedItems: SpawnedMagicItem[];
   isWishlistOpen: boolean;
   characterChatState: CharacterChatState | null;
+  // Living NPC Director: Adek Khalid Follow Mode
+  isKhalidFollowing: boolean;
+  khalidPos: [number, number, number];
 }
 
 export interface SpawnedMagicItem {
@@ -296,6 +312,8 @@ let state: GameState = {
   spawnedItems: [],
   isWishlistOpen: false,
   characterChatState: null,
+  isKhalidFollowing: false,
+  khalidPos: [-1.8, 0.2, -1.8],
 };
 
 // Sinkronkan tema audio awal sesuai waktu yang tersimpan di localStorage tanpa chime
@@ -462,7 +480,7 @@ export const gameStore = {
     emitChange();
   },
 
-  executeDialogAction: (actionType: 'high_five' | 'take_snack' | 'play_ball' | 'cuddle_baby' | 'play_drumband' | 'play_toycar' | 'complete_quest' | 'feed_animal' | 'buy_icecream' | 'scan_grocery') => {
+  executeDialogAction: (actionType: DialogActionType) => {
     if (actionType === 'high_five') {
       soundManager.playHighFive();
       soundManager.playKeyboardTyping();
@@ -532,7 +550,45 @@ export const gameStore = {
       emitChange();
     } else if (actionType === 'complete_quest') {
       gameStore.completeSchoolQuest();
+    } else if (actionType === 'toggle_khalid_follow') {
+      const nextFollow = !state.isKhalidFollowing;
+      soundManager.playHighFive();
+      confetti({ particleCount: 50, spread: 80, origin: { y: 0.75 } });
+      state = {
+        ...state,
+        isKhalidFollowing: nextFollow,
+        activeDialog: null,
+        bubbleMessage: nextFollow
+          ? 'Horeee! Adek Khalid ikut Mbak Khaulah berpetualang! "Ayo kita lari bareng Mbak!" 👦🏃‍♂️💨'
+          : 'Adek Khalid istirahat di sini: "Nanti main lagi bareng Khalid ya Mbak Khaulah!" 👦🌸',
+      };
+      emitChange();
     }
+  },
+
+  toggleKhalidFollow: () => {
+    const nextFollow = !state.isKhalidFollowing;
+    soundManager.playHighFive();
+    confetti({ particleCount: 45, spread: 75, origin: { y: 0.75 } });
+    state = {
+      ...state,
+      isKhalidFollowing: nextFollow,
+      bubbleMessage: nextFollow
+        ? 'Horeee! Adek Khalid ikut Mbak Khaulah berpetualang! 👦🏃‍♂️💨'
+        : 'Adek Khalid istirahat dulu di sini ya! 👦🌸',
+    };
+    emitChange();
+  },
+
+  setKhalidFollow: (following: boolean) => {
+    if (state.isKhalidFollowing !== following) {
+      state = { ...state, isKhalidFollowing: following };
+      emitChange();
+    }
+  },
+
+  setKhalidPos: (pos: [number, number, number]) => {
+    state.khalidPos = pos;
   },
 
   setActiveRide: (ride: RideType) => {

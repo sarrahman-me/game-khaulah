@@ -1,14 +1,116 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text, Billboard, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
-import { gameStore } from '../../../state/useGameStore';
+import { gameStore, useGameStore, TimeOfDay } from '../../../state/useGameStore';
 import { addSolidBox, removeSolidCollider, SolidCollider } from '../../../state/colliders';
+
+// ============================================================================
+// LIVING NPC DIRECTOR: JADWAL KEHIDUPAN KELUARGA SESUAI WAKTU (SUBUH/SIANG/SORE/MALAM)
+// ============================================================================
+export const FAMILY_SCHEDULE: Record<
+  TimeOfDay,
+  {
+    abi: { pos: [number, number, number]; status: string; text: string };
+    ummi: { pos: [number, number, number]; status: string; text: string };
+    faqih: { pos: [number, number, number]; status: string; text: string };
+    khalid: { pos: [number, number, number]; status: string; text: string };
+  }
+> = {
+  subuh: {
+    abi: {
+      pos: [-1.2, 0.2, -4.8],
+      status: 'Sholat & Senyum Fajar 🌅',
+      text: 'Assalamu\'alaikum Khaulah bidadari shalihah Abi! Fajar Subuh yang sejuk dan damai. Jangan lupa sholat Subuh dan selalu bersyukur ya nak! Abi sayang Khaulah!',
+    },
+    ummi: {
+      pos: [1.2, 0.2, -4.8],
+      status: 'Menyiapkan Sarapan 🧕',
+      text: 'Assalamu\'alaikum Khaulah sayang! Selamat pagi anak shalihah Ummi. Ummi sudah siapkan sarapan berkah untuk Khaulah, ayo ambil ya!',
+    },
+    faqih: {
+      pos: [0.0, 0.2, -4.2],
+      status: 'Kereta Dorong Selimut 👶',
+      text: 'Uwaaa~ Cilukba! Adek Faqih bangun pagi tersenyum manis di kereta dorong hangat! 👶🍼',
+    },
+    khalid: {
+      pos: [-1.8, 0.2, -3.5],
+      status: 'Bangun Tidur Ceria 👦',
+      text: 'Hoaaam... Mbak Khaulah! Khalid baru bangun tidur nih, tapi langsung semangat pas lihat Mbak Khaulah! Ayo main bareng Khalid!',
+    },
+  },
+  siang: {
+    abi: {
+      pos: [-3.0, 0.2, -4.5],
+      status: 'Fokus Coding Laptop 💻',
+      text: 'Assalamu\'alaikum Khaulah putri shalihah Abi! Abi sedang fokus menyelesaikan coding dan pekerjaan di laptop untuk keluarga. Senyum ceria Khaulah bikin Abi semangat terus!',
+    },
+    ummi: {
+      pos: [2.8, 0.2, -4.2],
+      status: 'Menyapu Teras & Bekal 🧹',
+      text: 'Assalamu\'alaikum Khaulah bidadari kecil Ummi! Kebersihan itu sebagian dari iman, nak. Ummi sudah siapkan bekal kue pelangi terenak untuk Khaulah, ayo ambil sayang!',
+    },
+    faqih: {
+      pos: [2.0, 0.2, -1.8],
+      status: 'Balap Mobil-Mobilan 🚗',
+      text: 'Ngeeeng! Brum brum pip pip! Adek Faqih lagi seru banget ngebutin mobil-mobilan di karpet! Mbak Khaulah ayo balapan bareng!',
+    },
+    khalid: {
+      pos: [-1.8, 0.2, -1.8],
+      status: 'Latihan Drumband 🥁',
+      text: 'Mbak Khaulah lihat nih! Khalid lagi latihan drumband! Dum-tak-tak-dum ratatat! Mau ajak Khalid ikut jalan-jalan keliling desa?',
+    },
+  },
+  sore: {
+    abi: {
+      pos: [-2.2, 0.2, -3.2],
+      status: 'Santai Minum Teh Sore 🍵',
+      text: 'Alhamdulillah, senja sore yang syahdu di Karang Tengah. Senang sekali melihat Khaulah bermain ceria dan sehat selalu!',
+    },
+    ummi: {
+      pos: [3.2, 0.2, -3.2],
+      status: 'Menyiram Bunga & Donat 🌸',
+      text: 'Senja sore yang indah, nak. Ummi sedang menyiram tanaman bunga agar selalu harum dan asri. Ada donat manis untuk Khaulah!',
+    },
+    faqih: {
+      pos: [1.5, 0.2, -2.2],
+      status: 'Main Kerincingan Lucu 🪇',
+      text: 'Kring kring! Adek Faqih goyang-goyangkan kerincingan warna-warni sambil tertawa riang! 🪇👶',
+    },
+    khalid: {
+      pos: [-2.6, 0.2, -1.0],
+      status: 'Parade Drumband Cilik 🎶',
+      text: 'Dum-dum-tak! Adek Khalid siap mimpin parade drumband sore! Mbak Khaulah ayo lari bareng Khalid!',
+    },
+  },
+  malam: {
+    abi: {
+      pos: [-0.6, 0.2, -4.0],
+      status: 'Kumpul Hangat Keluarga 🌙',
+      text: 'MasyaAllah, malam bertabur bintang yang indah. Istirahat yang cukup ya anak pintar Abi, besok kita berpetualang lagi!',
+    },
+    ummi: {
+      pos: [0.6, 0.2, -4.0],
+      status: 'Mendongeng di Teras 🧕',
+      text: 'Malam bertabur bintang nan damai. Jangan lupa cuci kaki, sikat gigi, dan berdoa sebelum tidur ya bidadari shalihah Ummi.',
+    },
+    faqih: {
+      pos: [-1.5, 0.2, -3.6],
+      status: 'Tidur Pulas di Kereta 💤',
+      text: 'Ssshh... Adek Faqih tertidur pulas memeluk mobil-mobilan kesayangannya di bawah lentera hangat! 💤👶',
+    },
+    khalid: {
+      pos: [1.6, 0.2, -3.5],
+      status: 'Dengarkan Dongeng Ummi 📖',
+      text: 'Mbak Khaulah sini duduk bareng Khalid! Kita dengarkan dongeng Ummi sambil melihat kunang-kunang di atas sungai!',
+    },
+  },
+};
 
 // ============================================================================
 // 1. ABI MODEL (AYAH - 27 TAHUN, PRIA TANPA KACAMATA, KERJA DEPAN LAPTOP)
 // ============================================================================
-const AbiModel: React.FC<{ position: [number, number, number] }> = ({ position }) => {
+const AbiModel: React.FC<{ position: [number, number, number]; statusTag?: string }> = ({ position, statusTag }) => {
   const groupRef = useRef<THREE.Group>(null);
   const characterRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
@@ -19,11 +121,18 @@ const AbiModel: React.FC<{ position: [number, number, number] }> = ({ position }
   const screenGlowRef = useRef<THREE.PointLight>(null);
   const eyeScale = useRef(1);
   const blinkTimer = useRef(3.0);
+  const currentPos = useRef(new THREE.Vector3(position[0], position[1], position[2]));
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
     const time = state.clock.getElapsedTime();
     const playerPos = gameStore.getState().playerPos;
+
+    // Smooth movement towards scheduled position
+    currentPos.current.x = THREE.MathUtils.lerp(currentPos.current.x, position[0], delta * 2.2);
+    currentPos.current.y = THREE.MathUtils.lerp(currentPos.current.y, position[1], delta * 2.2);
+    currentPos.current.z = THREE.MathUtils.lerp(currentPos.current.z, position[2], delta * 2.2);
+    groupRef.current.position.copy(currentPos.current);
 
     // Blinking eye animation
     blinkTimer.current -= delta;
@@ -36,8 +145,8 @@ const AbiModel: React.FC<{ position: [number, number, number] }> = ({ position }
     }
 
     // Distance to Khaulah
-    const dx = playerPos[0] - position[0];
-    const dz = playerPos[2] - position[2];
+    const dx = playerPos[0] - currentPos.current.x;
+    const dz = playerPos[2] - currentPos.current.z;
     const distSq = dx * dx + dz * dz;
 
     // Screen light pulse
@@ -405,18 +514,29 @@ const AbiModel: React.FC<{ position: [number, number, number] }> = ({ position }
       {/* Floating Billboard Name Tag (Cukup Nama Saja, Tanpa Umur) */}
       <Billboard position={[0, 2.15, 0]}>
         <mesh>
-          <planeGeometry args={[1.2, 0.4]} />
+          <planeGeometry args={[statusTag ? 2.3 : 1.2, 0.46]} />
           <meshBasicMaterial color="#1D3557" transparent opacity={0.88} />
         </mesh>
         <Text
-          position={[0, 0, 0.02]}
-          fontSize={0.2}
+          position={[0, statusTag ? 0.08 : 0, 0.02]}
+          fontSize={0.18}
           color="#FFFFFF"
           anchorX="center"
           anchorY="middle"
         >
           Abi 💻
         </Text>
+        {statusTag && (
+          <Text
+            position={[0, -0.11, 0.02]}
+            fontSize={0.11}
+            color="#BAE6FD"
+            anchorX="center"
+            anchorY="middle"
+          >
+            {statusTag}
+          </Text>
+        )}
       </Billboard>
     </group>
   );
@@ -425,7 +545,7 @@ const AbiModel: React.FC<{ position: [number, number, number] }> = ({ position }
 // ============================================================================
 // 2. UMMI MODEL (IBU - 26 TAHUN, BERCADAR / NIQAB, AKTIVITAS MENYAPU)
 // ============================================================================
-const UmmiModel: React.FC<{ position: [number, number, number] }> = ({ position }) => {
+const UmmiModel: React.FC<{ position: [number, number, number]; statusTag?: string }> = ({ position, statusTag }) => {
   const groupRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
   const broomRef = useRef<THREE.Group>(null);
@@ -433,11 +553,18 @@ const UmmiModel: React.FC<{ position: [number, number, number] }> = ({ position 
   const rightArmRef = useRef<THREE.Group>(null);
   const eyeScale = useRef(1);
   const blinkTimer = useRef(2.5);
+  const currentPos = useRef(new THREE.Vector3(position[0], position[1], position[2]));
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
     const time = state.clock.getElapsedTime();
     const playerPos = gameStore.getState().playerPos;
+
+    // Smooth movement towards scheduled position
+    currentPos.current.x = THREE.MathUtils.lerp(currentPos.current.x, position[0], delta * 2.2);
+    currentPos.current.y = THREE.MathUtils.lerp(currentPos.current.y, position[1], delta * 2.2);
+    currentPos.current.z = THREE.MathUtils.lerp(currentPos.current.z, position[2], delta * 2.2);
+    groupRef.current.position.copy(currentPos.current);
 
     // Eye blinking
     blinkTimer.current -= delta;
@@ -449,8 +576,8 @@ const UmmiModel: React.FC<{ position: [number, number, number] }> = ({ position 
       }
     }
 
-    const dx = playerPos[0] - position[0];
-    const dz = playerPos[2] - position[2];
+    const dx = playerPos[0] - currentPos.current.x;
+    const dz = playerPos[2] - currentPos.current.z;
     const distSq = dx * dx + dz * dz;
 
     // Sweeping stroke rhythm: smooth back-and-forth swing
@@ -703,18 +830,29 @@ const UmmiModel: React.FC<{ position: [number, number, number] }> = ({ position 
       {/* Floating Billboard Name Tag (Cukup Nama Saja, Tanpa Umur, Aman dari Atap) */}
       <Billboard position={[0, 2.45, 0]}>
         <mesh>
-          <planeGeometry args={[1.3, 0.4]} />
+          <planeGeometry args={[statusTag ? 2.3 : 1.3, 0.46]} />
           <meshBasicMaterial color="#E07A5F" transparent opacity={0.88} />
         </mesh>
         <Text
-          position={[0, 0, 0.02]}
-          fontSize={0.2}
+          position={[0, statusTag ? 0.08 : 0, 0.02]}
+          fontSize={0.18}
           color="#FFFFFF"
           anchorX="center"
           anchorY="middle"
         >
           Ummi 🧕
         </Text>
+        {statusTag && (
+          <Text
+            position={[0, -0.11, 0.02]}
+            fontSize={0.11}
+            color="#FFF1F2"
+            anchorX="center"
+            anchorY="middle"
+          >
+            {statusTag}
+          </Text>
+        )}
       </Billboard>
     </group>
   );
@@ -723,7 +861,7 @@ const UmmiModel: React.FC<{ position: [number, number, number] }> = ({ position 
 // ============================================================================
 // 3. KHALID MODEL (ADEK KHALID - 4 TAHUN, MAIN DRUMBAND / SNARE DRUM)
 // ============================================================================
-const KhalidModel: React.FC<{ position: [number, number, number] }> = ({ position }) => {
+const KhalidModel: React.FC<{ position: [number, number, number]; statusTag?: string }> = ({ position, statusTag }) => {
   const groupRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
   const drumGroupRef = useRef<THREE.Group>(null);
@@ -732,67 +870,161 @@ const KhalidModel: React.FC<{ position: [number, number, number] }> = ({ positio
   const leftLegRef = useRef<THREE.Group>(null);
   const rightLegRef = useRef<THREE.Group>(null);
 
+  const isFollowing = useGameStore((s) => s.isKhalidFollowing);
+  const currentPos = useRef(new THREE.Vector3(position[0], position[1], position[2]));
+  const wasFollowing = useRef(false);
+  const [speechBubbleText, setSpeechBubbleText] = useState<string | null>(null);
+  const bubbleTimer = useRef(0);
+
   useFrame((state, delta) => {
     if (!groupRef.current) return;
     const time = state.clock.getElapsedTime();
     const playerPos = gameStore.getState().playerPos;
+    const speedBuff = gameStore.getState().speedBuffTimeLeft;
+    const isRidingScooter = gameStore.getState().isRidingScooter;
+    const isJumpPressed = gameStore.getState().isJumpPressed;
 
-    const dx = playerPos[0] - position[0];
-    const dz = playerPos[2] - position[2];
-    const distSq = dx * dx + dz * dz;
-
-    // Drumband tempo: fast, snappy marching cadence
-    const drumBeat = Math.sin(time * 14);
-    const drumBeatAlt = Math.cos(time * 14 + 0.8);
-
-    // Toddler marching bounce in place
-    const marchBounce = Math.abs(Math.sin(time * 6.5)) * 0.06;
-    groupRef.current.position.y = position[1] + marchBounce;
-
-    // Alternating knee marching lifts
-    if (leftLegRef.current && rightLegRef.current) {
-      leftLegRef.current.rotation.x = Math.sin(time * 6.5) * 0.35;
-      rightLegRef.current.rotation.x = -Math.sin(time * 6.5) * 0.35;
-    }
-
-    if (distSq < 16.0) {
-      const targetAngle = Math.atan2(dx, dz);
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(
-        groupRef.current.rotation.y,
-        targetAngle,
-        delta * 5
-      );
-
-      // Proud happy grin & head bobbing
-      if (headRef.current) {
-        headRef.current.rotation.y = Math.sin(time * 3) * 0.1;
-        headRef.current.rotation.x = -0.1 + Math.sin(time * 7) * 0.08;
+    if (isFollowing) {
+      if (!wasFollowing.current) {
+        wasFollowing.current = true;
+        setSpeechBubbleText('Tunggu Khalid Mbak! 🏃‍♂️💨');
+        bubbleTimer.current = 4.0;
       }
 
-      // Enthusiastic drum rolls!
-      if (leftArmRef.current) {
-        leftArmRef.current.rotation.x = -0.7 + drumBeat * 0.45;
+      // Check distance to Khaulah
+      const pVec = new THREE.Vector3(playerPos[0], playerPos[1], playerPos[2]);
+      const distToPlayer = currentPos.current.distanceTo(pVec);
+
+      // Teleport if too far (e.g. after teleporting to another part of island)
+      if (distToPlayer > 32.0) {
+        currentPos.current.set(playerPos[0] - 1.5, Math.max(0.2, playerPos[1]), playerPos[2] - 1.5);
+        setSpeechBubbleText('Wuuush! Khalid sampai! ✨');
+        bubbleTimer.current = 3.0;
       }
-      if (rightArmRef.current) {
-        rightArmRef.current.rotation.x = -0.7 + drumBeatAlt * 0.45;
+
+      // Target position slightly behind and beside player
+      const facing = gameStore.getState().playerFacingAngle;
+      const targetX = playerPos[0] - Math.sin(facing) * 1.8 + Math.cos(facing) * 0.8;
+      const targetZ = playerPos[2] - Math.cos(facing) * 1.8 - Math.sin(facing) * 0.8;
+      const targetY = Math.max(0.2, playerPos[1]);
+
+      const dx = targetX - currentPos.current.x;
+      const dz = targetZ - currentPos.current.z;
+      const distToTarget = Math.hypot(dx, dz);
+
+      if (distToPlayer > 2.2) {
+        // Run towards target
+        const speed = (speedBuff > 0 || isRidingScooter) ? 20.0 : 11.0;
+        const step = Math.min(distToTarget, speed * delta);
+        if (distToTarget > 0.05) {
+          currentPos.current.x += (dx / distToTarget) * step;
+          currentPos.current.z += (dz / distToTarget) * step;
+        }
+        currentPos.current.y = THREE.MathUtils.lerp(currentPos.current.y, targetY, delta * 8);
+
+        // Face movement direction
+        const moveAngle = Math.atan2(dx, dz);
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, moveAngle, delta * 12);
+
+        // Toddler running animation
+        const runCadence = time * 18;
+        const runBounce = Math.abs(Math.sin(runCadence)) * 0.08;
+        groupRef.current.position.y = currentPos.current.y + runBounce;
+
+        if (leftLegRef.current && rightLegRef.current) {
+          leftLegRef.current.rotation.x = Math.sin(runCadence) * 0.65;
+          rightLegRef.current.rotation.x = -Math.sin(runCadence) * 0.65;
+        }
+
+        const drumBeat = Math.sin(time * 20);
+        if (leftArmRef.current) leftArmRef.current.rotation.x = -0.7 + drumBeat * 0.45;
+        if (rightArmRef.current) rightArmRef.current.rotation.x = -0.7 + Math.cos(time * 20) * 0.45;
+        if (headRef.current) headRef.current.rotation.x = 0.05 + Math.sin(runCadence) * 0.08;
+
+        bubbleTimer.current -= delta;
+        if (bubbleTimer.current <= 0) {
+          const quotes = [
+            'Lari Mbak Khaulah! 🏃‍♂️💨',
+            'Kejar aku hehe! 😆',
+            'Seru banget! ✨',
+            'Adek Khalid gak capek! ⚡',
+          ];
+          setSpeechBubbleText(quotes[Math.floor(Math.random() * quotes.length)]);
+          bubbleTimer.current = 8.0 + Math.random() * 6.0;
+        }
+      } else {
+        // Arrived: face Khaulah and rest
+        const faceAngle = Math.atan2(playerPos[0] - currentPos.current.x, playerPos[2] - currentPos.current.z);
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, faceAngle, delta * 6);
+        groupRef.current.position.y = currentPos.current.y;
+
+        if (leftLegRef.current) leftLegRef.current.rotation.x = THREE.MathUtils.lerp(leftLegRef.current.rotation.x, 0, delta * 8);
+        if (rightLegRef.current) rightLegRef.current.rotation.x = THREE.MathUtils.lerp(rightLegRef.current.rotation.x, 0, delta * 8);
+
+        if (headRef.current) {
+          headRef.current.rotation.x = -0.05 + Math.sin(time * 3) * 0.05;
+          headRef.current.rotation.y = Math.sin(time * 2) * 0.08;
+        }
+        if (leftArmRef.current) leftArmRef.current.rotation.x = -0.65 + Math.sin(time * 8) * 0.2;
+        if (rightArmRef.current) rightArmRef.current.rotation.x = -0.65 + Math.cos(time * 8) * 0.2;
+
+        bubbleTimer.current -= delta;
+        if (bubbleTimer.current <= 0) {
+          setSpeechBubbleText('Main apa lagi Mbak? ✨');
+          bubbleTimer.current = 10.0 + Math.random() * 8.0;
+        }
       }
+
+      if (isJumpPressed) {
+        groupRef.current.position.y += 0.25;
+      }
+
+      groupRef.current.position.x = currentPos.current.x;
+      groupRef.current.position.z = currentPos.current.z;
+
+      gameStore.setKhalidPos([currentPos.current.x, currentPos.current.y, currentPos.current.z]);
     } else {
-      // Steady drumband practice beat
-      if (headRef.current) {
-        headRef.current.rotation.x = 0.1 + Math.sin(time * 6.5) * 0.08;
+      wasFollowing.current = false;
+      currentPos.current.x = THREE.MathUtils.lerp(currentPos.current.x, position[0], delta * 2.5);
+      currentPos.current.y = THREE.MathUtils.lerp(currentPos.current.y, position[1], delta * 2.5);
+      currentPos.current.z = THREE.MathUtils.lerp(currentPos.current.z, position[2], delta * 2.5);
+      groupRef.current.position.copy(currentPos.current);
+      gameStore.setKhalidPos([currentPos.current.x, currentPos.current.y, currentPos.current.z]);
+
+      // Drumband tempo: fast, snappy marching cadence
+      const drumBeat = Math.sin(time * 14);
+      const drumBeatAlt = Math.cos(time * 14 + 0.8);
+
+      const marchBounce = Math.abs(Math.sin(time * 6.5)) * 0.06;
+      groupRef.current.position.y += marchBounce;
+
+      if (leftLegRef.current && rightLegRef.current) {
+        leftLegRef.current.rotation.x = Math.sin(time * 6.5) * 0.35;
+        rightLegRef.current.rotation.x = -Math.sin(time * 6.5) * 0.35;
       }
 
-      if (leftArmRef.current) {
-        leftArmRef.current.rotation.x = -0.65 + drumBeat * 0.35;
-      }
-      if (rightArmRef.current) {
-        rightArmRef.current.rotation.x = -0.65 + drumBeatAlt * 0.35;
+      const dx = playerPos[0] - currentPos.current.x;
+      const dz = playerPos[2] - currentPos.current.z;
+      const distSq = dx * dx + dz * dz;
+
+      if (distSq < 16.0) {
+        const targetAngle = Math.atan2(dx, dz);
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetAngle, delta * 5);
+        if (headRef.current) {
+          headRef.current.rotation.y = Math.sin(time * 3) * 0.1;
+          headRef.current.rotation.x = -0.1 + Math.sin(time * 7) * 0.08;
+        }
+        if (leftArmRef.current) leftArmRef.current.rotation.x = -0.7 + drumBeat * 0.45;
+        if (rightArmRef.current) rightArmRef.current.rotation.x = -0.7 + drumBeatAlt * 0.45;
+      } else {
+        if (headRef.current) headRef.current.rotation.x = 0.1 + Math.sin(time * 6.5) * 0.08;
+        if (leftArmRef.current) leftArmRef.current.rotation.x = -0.65 + drumBeat * 0.35;
+        if (rightArmRef.current) rightArmRef.current.rotation.x = -0.65 + drumBeatAlt * 0.35;
       }
     }
 
-    // Drum vibration reaction
     if (drumGroupRef.current) {
-      drumGroupRef.current.position.y = 0.72 + Math.abs(drumBeat) * 0.015;
+      drumGroupRef.current.position.y = 0.72 + Math.abs(Math.sin(time * 14)) * 0.015;
     }
   });
 
@@ -991,21 +1223,51 @@ const KhalidModel: React.FC<{ position: [number, number, number] }> = ({ positio
         </mesh>
       </group>
 
-      {/* Floating Billboard Name Tag (Cukup Nama Saja, Tanpa Umur) */}
+      {/* Floating Speech Bubble / Dialog above Khalid */}
+      {speechBubbleText && (
+        <Billboard position={[0, 2.38, 0]}>
+          <mesh>
+            <planeGeometry args={[Math.max(1.8, speechBubbleText.length * 0.11), 0.36]} />
+            <meshBasicMaterial color="#FFFFFF" transparent opacity={0.92} />
+          </mesh>
+          <Text
+            position={[0, 0, 0.02]}
+            fontSize={0.13}
+            color="#1F2937"
+            anchorX="center"
+            anchorY="middle"
+          >
+            {speechBubbleText}
+          </Text>
+        </Billboard>
+      )}
+
+      {/* Floating Billboard Name Tag */}
       <Billboard position={[0, 1.95, 0]}>
         <mesh>
-          <planeGeometry args={[1.7, 0.4]} />
-          <meshBasicMaterial color="#E63946" transparent opacity={0.88} />
+          <planeGeometry args={[statusTag || isFollowing ? 2.3 : 1.6, 0.46]} />
+          <meshBasicMaterial color={isFollowing ? '#10B981' : '#E63946'} transparent opacity={0.88} />
         </mesh>
         <Text
-          position={[0, 0, 0.02]}
-          fontSize={0.2}
+          position={[0, (statusTag || isFollowing) ? 0.08 : 0, 0.02]}
+          fontSize={0.18}
           color="#FFFFFF"
           anchorX="center"
           anchorY="middle"
         >
-          Adek Khalid 🥁
+          {isFollowing ? 'Adek Khalid 🏃‍♂️' : 'Adek Khalid 🥁'}
         </Text>
+        {(statusTag || isFollowing) && (
+          <Text
+            position={[0, -0.11, 0.02]}
+            fontSize={0.11}
+            color="#FEF08A"
+            anchorX="center"
+            anchorY="middle"
+          >
+            {isFollowing ? 'Ikut Mbak Khaulah ✨' : statusTag}
+          </Text>
+        )}
       </Billboard>
     </group>
   );
@@ -1014,7 +1276,7 @@ const KhalidModel: React.FC<{ position: [number, number, number] }> = ({ positio
 // ============================================================================
 // 4. FAQIH MODEL (ADEK FAQIH - 2 TAHUN, BALITA GEMAS, MAIN MOBILAN)
 // ============================================================================
-const FaqihModel: React.FC<{ position: [number, number, number] }> = ({ position }) => {
+const FaqihModel: React.FC<{ position: [number, number, number]; statusTag?: string }> = ({ position, statusTag }) => {
   const groupRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
   const toyCarRef = useRef<THREE.Group>(null);
@@ -1022,11 +1284,18 @@ const FaqihModel: React.FC<{ position: [number, number, number] }> = ({ position
   const wheelRefs = useRef<(THREE.Mesh | null)[]>([]);
   const eyeScale = useRef(1);
   const blinkTimer = useRef(2.2);
+  const currentPos = useRef(new THREE.Vector3(position[0], position[1], position[2]));
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
     const time = state.clock.getElapsedTime();
     const playerPos = gameStore.getState().playerPos;
+
+    // Smooth movement towards scheduled position
+    currentPos.current.x = THREE.MathUtils.lerp(currentPos.current.x, position[0], delta * 2.2);
+    currentPos.current.y = THREE.MathUtils.lerp(currentPos.current.y, position[1], delta * 2.2);
+    currentPos.current.z = THREE.MathUtils.lerp(currentPos.current.z, position[2], delta * 2.2);
+    groupRef.current.position.copy(currentPos.current);
 
     // Blinking
     blinkTimer.current -= delta;
@@ -1038,8 +1307,8 @@ const FaqihModel: React.FC<{ position: [number, number, number] }> = ({ position
       }
     }
 
-    const dx = playerPos[0] - position[0];
-    const dz = playerPos[2] - position[2];
+    const dx = playerPos[0] - currentPos.current.x;
+    const dz = playerPos[2] - currentPos.current.z;
     const distSq = dx * dx + dz * dz;
 
     // Toy car cruising motion back and forth on the play mat
@@ -1291,21 +1560,32 @@ const FaqihModel: React.FC<{ position: [number, number, number] }> = ({ position
         </group>
       </group>
 
-      {/* Floating Billboard Name Tag (Cukup Nama Saja, Tanpa Umur) */}
-      <Billboard position={[0, 1.35, 0]}>
+      {/* Floating Billboard Name Tag */}
+      <Billboard position={[0, 1.45, 0]}>
         <mesh>
-          <planeGeometry args={[1.5, 0.4]} />
+          <planeGeometry args={[statusTag ? 2.2 : 1.5, 0.46]} />
           <meshBasicMaterial color="#2A9D8F" transparent opacity={0.88} />
         </mesh>
         <Text
-          position={[0, 0, 0.02]}
-          fontSize={0.2}
+          position={[0, statusTag ? 0.08 : 0, 0.02]}
+          fontSize={0.18}
           color="#FFFFFF"
           anchorX="center"
           anchorY="middle"
         >
           Adek Faqih 🚗
         </Text>
+        {statusTag && (
+          <Text
+            position={[0, -0.11, 0.02]}
+            fontSize={0.11}
+            color="#E0F2FE"
+            anchorX="center"
+            anchorY="middle"
+          >
+            {statusTag}
+          </Text>
+        )}
       </Billboard>
     </group>
   );
@@ -1314,67 +1594,11 @@ const FaqihModel: React.FC<{ position: [number, number, number] }> = ({ position
 // ============================================================================
 // MAIN FAMILY COMPONENT WITH PROXIMITY DETECTION & INTERACTION
 // ============================================================================
-const FAMILY_MEMBERS = [
-  {
-    id: 'abi',
-    pos: [-3.0, 0.2, -4.5] as [number, number, number],
-    title: 'Abi',
-    prompt: 'Tekan [E] untuk Sapa Abi! 💻',
-    dialog: {
-      speaker: 'Abi',
-      role: 'Ayah Tercinta 💻',
-      avatarBg: 'bg-blue-600',
-      text: 'Assalamu\'alaikum Khaulah putri shalihah Abi! Abi sedang fokus menyelesaikan pekerjaan dan coding di laptop untuk keluarga. Tapi melihat senyum ceria Khaulah membuat lelah Abi langsung hilang! Semangat selalu ya nak!',
-      actionText: '💻 Tos Semangat sama Abi! ✨',
-      actionType: 'high_five' as const,
-    },
-  },
-  {
-    id: 'ummi',
-    pos: [2.8, 0.2, -4.2] as [number, number, number],
-    title: 'Ummi',
-    prompt: 'Tekan [E] untuk Sapa Ummi! 🧕🧹',
-    dialog: {
-      speaker: 'Ummi',
-      role: 'Ibu Tercinta Bercadar 🧕',
-      avatarBg: 'bg-rose-500',
-      text: 'Assalamu\'alaikum Khaulah bidadari kecil Ummi! Kebersihan itu sebagian dari iman, nak. Ummi sedang menyapu teras agar rumah kita selalu asri dan rapi. Ummi sudah siapkan bekal cinta terenak untuk Khaulah, ayo ambil sayang!',
-      actionText: '🧹 Ambil Bekal Berkah Ummi! (+Speed Boost ⚡)',
-      actionType: 'take_snack' as const,
-    },
-  },
-  {
-    id: 'khalid',
-    pos: [-1.8, 0.2, -1.8] as [number, number, number],
-    title: 'Adek Khalid',
-    prompt: 'Tekan [E] untuk Main Drumband! 🥁',
-    dialog: {
-      speaker: 'Adek Khalid',
-      role: 'Pemain Drumband Cilik 👦🥁',
-      avatarBg: 'bg-amber-500',
-      text: 'Mbak Khaulah lihat nih! Khalid lagi latihan drumband! Dum-tak-tak-dum ratatat! Nanti pas pawai drum band di TK, Khalid mau main paling hebat bareng Mbak Khaulah!',
-      actionText: '🥁 Main Drumband Bareng Khalid! 🎶',
-      actionType: 'play_drumband' as const,
-    },
-  },
-  {
-    id: 'faqih',
-    pos: [2.0, 0.2, -1.8] as [number, number, number],
-    title: 'Adek Faqih',
-    prompt: 'Tekan [E] untuk Main Mobilan! 🚗',
-    dialog: {
-      speaker: 'Adek Faqih',
-      role: 'Adik Gemas Balap Mobilan 👶🚗',
-      avatarBg: 'bg-emerald-500',
-      text: 'Ngeeeng! Brum brum pip pip! Adek Faqih lagi seru banget ngebutin mobil-mobilan di karpet lintasan! Mbak Khaulah ayo balapan mobilan bareng Faqih!',
-      actionText: '🚗 Balapan Mobilan bareng Faqih! 💨',
-      actionType: 'play_toycar' as const,
-    },
-  },
-];
-
 export const FamilyMembers: React.FC = () => {
   const lastNearId = useRef<string | null>(null);
+  const timeOfDay = useGameStore((s) => s.timeOfDay);
+  const isKhalidFollowing = useGameStore((s) => s.isKhalidFollowing);
+  const schedule = FAMILY_SCHEDULE[timeOfDay] || FAMILY_SCHEDULE.siang;
 
   useEffect(() => {
     // Abi's laptop work desk
@@ -1384,28 +1608,101 @@ export const FamilyMembers: React.FC = () => {
     };
   }, []);
 
+  const getDynamicMembers = () => [
+    {
+      id: 'abi',
+      pos: schedule.abi.pos,
+      title: 'Abi',
+      prompt: `Tekan [E] untuk Sapa Abi! 💻 (${schedule.abi.status})`,
+      dialog: {
+        speaker: 'Abi',
+        role: `Ayah Tercinta 💻 (${schedule.abi.status})`,
+        avatarBg: 'bg-blue-600',
+        text: schedule.abi.text,
+        actionText: '💻 Tos Semangat sama Abi! ✨',
+        actionType: 'high_five' as const,
+      },
+    },
+    {
+      id: 'ummi',
+      pos: schedule.ummi.pos,
+      title: 'Ummi',
+      prompt: `Tekan [E] untuk Sapa Ummi! 🧕 (${schedule.ummi.status})`,
+      dialog: {
+        speaker: 'Ummi',
+        role: `Ibu Tercinta Bercadar 🧕 (${schedule.ummi.status})`,
+        avatarBg: 'bg-rose-500',
+        text: schedule.ummi.text,
+        actionText: '🧹 Ambil Bekal Berkah Ummi! (+Speed Boost ⚡)',
+        actionType: 'take_snack' as const,
+      },
+    },
+    {
+      id: 'khalid',
+      pos: isKhalidFollowing ? gameStore.getState().khalidPos : schedule.khalid.pos,
+      title: 'Adek Khalid',
+      prompt: isKhalidFollowing
+        ? 'Tekan [E] untuk Suruh Khalid Istirahat! 👦🏠'
+        : `Tekan [E] untuk Ajak Khalid Ikut! 👦🏃‍♂️ (${schedule.khalid.status})`,
+      dialog: {
+        speaker: 'Adek Khalid',
+        role: isKhalidFollowing
+          ? 'Sahabat Petualang Cilik 👦🏃‍♂️'
+          : `Pemain Drumband Cilik 👦🥁 (${schedule.khalid.status})`,
+        avatarBg: 'bg-amber-500',
+        text: isKhalidFollowing
+          ? 'Mbak Khaulah! Khalid senang banget ikut lari-larian keliling desa! Mau Khalid terus ikut petualangan, atau istirahat di sini dulu?'
+          : schedule.khalid.text,
+        actionText: isKhalidFollowing
+          ? '🏠 Adek Khalid Istirahat di Teras Dulu 🌸'
+          : '🏃‍♂️ Ajak Adek Khalid Ikut Petualangan! ✨',
+        actionType: 'toggle_khalid_follow' as const,
+      },
+    },
+    {
+      id: 'faqih',
+      pos: schedule.faqih.pos,
+      title: 'Adek Faqih',
+      prompt: `Tekan [E] untuk Main bareng Faqih! 👶 (${schedule.faqih.status})`,
+      dialog: {
+        speaker: 'Adek Faqih',
+        role: `Adik Gemas Balap Mobilan 👶🚗 (${schedule.faqih.status})`,
+        avatarBg: 'bg-emerald-500',
+        text: schedule.faqih.text,
+        actionText: '🚗 Balapan Mobilan bareng Faqih! 💨',
+        actionType: 'play_toycar' as const,
+      },
+    },
+  ];
+
   useFrame(() => {
     const playerPos = gameStore.getState().playerPos;
+    const members = getDynamicMembers();
 
-    let foundNear: (typeof FAMILY_MEMBERS)[0] | null = null;
-    for (const m of FAMILY_MEMBERS) {
+    let closestMember: (typeof members)[0] | null = null;
+    let closestDistSq = Infinity;
+
+    for (const m of members) {
       const distSq =
         Math.pow(playerPos[0] - m.pos[0], 2) +
         Math.pow(playerPos[1] - m.pos[1], 2) +
         Math.pow(playerPos[2] - m.pos[2], 2);
-      if (distSq < 6.0) {
-        foundNear = m;
-        break;
+      // If Khalid is following, give non-following members a slight priority when standing close
+      const effectiveDist = (m.id === 'khalid' && isKhalidFollowing) ? distSq + 1.6 : distSq;
+
+      if (effectiveDist < 6.0 && effectiveDist < closestDistSq) {
+        closestDistSq = effectiveDist;
+        closestMember = m;
       }
     }
 
-    if (foundNear) {
-      if (lastNearId.current !== foundNear.id) {
-        lastNearId.current = foundNear.id;
+    if (closestMember) {
+      if (lastNearId.current !== closestMember.id) {
+        lastNearId.current = closestMember.id;
         gameStore.setNearbyInteractable({
-          id: foundNear.id,
-          title: foundNear.title,
-          prompt: foundNear.prompt,
+          id: closestMember.id,
+          title: closestMember.title,
+          prompt: closestMember.prompt,
         });
       }
     } else {
@@ -1416,13 +1713,15 @@ export const FamilyMembers: React.FC = () => {
     }
   });
 
+  const members = getDynamicMembers();
+
   return (
     <group>
-      {/* 1. Abi (27 Tahun, Depan Laptop Tanpa Kacamata) */}
+      {/* 1. Abi (Ayah 27 Tahun) */}
       <group
         onClick={(e) => {
           e.stopPropagation();
-          gameStore.openDialog(FAMILY_MEMBERS[0].dialog);
+          gameStore.openDialog(members[0].dialog);
         }}
         onPointerOver={(e) => {
           e.stopPropagation();
@@ -1432,14 +1731,14 @@ export const FamilyMembers: React.FC = () => {
           document.body.style.cursor = 'auto';
         }}
       >
-        <AbiModel position={[-3.0, 0.2, -4.5]} />
+        <AbiModel position={schedule.abi.pos} statusTag={schedule.abi.status} />
       </group>
 
-      {/* 2. Ummi (26 Tahun, Bercadar Menyapu Teras) */}
+      {/* 2. Ummi (Ibu Bercadar 26 Tahun) */}
       <group
         onClick={(e) => {
           e.stopPropagation();
-          gameStore.openDialog(FAMILY_MEMBERS[1].dialog);
+          gameStore.openDialog(members[1].dialog);
         }}
         onPointerOver={(e) => {
           e.stopPropagation();
@@ -1449,14 +1748,14 @@ export const FamilyMembers: React.FC = () => {
           document.body.style.cursor = 'auto';
         }}
       >
-        <UmmiModel position={[2.8, 0.2, -4.2]} />
+        <UmmiModel position={schedule.ummi.pos} statusTag={schedule.ummi.status} />
       </group>
 
-      {/* 3. Adek Khalid (4 Tahun, Main Drumband) */}
+      {/* 3. Adek Khalid (4 Tahun, Follow Mode & Drumband) */}
       <group
         onClick={(e) => {
           e.stopPropagation();
-          gameStore.openDialog(FAMILY_MEMBERS[2].dialog);
+          gameStore.openDialog(members[2].dialog);
         }}
         onPointerOver={(e) => {
           e.stopPropagation();
@@ -1466,14 +1765,14 @@ export const FamilyMembers: React.FC = () => {
           document.body.style.cursor = 'auto';
         }}
       >
-        <KhalidModel position={[-1.8, 0.2, -1.8]} />
+        <KhalidModel position={schedule.khalid.pos} statusTag={schedule.khalid.status} />
       </group>
 
       {/* 4. Adek Faqih (2 Tahun, Main Mobilan) */}
       <group
         onClick={(e) => {
           e.stopPropagation();
-          gameStore.openDialog(FAMILY_MEMBERS[3].dialog);
+          gameStore.openDialog(members[3].dialog);
         }}
         onPointerOver={(e) => {
           e.stopPropagation();
@@ -1483,7 +1782,7 @@ export const FamilyMembers: React.FC = () => {
           document.body.style.cursor = 'auto';
         }}
       >
-        <FaqihModel position={[2.0, 0.2, -1.8]} />
+        <FaqihModel position={schedule.faqih.pos} statusTag={schedule.faqih.status} />
       </group>
     </group>
   );
