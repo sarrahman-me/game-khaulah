@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
-import { Text } from '@react-three/drei';
+import React, { useEffect, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
+import { useGameStore, gameStore } from '../../../state/useGameStore';
 import {
   colliders,
   addSolidBox,
@@ -10,20 +12,21 @@ import {
   PlatformCollider,
 } from '../../../state/colliders';
 
-export const RumahKhaulah: React.FC = () => {
+// ============================================================================
+// 1. RUMAH KHAULAH EXTERIOR (DUNIA LUAR - POSISI [0, 0, 0])
+// ============================================================================
+export const RumahKhaulahExterior: React.FC = () => {
+  const isInsideHouse = useGameStore((s) => s.isInsideHouse);
+  const lastNearDoorRef = useRef<string | null>(null);
+
   useEffect(() => {
     // ------------------------------------------------------------------------
-    // 1. WALKABLE FLOOR COLLIDERS (GROUND TYPE)
+    // WALKABLE EXTERIOR GROUND COLLIDERS
     // ------------------------------------------------------------------------
     // Front Porch Floor (Z: -2.4 to -6.5, X: -8.5 to 8.5)
     const porchBox = new THREE.Box3(
       new THREE.Vector3(-8.5, -0.5, -6.6),
       new THREE.Vector3(8.5, 0.45, -2.4)
-    );
-    // Main House Interior Floor (Z: -6.5 to -17.6, X: -8.5 to 8.5)
-    const interiorFloorBox = new THREE.Box3(
-      new THREE.Vector3(-8.5, -0.5, -17.6),
-      new THREE.Vector3(8.5, 0.45, -6.4)
     );
     // Back Veranda Deck Floor (Z: -17.5 to -23.8, X: -6.0 to 6.0)
     const backVerandaBox = new THREE.Box3(
@@ -32,40 +35,24 @@ export const RumahKhaulah: React.FC = () => {
     );
 
     const cPorch: PlatformCollider = { box: porchBox, type: 'ground' };
-    const cInterior: PlatformCollider = { box: interiorFloorBox, type: 'ground' };
     const cVeranda: PlatformCollider = { box: backVerandaBox, type: 'ground' };
-    colliders.push(cPorch, cInterior, cVeranda);
+    colliders.push(cPorch, cVeranda);
 
     // ------------------------------------------------------------------------
-    // 2. PHYSICAL SOLID COLLIDERS (WALLS & OBSTACLES)
+    // SOLID WALLS & CLOSED DOOR BLOCKERS (OUTDOOR COLLIDERS)
     // ------------------------------------------------------------------------
     const solids: SolidCollider[] = [
-      // Front Wall (Z: -6.5): Left wing & Right wing, leaving center arch (X: -1.6 to +1.6) open
-      addSolidBox([-8.6, 0, -6.8], [-1.6, 4.5, -6.2], 'wall_front_left'),
-      addSolidBox([1.6, 0, -6.8], [8.6, 4.5, -6.2], 'wall_front_right'),
+      // Solid Front Wall (Completely closes the house from the outside!)
+      addSolidBox([-8.6, 0, -6.8], [8.6, 4.5, -6.2], 'ext_wall_front'),
 
       // Left Exterior Wall (X: -8.5, Z: -17.6 to -6.4)
-      addSolidBox([-8.8, 0, -17.6], [-8.2, 4.5, -6.4], 'wall_left_ext'),
+      addSolidBox([-8.8, 0, -17.6], [-8.2, 4.5, -6.4], 'ext_wall_left'),
 
       // Right Exterior Wall (X: +8.5, Z: -17.6 to -6.4)
-      addSolidBox([8.2, 0, -17.6], [8.8, 4.5, -6.4], 'wall_right_ext'),
+      addSolidBox([8.2, 0, -17.6], [8.8, 4.5, -6.4], 'ext_wall_right'),
 
-      // Back Exterior Wall (Z: -17.5): Left wing & Right wing, leaving center French doors (X: -1.6 to +1.6) open
-      addSolidBox([-8.6, 0, -17.8], [-1.6, 4.5, -17.2], 'wall_back_left'),
-      addSolidBox([1.6, 0, -17.8], [8.6, 4.5, -17.2], 'wall_back_right'),
-
-      // Interior Partition Walls:
-      // Left Room Divider (Office vs Musholla at Z: -12.0)
-      addSolidBox([-8.4, 0, -12.2], [-3.2, 3.8, -11.8], 'interior_left_divider'),
-      // Left Hallway Wall (with wide arch doorway between Z: -13.5 and -10.5)
-      addSolidBox([-3.0, 0, -17.5], [-2.6, 3.8, -13.5], 'interior_left_hall_back'),
-      addSolidBox([-3.0, 0, -10.5], [-2.6, 3.8, -6.5], 'interior_left_hall_front'),
-
-      // Right Room Divider (Kitchen vs Bedroom at Z: -12.0)
-      addSolidBox([3.2, 0, -12.2], [8.4, 3.8, -11.8], 'interior_right_divider'),
-      // Right Hallway Wall (with wide arch doorway between Z: -13.5 and -10.5)
-      addSolidBox([2.6, 0, -17.5], [3.0, 3.8, -13.5], 'interior_right_hall_back'),
-      addSolidBox([2.6, 0, -10.5], [3.0, 3.8, -6.5], 'interior_right_hall_front'),
+      // Solid Back Wall (Completely closes the house towards the backyard veranda!)
+      addSolidBox([-8.6, 0, -17.8], [8.6, 4.5, -17.2], 'ext_wall_back'),
 
       // Front Porch Main Pillars
       addSolidCylinder(-7.8, -2.8, 0.25, 0, 3.6, 'porch_col_left_corner'),
@@ -87,7 +74,7 @@ export const RumahKhaulah: React.FC = () => {
     ];
 
     return () => {
-      [cPorch, cInterior, cVeranda].forEach((c) => {
+      [cPorch, cVeranda].forEach((c) => {
         const idx = colliders.indexOf(c);
         if (idx !== -1) colliders.splice(idx, 1);
       });
@@ -95,8 +82,47 @@ export const RumahKhaulah: React.FC = () => {
     };
   }, []);
 
+  // Proximity Detection for Exterior Doors
+  useFrame(() => {
+    if (isInsideHouse) return;
+    const playerPos = gameStore.getState().playerPos;
+
+    // Front door zone (on porch in front of door at [0, 0.2, -5.3])
+    const distFront = Math.hypot(playerPos[0] - 0, playerPos[2] - (-5.3));
+    // Back door zone (on veranda in front of back door at [0, 0.2, -18.6])
+    const distBack = Math.hypot(playerPos[0] - 0, playerPos[2] - (-18.6));
+
+    if (distFront < 2.5) {
+      if (lastNearDoorRef.current !== 'front') {
+        lastNearDoorRef.current = 'front';
+        gameStore.setNearbyInteractable({
+          id: 'house_front_door',
+          title: 'Pintu Rumah Khaulah',
+          prompt: 'Tekan [E] untuk Masuk ke Rumah Khaulah! 🏡🚪',
+        });
+      }
+    } else if (distBack < 2.5) {
+      if (lastNearDoorRef.current !== 'back') {
+        lastNearDoorRef.current = 'back';
+        gameStore.setNearbyInteractable({
+          id: 'house_back_door',
+          title: 'Pintu Belakang Rumah',
+          prompt: 'Tekan [E] untuk Masuk ke Rumah (Pintu Belakang)! 🏡🚪',
+        });
+      }
+    } else {
+      if (lastNearDoorRef.current !== null) {
+        lastNearDoorRef.current = null;
+        const cur = gameStore.getState().nearbyInteractable;
+        if (cur?.id === 'house_front_door' || cur?.id === 'house_back_door') {
+          gameStore.setNearbyInteractable(null);
+        }
+      }
+    }
+  });
+
   return (
-    <group position={[0, 0, 0]}>
+    <group position={[0, 0, 0]} visible={!isInsideHouse}>
       {/* ============================================================== */}
       {/* 1. FRONT PORCH (TERAS DEPAN MEGAH, Z: -2.5 to -6.5, X: -8.5 to 8.5) */}
       {/* ============================================================== */}
@@ -113,7 +139,6 @@ export const RumahKhaulah: React.FC = () => {
             <cylinderGeometry args={[0.22, 0.25, 3.4, 16]} />
             <meshStandardMaterial color="#FFF1E6" roughness={0.6} />
           </mesh>
-          {/* Column Capital & Base */}
           <mesh position={[0, 1.65, 0]}>
             <boxGeometry args={[0.6, 0.15, 0.6]} />
             <meshStandardMaterial color="#E07A5F" />
@@ -140,17 +165,14 @@ export const RumahKhaulah: React.FC = () => {
       {/* Porch Decorative Balustrades / Railings */}
       {[-5.5, 5.5].map((rx, ri) => (
         <group key={ri} position={[rx, 0.65, -2.8]}>
-          {/* Top Rail */}
           <mesh castShadow>
             <boxGeometry args={[4.4, 0.1, 0.15]} />
             <meshStandardMaterial color="#7F4F24" />
           </mesh>
-          {/* Bottom Rail */}
           <mesh position={[0, -0.45, 0]}>
             <boxGeometry args={[4.4, 0.08, 0.12]} />
             <meshStandardMaterial color="#7F4F24" />
           </mesh>
-          {/* Balusters */}
           {[-1.8, -1.2, -0.6, 0, 0.6, 1.2, 1.8].map((bx, bi) => (
             <mesh key={bi} position={[bx, -0.22, 0]} castShadow>
               <cylinderGeometry args={[0.04, 0.04, 0.45, 8]} />
@@ -180,7 +202,7 @@ export const RumahKhaulah: React.FC = () => {
       ))}
 
       {/* ============================================================== */}
-      {/* 2. MAIN ENTRANCE FAÇADE & PLAQUE (Z: -6.5)                     */}
+      {/* 2. MAIN ENTRANCE FAÇADE & INTERACTIVE FRONT DOOR (Z: -6.5)     */}
       {/* ============================================================== */}
       {/* Front Wall Left Wing */}
       <mesh position={[-5.1, 2.25, -6.5]} castShadow receiveShadow>
@@ -198,7 +220,7 @@ export const RumahKhaulah: React.FC = () => {
         <meshStandardMaterial color="#FFF1E6" roughness={0.7} />
       </mesh>
 
-      {/* Front Door Decorative Wooden Portal Frame */}
+      {/* Front Door Decorative Portal Frame & Plaque */}
       <group position={[0, 1.35, -6.5]}>
         <mesh position={[-1.5, 0, 0.1]} castShadow>
           <boxGeometry args={[0.2, 2.7, 0.3]} />
@@ -229,14 +251,90 @@ export const RumahKhaulah: React.FC = () => {
         </Text>
       </group>
 
-      {/* Front Windows with Cozy Shutters & Flower Boxes */}
+      {/* --- CLOSED INTERACTIVE FRONT DOOR (PINTU DEPAN UTAMA) --- */}
+      <group
+        position={[0, 1.35, -6.45]}
+        onClick={(e) => {
+          e.stopPropagation();
+          gameStore.enterHouse('front');
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = 'auto';
+        }}
+      >
+        {/* Double Wooden Doors */}
+        <mesh position={[-0.7, 0, 0]} castShadow>
+          <boxGeometry args={[1.36, 2.65, 0.1]} />
+          <meshStandardMaterial color="#854D0E" roughness={0.4} />
+        </mesh>
+        <mesh position={[0.7, 0, 0]} castShadow>
+          <boxGeometry args={[1.36, 2.65, 0.1]} />
+          <meshStandardMaterial color="#854D0E" roughness={0.4} />
+        </mesh>
+        {/* Decorative Door Panels */}
+        {[-0.7, 0.7].map((dx, di) => (
+          <group key={di} position={[dx, 0, 0.055]}>
+            <mesh position={[0, 0.55, 0]}>
+              <boxGeometry args={[1.05, 0.95, 0.02]} />
+              <meshStandardMaterial color="#A16207" />
+            </mesh>
+            <mesh position={[0, -0.55, 0]}>
+              <boxGeometry args={[1.05, 0.95, 0.02]} />
+              <meshStandardMaterial color="#A16207" />
+            </mesh>
+          </group>
+        ))}
+        {/* Golden Polished Door Handles */}
+        <mesh position={[-0.15, 0.0, 0.08]}>
+          <cylinderGeometry args={[0.035, 0.035, 0.22, 12]} />
+          <meshStandardMaterial color="#FBBF24" metalness={0.9} roughness={0.15} />
+        </mesh>
+        <mesh position={[0.15, 0.0, 0.08]}>
+          <cylinderGeometry args={[0.035, 0.035, 0.22, 12]} />
+          <meshStandardMaterial color="#FBBF24" metalness={0.9} roughness={0.15} />
+        </mesh>
+
+        {/* Floating Interactive Door Indicator */}
+        <Billboard position={[0, 1.85, 0.4]}>
+          <Text fontSize={0.18} color="#FEF08A" anchorX="center" anchorY="middle">
+            🚪 [E] Masuk Rumah
+          </Text>
+        </Billboard>
+      </group>
+
+      {/* Welcome Doormat on Front Porch Floor */}
+      <group position={[0, 0.16, -5.3]}>
+        <mesh receiveShadow>
+          <boxGeometry args={[2.2, 0.02, 1.2]} />
+          <meshStandardMaterial color="#E11D48" roughness={0.8} />
+        </mesh>
+        <mesh position={[0, 0.015, 0]}>
+          <boxGeometry args={[2.0, 0.01, 1.0]} />
+          <meshStandardMaterial color="#FFE4E6" roughness={0.9} />
+        </mesh>
+        <Text
+          position={[0, 0.025, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          fontSize={0.15}
+          color="#9F1239"
+          anchorX="center"
+          anchorY="middle"
+        >
+          SELAMAT DATANG 🌸
+        </Text>
+      </group>
+
+      {/* Front Windows with Shutters & Flower Boxes */}
       {[-5.2, 5.2].map((wx, wi) => (
         <group key={wi} position={[wx, 2.1, -6.4]}>
           <mesh>
             <boxGeometry args={[2.0, 1.6, 0.1]} />
             <meshStandardMaterial color="#93C5FD" roughness={0.1} transparent opacity={0.75} />
           </mesh>
-          {/* Wooden Frame */}
           <mesh>
             <boxGeometry args={[2.1, 0.1, 0.14]} />
             <meshStandardMaterial color="#7F4F24" />
@@ -245,12 +343,10 @@ export const RumahKhaulah: React.FC = () => {
             <boxGeometry args={[0.1, 1.7, 0.14]} />
             <meshStandardMaterial color="#7F4F24" />
           </mesh>
-          {/* Flower Box */}
           <mesh position={[0, -0.95, 0.18]}>
             <boxGeometry args={[2.1, 0.32, 0.4]} />
             <meshStandardMaterial color="#9C6644" />
           </mesh>
-          {/* Fresh Blooms in Flower Box */}
           {[-0.8, -0.4, 0, 0.4, 0.8].map((fx, fi) => (
             <mesh key={fi} position={[fx, -0.72, 0.2]}>
               <sphereGeometry args={[0.13, 8, 8]} />
@@ -263,12 +359,12 @@ export const RumahKhaulah: React.FC = () => {
       {/* ============================================================== */}
       {/* 3. EXTERIOR WALLS & ROOF (LUAS, KEDALAMAN Z: -6.5 to -17.5)   */}
       {/* ============================================================== */}
-      {/* Left Exterior Wall (X: -8.5) */}
+      {/* Left Exterior Wall */}
       <mesh position={[-8.5, 2.25, -12.0]} castShadow receiveShadow>
         <boxGeometry args={[0.4, 4.3, 11.2]} />
         <meshStandardMaterial color="#FFF1E6" roughness={0.7} />
       </mesh>
-      {/* Right Exterior Wall (X: 8.5) */}
+      {/* Right Exterior Wall */}
       <mesh position={[8.5, 2.25, -12.0]} castShadow receiveShadow>
         <boxGeometry args={[0.4, 4.3, 11.2]} />
         <meshStandardMaterial color="#FFF1E6" roughness={0.7} />
@@ -315,9 +411,214 @@ export const RumahKhaulah: React.FC = () => {
       </mesh>
 
       {/* ============================================================== */}
-      {/* 4. SPACIOUS INTERIOR FLOORS & CEILING (WARM PARQUET & MARBLE)  */}
+      {/* 4. BACK VERANDA & GARDEN PERGOLA TO WATERPARK (Z: -17.5 to -23.5) */}
       {/* ============================================================== */}
-      {/* Main Interior Parquet Wood Floor */}
+      {/* Back Veranda Spacious Decking */}
+      <mesh position={[0, 0.15, -20.5]} receiveShadow>
+        <boxGeometry args={[11.6, 0.28, 6.0]} />
+        <meshStandardMaterial color="#DDB892" roughness={0.6} />
+      </mesh>
+
+      {/* Back Veranda Protective Railings */}
+      {[-5.6, 5.6].map((vx, vi) => (
+        <group key={vi} position={[vx, 0.7, -20.5]}>
+          <mesh castShadow>
+            <boxGeometry args={[0.15, 0.85, 5.8]} />
+            <meshStandardMaterial color="#7F4F24" />
+          </mesh>
+        </group>
+      ))}
+
+      {/* --- CLOSED INTERACTIVE BACK DOOR (PINTU BELAKANG MENUJU KOLAM) --- */}
+      <group
+        position={[0, 1.35, -17.5]}
+        onClick={(e) => {
+          e.stopPropagation();
+          gameStore.enterHouse('back');
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = 'auto';
+        }}
+      >
+        <mesh castShadow>
+          <boxGeometry args={[2.8, 2.7, 0.12]} />
+          <meshStandardMaterial color="#7F4F24" roughness={0.6} />
+        </mesh>
+        {/* Tinted Glass Panes */}
+        {[-0.65, 0.65].map((gx, gi) => (
+          <mesh key={gi} position={[gx, 0.15, 0.02]}>
+            <boxGeometry args={[0.9, 2.1, 0.06]} />
+            <meshStandardMaterial color="#93C5FD" transparent opacity={0.7} roughness={0.1} />
+          </mesh>
+        ))}
+        {/* Navigation Plaque */}
+        <mesh position={[0, 1.55, -0.1]}>
+          <boxGeometry args={[3.2, 0.45, 0.06]} />
+          <meshStandardMaterial color="#0096C7" />
+        </mesh>
+        <Text
+          position={[0, 1.55, -0.15]}
+          rotation={[0, Math.PI, 0]}
+          fontSize={0.17}
+          color="#FFFFFF"
+          anchorX="center"
+          anchorY="middle"
+        >
+          🏊‍♀️ PINTU MASUK KE RUMAH KHAULAH 🏡
+        </Text>
+
+        {/* Billboard Indicator for back door */}
+        <Billboard position={[0, 1.9, -0.4]}>
+          <Text fontSize={0.18} color="#FEF08A" anchorX="center" anchorY="middle">
+            🚪 [E] Masuk Rumah
+          </Text>
+        </Billboard>
+      </group>
+
+      {/* Flower-Covered Garden Pergola Archway Entry to Pool (Z: -23.5) */}
+      <group position={[0, 0, -23.5]}>
+        <mesh position={[-2.4, 1.7, 0]} castShadow>
+          <cylinderGeometry args={[0.14, 0.16, 3.4, 12]} />
+          <meshStandardMaterial color="#6F4E37" />
+        </mesh>
+        <mesh position={[2.4, 1.7, 0]} castShadow>
+          <cylinderGeometry args={[0.14, 0.16, 3.4, 12]} />
+          <meshStandardMaterial color="#6F4E37" />
+        </mesh>
+        <mesh position={[0, 3.45, 0]} castShadow>
+          <boxGeometry args={[5.2, 0.2, 0.4]} />
+          <meshStandardMaterial color="#6F4E37" />
+        </mesh>
+        {[-1.8, -0.9, 0, 0.9, 1.8].map((bx, bi) => (
+          <mesh key={bi} position={[bx, 3.6, 0]}>
+            <boxGeometry args={[0.12, 0.14, 1.4]} />
+            <meshStandardMaterial color="#6F4E37" />
+          </mesh>
+        ))}
+        {/* Climbing Ivy & Flowers on Pergola */}
+        <mesh position={[-2.4, 2.4, 0]}>
+          <sphereGeometry args={[0.42, 8, 8]} />
+          <meshStandardMaterial color="#2D6A4F" roughness={0.6} />
+        </mesh>
+        <mesh position={[2.4, 2.2, 0]}>
+          <sphereGeometry args={[0.38, 8, 8]} />
+          <meshStandardMaterial color="#2D6A4F" roughness={0.6} />
+        </mesh>
+        {[-2.2, -1.2, 0, 1.2, 2.2].map((fx, fi) => (
+          <mesh key={fi} position={[fx, 3.5, fi % 2 === 0 ? 0.25 : -0.25]}>
+            <sphereGeometry args={[0.14, 6, 6]} />
+            <meshStandardMaterial color={fi % 2 === 0 ? '#FF6B8B' : '#FFD166'} />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  );
+};
+
+// ============================================================================
+// 2. RUMAH KHAULAH INTERIOR (DUNIA DALAM RUMAH - POSISI DEDIKASI [160, 0, 0])
+// ============================================================================
+export const RumahKhaulahInterior: React.FC = () => {
+  const isInsideHouse = useGameStore((s) => s.isInsideHouse);
+  const lastNearExitRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    // ------------------------------------------------------------------------
+    // WALKABLE INTERIOR GROUND COLLIDER (GROUND TYPE)
+    // ------------------------------------------------------------------------
+    const interiorFloorBox = new THREE.Box3(
+      new THREE.Vector3(160 - 8.5, -0.5, -17.6),
+      new THREE.Vector3(160 + 8.5, 0.45, -6.4)
+    );
+    const cInterior: PlatformCollider = { box: interiorFloorBox, type: 'ground' };
+    colliders.push(cInterior);
+
+    // ------------------------------------------------------------------------
+    // SOLID WALLS ENCLOSING THE INTERIOR (PREVENTS FALLING OUT)
+    // ------------------------------------------------------------------------
+    const solids: SolidCollider[] = [
+      // Front Interior Enclosing Wall (Z: -6.5)
+      addSolidBox([160 - 8.6, 0, -6.6], [160 + 8.6, 4.5, -6.2], 'int_front_wall'),
+
+      // Back Interior Enclosing Wall (Z: -17.5)
+      addSolidBox([160 - 8.6, 0, -17.8], [160 + 8.6, 4.5, -17.4], 'int_back_wall'),
+
+      // Left Interior Wall (X: 160 - 8.5 = 151.5)
+      addSolidBox([160 - 8.8, 0, -17.6], [160 - 8.2, 4.5, -6.4], 'int_left_wall'),
+
+      // Right Interior Wall (X: 160 + 8.5 = 168.5)
+      addSolidBox([160 + 8.2, 0, -17.6], [160 + 8.8, 4.5, -6.4], 'int_right_wall'),
+
+      // Interior Partition Walls:
+      // Left Room Divider (Office vs Musholla at Z: -12.0)
+      addSolidBox([160 - 8.4, 0, -12.2], [160 - 3.2, 3.8, -11.8], 'int_left_divider'),
+      // Left Hallway Wall (with wide arch doorway between Z: -13.5 and -10.5)
+      addSolidBox([160 - 3.0, 0, -17.5], [160 - 2.6, 3.8, -13.5], 'int_left_hall_back'),
+      addSolidBox([160 - 3.0, 0, -10.5], [160 - 2.6, 3.8, -6.5], 'int_left_hall_front'),
+
+      // Right Room Divider (Kitchen vs Bedroom at Z: -12.0)
+      addSolidBox([160 + 3.2, 0, -12.2], [160 + 8.4, 3.8, -11.8], 'int_right_divider'),
+      // Right Hallway Wall (with wide arch doorway between Z: -13.5 and -10.5)
+      addSolidBox([160 + 2.6, 0, -17.5], [160 + 3.0, 3.8, -13.5], 'int_right_hall_back'),
+      addSolidBox([160 + 2.6, 0, -10.5], [160 + 3.0, 3.8, -6.5], 'int_right_hall_front'),
+    ];
+
+    return () => {
+      const idx = colliders.indexOf(cInterior);
+      if (idx !== -1) colliders.splice(idx, 1);
+      solids.forEach((s) => removeSolidCollider(s));
+    };
+  }, []);
+
+  // Proximity Detection for Interior Exit Doors
+  useFrame(() => {
+    if (!isInsideHouse) return;
+    const playerPos = gameStore.getState().playerPos;
+
+    // Front Exit Door zone (at [160, 0.2, -7.0])
+    const distFrontExit = Math.hypot(playerPos[0] - 160, playerPos[2] - (-7.0));
+    // Back Exit Door zone (at [160, 0.2, -16.8])
+    const distBackExit = Math.hypot(playerPos[0] - 160, playerPos[2] - (-16.8));
+
+    if (distFrontExit < 2.5) {
+      if (lastNearExitRef.current !== 'front') {
+        lastNearExitRef.current = 'front';
+        gameStore.setNearbyInteractable({
+          id: 'interior_exit_front',
+          title: 'Pintu Keluar Depan',
+          prompt: 'Tekan [E] untuk Keluar ke Halaman Depan! 🌳🚪',
+        });
+      }
+    } else if (distBackExit < 2.5) {
+      if (lastNearExitRef.current !== 'back') {
+        lastNearExitRef.current = 'back';
+        gameStore.setNearbyInteractable({
+          id: 'interior_exit_back',
+          title: 'Pintu Keluar Belakang',
+          prompt: 'Tekan [E] untuk Keluar ke Kolam Renang / Waterpark! 🏊‍♀️🌴',
+        });
+      }
+    } else {
+      if (lastNearExitRef.current !== null) {
+        lastNearExitRef.current = null;
+        const cur = gameStore.getState().nearbyInteractable;
+        if (cur?.id === 'interior_exit_front' || cur?.id === 'interior_exit_back') {
+          gameStore.setNearbyInteractable(null);
+        }
+      }
+    }
+  });
+
+  return (
+    <group position={[160, 0, 0]} visible={isInsideHouse}>
+      {/* ============================================================== */}
+      {/* 1. INTERIOR PARQUET FLOOR & ROOM RUGS                           */}
+      {/* ============================================================== */}
+      {/* Main Parquet Wood Floor */}
       <mesh position={[0, 0.16, -12.0]} receiveShadow>
         <boxGeometry args={[16.6, 0.3, 10.8]} />
         <meshStandardMaterial color="#DDB892" roughness={0.4} />
@@ -329,7 +630,7 @@ export const RumahKhaulah: React.FC = () => {
         <meshStandardMaterial color="#F4ACB7" roughness={0.8} />
       </mesh>
 
-      {/* Musholla Green Carpet in Back-Left Room */}
+      {/* Musholla Emerald Green Carpet in Back-Left Room */}
       <mesh position={[-5.5, 0.17, -15.0]} receiveShadow>
         <boxGeometry args={[4.8, 0.02, 4.2]} />
         <meshStandardMaterial color="#2D6A4F" roughness={0.8} />
@@ -354,7 +655,55 @@ export const RumahKhaulah: React.FC = () => {
       </mesh>
 
       {/* ============================================================== */}
-      {/* 5. INTERIOR PARTITION WALLS & ARCHWAYS                         */}
+      {/* 2. SOLID INTERIOR WALLS & COZY CEILING                         */}
+      {/* ============================================================== */}
+      {/* Front Wall with Arch Header above Exit Door */}
+      <mesh position={[-5.1, 2.25, -6.5]} receiveShadow>
+        <boxGeometry args={[6.8, 4.3, 0.3]} />
+        <meshStandardMaterial color="#FFF1E6" roughness={0.7} />
+      </mesh>
+      <mesh position={[5.1, 2.25, -6.5]} receiveShadow>
+        <boxGeometry args={[6.8, 4.3, 0.3]} />
+        <meshStandardMaterial color="#FFF1E6" roughness={0.7} />
+      </mesh>
+      <mesh position={[0, 3.55, -6.5]} receiveShadow>
+        <boxGeometry args={[3.4, 1.7, 0.3]} />
+        <meshStandardMaterial color="#FFF1E6" roughness={0.7} />
+      </mesh>
+
+      {/* Back Wall with Arch Header above Pool Exit Door */}
+      <mesh position={[-5.1, 2.25, -17.5]} receiveShadow>
+        <boxGeometry args={[6.8, 4.3, 0.3]} />
+        <meshStandardMaterial color="#FFF1E6" roughness={0.7} />
+      </mesh>
+      <mesh position={[5.1, 2.25, -17.5]} receiveShadow>
+        <boxGeometry args={[6.8, 4.3, 0.3]} />
+        <meshStandardMaterial color="#FFF1E6" roughness={0.7} />
+      </mesh>
+      <mesh position={[0, 3.55, -17.5]} receiveShadow>
+        <boxGeometry args={[3.4, 1.7, 0.3]} />
+        <meshStandardMaterial color="#FFF1E6" roughness={0.7} />
+      </mesh>
+
+      {/* Left Wall */}
+      <mesh position={[-8.5, 2.25, -12.0]} receiveShadow>
+        <boxGeometry args={[0.3, 4.3, 11.2]} />
+        <meshStandardMaterial color="#FFF1E6" roughness={0.7} />
+      </mesh>
+      {/* Right Wall */}
+      <mesh position={[8.5, 2.25, -12.0]} receiveShadow>
+        <boxGeometry args={[0.3, 4.3, 11.2]} />
+        <meshStandardMaterial color="#FFF1E6" roughness={0.7} />
+      </mesh>
+
+      {/* Full Enclosing Ceiling with Warm Tone */}
+      <mesh position={[0, 4.25, -12.0]} receiveShadow>
+        <boxGeometry args={[17.2, 0.2, 11.4]} />
+        <meshStandardMaterial color="#FAF5EF" roughness={0.9} />
+      </mesh>
+
+      {/* ============================================================== */}
+      {/* 3. INTERIOR PARTITION WALLS & ARCHWAYS                         */}
       {/* ============================================================== */}
       {/* Left Dividing Wall (Separating Office & Musholla at Z: -12.0) */}
       <mesh position={[-5.8, 1.9, -12.0]} castShadow receiveShadow>
@@ -397,18 +746,111 @@ export const RumahKhaulah: React.FC = () => {
       </mesh>
 
       {/* ============================================================== */}
-      {/* 6. STATIC FURNITURE & FIXTURES FOR EACH ROOM                   */}
+      {/* 4. INTERIOR EXIT DOORS (PINTU KELUAR)                           */}
+      {/* ============================================================== */}
+      {/* --- FRONT EXIT DOOR (KELUAR KE HALAMAN DEPAN) --- */}
+      <group
+        position={[0, 1.35, -6.55]}
+        onClick={(e) => {
+          e.stopPropagation();
+          gameStore.exitHouse('front');
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = 'auto';
+        }}
+      >
+        <mesh castShadow>
+          <boxGeometry args={[2.8, 2.65, 0.1]} />
+          <meshStandardMaterial color="#854D0E" roughness={0.4} />
+        </mesh>
+        {/* Golden Door Handles */}
+        <mesh position={[-0.15, 0, -0.06]}>
+          <cylinderGeometry args={[0.035, 0.035, 0.22, 12]} />
+          <meshStandardMaterial color="#FBBF24" metalness={0.9} roughness={0.15} />
+        </mesh>
+        <mesh position={[0.15, 0, -0.06]}>
+          <cylinderGeometry args={[0.035, 0.035, 0.22, 12]} />
+          <meshStandardMaterial color="#FBBF24" metalness={0.9} roughness={0.15} />
+        </mesh>
+        {/* Sign above door: KELUAR KE HALAMAN DEPAN */}
+        <mesh position={[0, 1.5, -0.08]}>
+          <boxGeometry args={[3.0, 0.4, 0.05]} />
+          <meshStandardMaterial color="#1E3A8A" />
+        </mesh>
+        <Text position={[0, 1.5, -0.12]} fontSize={0.16} color="#FFFFFF" anchorX="center" anchorY="middle">
+          🌳 KELUAR KE HALAMAN DEPAN 🚪
+        </Text>
+
+        <Billboard position={[0, 1.95, -0.4]}>
+          <Text fontSize={0.18} color="#FEF08A" anchorX="center" anchorY="middle">
+            🚪 [E] Keluar ke Halaman
+          </Text>
+        </Billboard>
+      </group>
+
+      {/* Exit Mat in front of front door inside */}
+      <mesh position={[0, 0.165, -7.4]}>
+        <boxGeometry args={[2.0, 0.015, 1.0]} />
+        <meshStandardMaterial color="#FED7AA" roughness={0.8} />
+      </mesh>
+
+      {/* --- BACK EXIT DOOR (KELUAR KE WATERPARK & KOLAM RENANG) --- */}
+      <group
+        position={[0, 1.35, -17.45]}
+        onClick={(e) => {
+          e.stopPropagation();
+          gameStore.exitHouse('back');
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = 'auto';
+        }}
+      >
+        <mesh castShadow>
+          <boxGeometry args={[2.8, 2.65, 0.1]} />
+          <meshStandardMaterial color="#7F4F24" roughness={0.5} />
+        </mesh>
+        {/* French Window Glass Panes with view of sparkling pool */}
+        {[-0.65, 0.65].map((gx, gi) => (
+          <mesh key={gi} position={[gx, 0.15, 0.01]}>
+            <boxGeometry args={[0.9, 2.05, 0.04]} />
+            <meshStandardMaterial color="#67E8F9" transparent opacity={0.7} roughness={0.1} />
+          </mesh>
+        ))}
+        {/* Sign above door */}
+        <mesh position={[0, 1.5, 0.08]}>
+          <boxGeometry args={[3.2, 0.4, 0.05]} />
+          <meshStandardMaterial color="#0284C7" />
+        </mesh>
+        <Text position={[0, 1.5, 0.12]} fontSize={0.16} color="#FFFFFF" anchorX="center" anchorY="middle">
+          🏊‍♀️ KELUAR KE KOLAM RENANG & WATERPARK 🌴
+        </Text>
+
+        <Billboard position={[0, 1.95, 0.4]}>
+          <Text fontSize={0.18} color="#FEF08A" anchorX="center" anchorY="middle">
+            🏊‍♀️ [E] Menuju Kolam Renang
+          </Text>
+        </Billboard>
+      </group>
+
+      {/* ============================================================== */}
+      {/* 5. STATIC FURNITURE & FIXTURES FOR EACH ROOM                   */}
       {/* ============================================================== */}
       {/* --- LIVING ROOM (RUANG KELUARGA & SANTAI TENGAH) --- */}
       <group position={[0, 0.2, -11.5]}>
         {/* L-Shaped Cozy Family Sofa */}
         <group position={[-1.2, 0, 0]}>
-          {/* Base Cushion */}
           <mesh position={[0, 0.25, 0]} castShadow>
             <boxGeometry args={[2.2, 0.4, 1.0]} />
             <meshStandardMaterial color="#E9D8A6" roughness={0.8} />
           </mesh>
-          {/* Backrest */}
           <mesh position={[0, 0.65, -0.4]} castShadow>
             <boxGeometry args={[2.2, 0.55, 0.25]} />
             <meshStandardMaterial color="#DDA15E" roughness={0.8} />
@@ -450,7 +892,7 @@ export const RumahKhaulah: React.FC = () => {
         </group>
 
         {/* Chandelier / Warm Center Ceiling Light */}
-        <pointLight position={[0, 3.2, 0]} color="#FFE8D6" intensity={0.9} distance={10} />
+        <pointLight position={[0, 3.2, 0]} color="#FFE8D6" intensity={1.1} distance={12} />
       </group>
 
       {/* --- RUANG KERJA & CODING ABI (FRONT-LEFT ROOM: X: -5.5, Z: -9.5) --- */}
@@ -468,7 +910,7 @@ export const RumahKhaulah: React.FC = () => {
           </mesh>
         ))}
 
-        {/* Motivational Frame on Wall: "BARAKALLAH - KELUARGA BAHAGIA" */}
+        {/* Motivational Frame on Wall: CODING WITH LOVE FOR KELUARGA */}
         <mesh position={[-2.45, 2.7, 0]} rotation={[0, Math.PI / 2, 0]}>
           <boxGeometry args={[1.6, 0.7, 0.05]} />
           <meshStandardMaterial color="#582F0E" />
@@ -485,7 +927,7 @@ export const RumahKhaulah: React.FC = () => {
         </Text>
 
         {/* Warm Ambient Lamp */}
-        <pointLight position={[0, 2.8, 0]} color="#FFF3B0" intensity={0.8} distance={7} />
+        <pointLight position={[0, 2.8, 0]} color="#FFF3B0" intensity={0.9} distance={8} />
       </group>
 
       {/* --- MUSHOLLA KELUARGA (BACK-LEFT ROOM: X: -5.5, Z: -15.0) --- */}
@@ -496,7 +938,6 @@ export const RumahKhaulah: React.FC = () => {
             <boxGeometry args={[0.5, 0.2, 0.4]} />
             <meshStandardMaterial color="#7F4F24" roughness={0.6} />
           </mesh>
-          {/* Open Sacred Book */}
           <mesh position={[0, 0.14, 0]} rotation={[-0.2, 0, 0]}>
             <boxGeometry args={[0.42, 0.06, 0.32]} />
             <meshStandardMaterial color="#FFFBEB" />
@@ -509,7 +950,7 @@ export const RumahKhaulah: React.FC = () => {
           <meshStandardMaterial color="#7F4F24" />
         </mesh>
 
-        {/* Wall Calligraphy Frame: "BISMILLAHIRRAHMANIRRAHIM" */}
+        {/* Wall Calligraphy Frame: BISMILLAHIRRAHMANIRRAHIM */}
         <mesh position={[-2.45, 2.5, 0]} rotation={[0, Math.PI / 2, 0]}>
           <boxGeometry args={[1.8, 0.8, 0.04]} />
           <meshStandardMaterial color="#1B4332" />
@@ -526,7 +967,7 @@ export const RumahKhaulah: React.FC = () => {
         </Text>
 
         {/* Serene Dawn Light */}
-        <pointLight position={[0, 2.8, 0]} color="#BAE6FD" intensity={0.7} distance={7} />
+        <pointLight position={[0, 2.8, 0]} color="#BAE6FD" intensity={0.8} distance={8} />
       </group>
 
       {/* --- DAPUR BERSIH UMMI (FRONT-RIGHT ROOM: X: 5.5, Z: -9.5) --- */}
@@ -537,7 +978,6 @@ export const RumahKhaulah: React.FC = () => {
             <boxGeometry args={[3.2, 0.9, 0.8]} />
             <meshStandardMaterial color="#F8FAFC" roughness={0.2} metalness={0.1} />
           </mesh>
-          {/* Marble Top Counter */}
           <mesh position={[0, 0.92, 0]} castShadow>
             <boxGeometry args={[3.3, 0.06, 0.85]} />
             <meshStandardMaterial color="#CBD5E1" roughness={0.1} />
@@ -562,7 +1002,7 @@ export const RumahKhaulah: React.FC = () => {
         </mesh>
 
         {/* Kitchen Ceiling Warm Light */}
-        <pointLight position={[0, 2.8, 0]} color="#FEF08A" intensity={0.8} distance={7} />
+        <pointLight position={[0, 2.8, 0]} color="#FEF08A" intensity={0.9} distance={8} />
       </group>
 
       {/* --- KAMAR TIDUR & RUANG BERMAIN ANAK (BACK-RIGHT ROOM: X: 5.5, Z: -15.0) --- */}
@@ -573,7 +1013,6 @@ export const RumahKhaulah: React.FC = () => {
             <boxGeometry args={[1.2, 0.5, 0.7]} />
             <meshStandardMaterial color="#FFB703" roughness={0.5} />
           </mesh>
-          {/* Colorful Toy Blocks spilling out */}
           {[-0.3, 0, 0.3].map((bx, bi) => (
             <mesh key={bi} position={[bx, 0.58, (bi % 2 === 0 ? 0.1 : -0.1)]} castShadow>
               <boxGeometry args={[0.16, 0.16, 0.16]} />
@@ -583,97 +1022,20 @@ export const RumahKhaulah: React.FC = () => {
         </group>
 
         {/* Playroom Gentle Light */}
-        <pointLight position={[0, 2.8, 0]} color="#FEF3C7" intensity={0.8} distance={7} />
-      </group>
-
-      {/* ============================================================== */}
-      {/* 7. BACK VERANDA & GARDEN PERGOLA TO WATERPARK (Z: -17.5 to -23.5) */}
-      {/* ============================================================== */}
-      {/* Back Veranda Spacious Decking */}
-      <mesh position={[0, 0.15, -20.5]} receiveShadow>
-        <boxGeometry args={[11.6, 0.28, 6.0]} />
-        <meshStandardMaterial color="#DDB892" roughness={0.6} />
-      </mesh>
-
-      {/* Back Veranda Protective Railings */}
-      {[-5.6, 5.6].map((vx, vi) => (
-        <group key={vi} position={[vx, 0.7, -20.5]}>
-          <mesh castShadow>
-            <boxGeometry args={[0.15, 0.85, 5.8]} />
-            <meshStandardMaterial color="#7F4F24" />
-          </mesh>
-        </group>
-      ))}
-
-      {/* French Double Glass Doors Facing Backyard Pool (Z: -17.5) */}
-      <group position={[0, 1.35, -17.5]}>
-        <mesh castShadow>
-          <boxGeometry args={[2.8, 2.7, 0.12]} />
-          <meshStandardMaterial color="#7F4F24" roughness={0.6} />
-        </mesh>
-        {/* Clear Glass Panes */}
-        {[-0.65, 0.65].map((gx, gi) => (
-          <mesh key={gi} position={[gx, 0.15, 0.02]}>
-            <boxGeometry args={[0.9, 2.1, 0.06]} />
-            <meshStandardMaterial color="#93C5FD" transparent opacity={0.7} roughness={0.1} />
-          </mesh>
-        ))}
-        {/* Navigation Plaque */}
-        <mesh position={[0, 1.55, -0.1]}>
-          <boxGeometry args={[3.0, 0.45, 0.06]} />
-          <meshStandardMaterial color="#0096C7" />
-        </mesh>
-        <Text
-          position={[0, 1.55, -0.15]}
-          rotation={[0, Math.PI, 0]}
-          fontSize={0.18}
-          color="#FFFFFF"
-          anchorX="center"
-          anchorY="middle"
-        >
-          🏊‍♀️ BACKYARD WATERPARK & KOLAM RENANG 🌴
-        </Text>
-      </group>
-
-      {/* Flower-Covered Garden Pergola Archway Entry to Pool (Z: -23.5) */}
-      <group position={[0, 0, -23.5]}>
-        {/* Timber Posts */}
-        <mesh position={[-2.4, 1.7, 0]} castShadow>
-          <cylinderGeometry args={[0.14, 0.16, 3.4, 12]} />
-          <meshStandardMaterial color="#6F4E37" />
-        </mesh>
-        <mesh position={[2.4, 1.7, 0]} castShadow>
-          <cylinderGeometry args={[0.14, 0.16, 3.4, 12]} />
-          <meshStandardMaterial color="#6F4E37" />
-        </mesh>
-        {/* Lattice Beams */}
-        <mesh position={[0, 3.45, 0]} castShadow>
-          <boxGeometry args={[5.2, 0.2, 0.4]} />
-          <meshStandardMaterial color="#6F4E37" />
-        </mesh>
-        {[-1.8, -0.9, 0, 0.9, 1.8].map((bx, bi) => (
-          <mesh key={bi} position={[bx, 3.6, 0]}>
-            <boxGeometry args={[0.12, 0.14, 1.4]} />
-            <meshStandardMaterial color="#6F4E37" />
-          </mesh>
-        ))}
-        {/* Climbing Ivy & Flowers on Pergola */}
-        <mesh position={[-2.4, 2.4, 0]}>
-          <sphereGeometry args={[0.42, 8, 8]} />
-          <meshStandardMaterial color="#2D6A4F" roughness={0.6} />
-        </mesh>
-        <mesh position={[2.4, 2.2, 0]}>
-          <sphereGeometry args={[0.38, 8, 8]} />
-          <meshStandardMaterial color="#2D6A4F" roughness={0.6} />
-        </mesh>
-        {/* Blossoms */}
-        {[-2.2, -1.2, 0, 1.2, 2.2].map((fx, fi) => (
-          <mesh key={fi} position={[fx, 3.5, fi % 2 === 0 ? 0.25 : -0.25]}>
-            <sphereGeometry args={[0.14, 6, 6]} />
-            <meshStandardMaterial color={fi % 2 === 0 ? '#FF6B8B' : '#FFD166'} />
-          </mesh>
-        ))}
+        <pointLight position={[0, 2.8, 0]} color="#FEF3C7" intensity={0.9} distance={8} />
       </group>
     </group>
+  );
+};
+
+// ============================================================================
+// COMBINED COMPONENT EXPORT
+// ============================================================================
+export const RumahKhaulah: React.FC = () => {
+  return (
+    <>
+      <RumahKhaulahExterior />
+      <RumahKhaulahInterior />
+    </>
   );
 };

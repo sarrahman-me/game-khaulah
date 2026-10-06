@@ -254,7 +254,15 @@ export const PlayerKhaulah: React.FC = () => {
 
         const near = gameStore.getState().nearbyInteractable;
         if (near) {
-          if (near.id === 'scooter') {
+          if (near.id === 'house_front_door') {
+            gameStore.enterHouse('front');
+          } else if (near.id === 'house_back_door') {
+            gameStore.enterHouse('back');
+          } else if (near.id === 'interior_exit_front') {
+            gameStore.exitHouse('front');
+          } else if (near.id === 'interior_exit_back') {
+            gameStore.exitHouse('back');
+          } else if (near.id === 'scooter') {
             gameStore.mountScooter();
           } else if (near.id === 'bu_guru') {
             const quest = gameStore.getState().schoolQuest;

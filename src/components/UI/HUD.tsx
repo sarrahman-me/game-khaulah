@@ -35,11 +35,22 @@ export const HUD: React.FC = () => {
   const isRidingScooter = useGameStore((s) => s.isRidingScooter);
   const schoolQuest = useGameStore((s) => s.schoolQuest);
   const isKhalidFollowing = useGameStore((s) => s.isKhalidFollowing);
+  const isInsideHouse = useGameStore((s) => s.isInsideHouse);
+  const isDoorTransitioning = useGameStore((s) => s.isDoorTransitioning);
+  const doorTransitionText = useGameStore((s) => s.doorTransitionText);
 
   const handleInteract = () => {
     if (!nearbyInteractable) return;
     const id = nearbyInteractable.id;
-    if (id === 'scooter') {
+    if (id === 'house_front_door') {
+      gameStore.enterHouse('front');
+    } else if (id === 'house_back_door') {
+      gameStore.enterHouse('back');
+    } else if (id === 'interior_exit_front') {
+      gameStore.exitHouse('front');
+    } else if (id === 'interior_exit_back') {
+      gameStore.exitHouse('back');
+    } else if (id === 'scooter') {
       gameStore.mountScooter();
     } else if (id === 'bu_guru') {
       const allCollected = schoolQuest.backpack && schoolQuest.waterBottle && schoolQuest.drawingBook;
@@ -266,6 +277,18 @@ export const HUD: React.FC = () => {
               <span>Bekal Ummi ({Math.ceil(speedBuffTimeLeft)}s ⚡)</span>
             </div>
           )}
+
+          {/* Current Location Pill: Rumah Khaulah vs Desa Karang Tengah */}
+          <div
+            className={`pointer-events-auto px-3.5 py-1.5 rounded-full shadow-md flex items-center gap-1.5 border-2 border-white text-xs font-bubble font-bold transition-all duration-300 ${
+              isInsideHouse
+                ? 'bg-gradient-to-r from-amber-500 to-rose-400 text-white shadow-amber-200/50'
+                : 'bg-white/90 text-sky-800'
+            }`}
+          >
+            <span>{isInsideHouse ? '🏡' : '🌳'}</span>
+            <span>{isInsideHouse ? 'Dalam Rumah Khaulah' : 'Desa Karang Tengah'}</span>
+          </div>
 
           {/* Adek Khalid Following Pill */}
           {isKhalidFollowing && (
@@ -547,6 +570,22 @@ export const HUD: React.FC = () => {
 
       {/* Living AI Character Conversation Modal */}
       <CharacterChatModal />
+
+      {/* Smooth Door Transition Overlay */}
+      {isDoorTransitioning && (
+        <div className="fixed inset-0 z-50 bg-slate-900/85 backdrop-blur-md flex flex-col items-center justify-center animate-fade-in pointer-events-auto select-none transition-all duration-300">
+          <div className="bg-white/95 rounded-3xl p-6 sm:p-8 shadow-2xl border-4 border-amber-300 flex flex-col items-center gap-3 scale-105 transition-transform duration-300 max-w-sm mx-4 text-center">
+            <span className="text-5xl animate-bounce">🚪✨</span>
+            <p className="text-lg font-bubble font-bold text-amber-950 tracking-wide">
+              {doorTransitionText || 'Membuka Pintu...'}
+            </p>
+            <div className="w-32 h-2.5 bg-amber-100 rounded-full overflow-hidden mt-1 shadow-inner">
+              <div className="w-full h-full bg-gradient-to-r from-amber-400 to-rose-400 rounded-full animate-pulse" />
+            </div>
+            <span className="text-xs text-amber-700/80 font-medium">Cklek...</span>
+          </div>
+        </div>
+      )}
 
       {/* Secret Wishlist Modal (Buku Impian Khaulah untuk Abi) */}
       <WishlistModal />

@@ -19,90 +19,90 @@ export const FAMILY_SCHEDULE: Record<
 > = {
   subuh: {
     abi: {
-      pos: [-5.2, 0.2, -15.0],
+      pos: [154.8, 0.2, -15.0],
       status: 'Sholat & Dzikir di Musholla 🌅',
       text: 'Assalamu\'alaikum Kak Khaulah putri shalihah Abi! Fajar Subuh yang sejuk dan damai. Abi baru selesai sholat Subuh dan berdzikir mendoakan Kak Khaulah agar selalu cerdas, shalihah, dan bahagia! Abi sayang Khaulah!',
     },
     ummi: {
-      pos: [5.5, 0.2, -9.5],
+      pos: [165.5, 0.2, -9.5],
       status: 'Menyiapkan Sarapan di Dapur 🧕🍳',
       text: 'Assalamu\'alaikum Kak Khaulah bidadari shalihah Ummi! Ummi sedang menyiapkan sarapan kue pelangi dan susu hangat yang lezat di dapur. Ayo sarapan berkah dulu ya sayang!',
     },
     faqih: {
-      pos: [0.0, 0.2, -4.8],
+      pos: [160.0, 0.2, -10.5],
       status: 'Cilukba di Kereta Dorong 👶🍼',
       text: 'Uwaaa~ Cilukba! Adek Faqih bangun pagi ceria di kereta dorong hangat menyapa Kak Khaulah! 👶🍼',
     },
     khalid: {
-      pos: [5.5, 0.2, -15.5],
+      pos: [165.5, 0.2, -15.5],
       status: 'Bangun Tidur di Kasur Awan 👦💤',
       text: 'Hoaaam... Kak Khaulah! Khalid baru bangun tidur nih di kasur, tapi langsung semangat pas lihat Kak Khaulah! Ayo main bareng Khalid!',
     },
   },
   siang: {
     abi: {
-      pos: [-5.2, 0.2, -9.5],
+      pos: [154.8, 0.2, -9.5],
       status: 'Fokus Coding Laptop 💻',
       text: 'Assalamu\'alaikum Kak Khaulah putri shalihah Abi! Abi sedang fokus mengetik kode dan coding di laptop untuk keluarga. Senyum ceria Kak Khaulah bikin semangat Abi berkobar terus!',
     },
     ummi: {
-      pos: [4.5, 0.2, -4.8],
-      status: 'Menyapu Teras Bersih 🧹',
-      text: 'Assalamu\'alaikum Kak Khaulah sayang! Kebersihan itu sebagian dari iman, nak. Ummi sedang menyapu teras agar rumah kita selalu asri dan rapi. Ummi sudah siapkan bekal cinta terenak untuk Khaulah, ayo ambil sayang!',
+      pos: [165.5, 0.2, -9.5],
+      status: 'Membuat Camilan Lezat di Dapur 🧕🧁',
+      text: 'Assalamu\'alaikum Kak Khaulah sayang! Kebersihan itu sebagian dari iman, nak. Ummi sedang menyiapkan bekal cinta terenak di dapur untuk Khaulah, ayo ambil sayang!',
     },
     faqih: {
-      pos: [5.5, 0.2, -14.0],
+      pos: [165.5, 0.2, -13.5],
       status: 'Balap Mobilan di Karpet 🚗💨',
       text: 'Ngeeeng! Brum brum pip pip! Adek Faqih lagi seru banget ngebutin mobil-mobilan di karpet sirkuit lintasan! Kak Khaulah ayo balapan bareng!',
     },
     khalid: {
-      pos: [-1.8, 0.2, -3.8],
+      pos: [163.5, 0.2, -13.5],
       status: 'Latihan Drumband 🥁🎶',
       text: 'Kak Khaulah lihat nih! Khalid lagi latihan drumband! Dum-tak-tak-dum ratatat! Mau ajak Khalid ikut jalan-jalan keliling desa?',
     },
   },
   sore: {
     abi: {
-      pos: [-4.8, 0.2, -4.8],
-      status: 'Santai Minum Teh Sore 🍵',
-      text: 'Alhamdulillah, senja sore yang syahdu di teras rumah kita di Karang Tengah. Senang sekali melihat Kak Khaulah bermain ceria dan sehat selalu!',
+      pos: [158.8, 0.2, -11.5],
+      status: 'Santai Minum Teh Sore di Sofa 🍵🛋️',
+      text: 'Alhamdulillah, senja sore yang syahdu di ruang tengah rumah kita. Senang sekali melihat Kak Khaulah bermain ceria dan sehat selalu!',
     },
     ummi: {
-      pos: [6.5, 0.2, -4.2],
-      status: 'Menyiram Bunga Mekar 🌸💧',
-      text: 'Senja sore yang indah, nak. Ummi sedang menyiram pot-pot bunga teras dengan air sejuk agar selalu mekar dan wangi. Ada donat manis untuk Khaulah!',
+      pos: [165.5, 0.2, -9.5],
+      status: 'Menyiapkan Teh & Buah Segar 🌸🫖',
+      text: 'Senja sore yang indah, nak. Ummi sedang menyiapkan teh hangat dan buah manis di dapur. Ada donat manis untuk Khaulah!',
     },
     faqih: {
-      pos: [2.2, 0.2, -4.8],
+      pos: [164.2, 0.2, -12.5],
       status: 'Main Kerincingan Lucu 🪇✨',
       text: 'Kring kring! Adek Faqih goyang-goyangkan kerincingan warna-warni sambil tertawa riang menyapa Kak Khaulah! 🪇👶',
     },
     khalid: {
-      pos: [-2.5, 0.2, -2.0],
-      status: 'Parade Drumband Cilik 🎶🏃‍♂️',
-      text: 'Dum-dum-tak! Adek Khalid siap mimpin parade drumband sore di halaman! Kak Khaulah ayo lari bareng Khalid!',
+      pos: [160.0, 0.2, -11.5],
+      status: 'Parade Drumband Cilik 🎶🥁',
+      text: 'Dum-dum-tak! Adek Khalid siap mimpin parade drumband cilik! Kak Khaulah mau ajak Khalid ikut jalan-jalan keluar?',
     },
   },
   malam: {
     abi: {
-      pos: [-1.2, 0.2, -11.5],
+      pos: [158.8, 0.2, -11.5],
       status: 'Kumpul Hangat di Sofa 🌙📖',
       text: 'MasyaAllah, malam bertabur bintang nan damai. Istirahat yang cukup ya anak pintar Abi, besok kita berpetualang lagi!',
     },
     ummi: {
-      pos: [1.2, 0.2, -11.5],
+      pos: [161.2, 0.2, -11.5],
       status: 'Mendongeng di Karpet 🧕📖',
       text: 'Malam bertabur bintang nan damai. Ummi sedang membacakan dongeng kisah nabi yang penuh hikmah. Jangan lupa cuci kaki, sikat gigi, dan berdoa sebelum tidur ya bidadari shalihah Ummi.',
     },
     faqih: {
-      pos: [6.5, 0.2, -16.5],
+      pos: [166.5, 0.2, -16.0],
       status: 'Tidur Pulas di Boks Bayi 💤👶',
       text: 'Ssshh... Adek Faqih tertidur pulas memeluk mobil-mobilan kesayangannya di boks bayi yang hangat! 💤👶',
     },
     khalid: {
-      pos: [0.4, 0.2, -11.5],
+      pos: [160.4, 0.2, -11.5],
       status: 'Dengarkan Dongeng Ummi 📖🧸',
-      text: 'Kak Khaulah sini duduk bareng Khalid di karpet! Kita dengarkan dongeng Ummi sambil melihat kunang-kunang di luar!',
+      text: 'Kak Khaulah sini duduk bareng Khalid di karpet! Kita dengarkan dongeng Ummi sambil santai bersama keluarga!',
     },
   },
 };
@@ -1306,70 +1306,78 @@ export const FamilyMembers: React.FC = () => {
   const lastNearId = useRef<string | null>(null);
   const timeOfDay = useGameStore((s) => s.timeOfDay);
   const isKhalidFollowing = useGameStore((s) => s.isKhalidFollowing);
+  const isInsideHouse = useGameStore((s) => s.isInsideHouse);
   const schedule = FAMILY_SCHEDULE[timeOfDay] || FAMILY_SCHEDULE.siang;
 
-  const getDynamicMembers = () => [
-    {
-      id: 'abi',
-      pos: schedule.abi.pos,
-      title: 'Abi',
-      prompt: `Tekan [E] untuk Sapa Abi! 💻 (${schedule.abi.status})`,
-      dialog: {
-        speaker: 'Abi',
-        role: `Ayah Tercinta 💻 (${schedule.abi.status})`,
-        avatarBg: 'bg-blue-600',
-        text: schedule.abi.text,
-        actionText: '💻 Tos Semangat sama Abi! ✨',
-        actionType: 'high_five' as const,
+  const getDynamicMembers = () => {
+    const all = [
+      {
+        id: 'abi',
+        pos: schedule.abi.pos,
+        title: 'Abi',
+        prompt: `Tekan [E] untuk Sapa Abi! 💻 (${schedule.abi.status})`,
+        dialog: {
+          speaker: 'Abi',
+          role: `Ayah Tercinta 💻 (${schedule.abi.status})`,
+          avatarBg: 'bg-blue-600',
+          text: schedule.abi.text,
+          actionText: '💻 Tos Semangat sama Abi! ✨',
+          actionType: 'high_five' as const,
+        },
       },
-    },
-    {
-      id: 'ummi',
-      pos: schedule.ummi.pos,
-      title: 'Ummi',
-      prompt: `Tekan [E] untuk Sapa Ummi! 🧕 (${schedule.ummi.status})`,
-      dialog: {
-        speaker: 'Ummi',
-        role: `Ibu Tercinta Bercadar 🧕 (${schedule.ummi.status})`,
-        avatarBg: 'bg-rose-500',
-        text: schedule.ummi.text,
-        actionText: '🧹 Ambil Bekal Berkah Ummi! (+Speed Boost ⚡)',
-        actionType: 'take_snack' as const,
+      {
+        id: 'ummi',
+        pos: schedule.ummi.pos,
+        title: 'Ummi',
+        prompt: `Tekan [E] untuk Sapa Ummi! 🧕 (${schedule.ummi.status})`,
+        dialog: {
+          speaker: 'Ummi',
+          role: `Ibu Tercinta Bercadar 🧕 (${schedule.ummi.status})`,
+          avatarBg: 'bg-rose-500',
+          text: schedule.ummi.text,
+          actionText: '🧹 Ambil Bekal Berkah Ummi! (+Speed Boost ⚡)',
+          actionType: 'take_snack' as const,
+        },
       },
-    },
-    {
-      id: 'khalid',
-      pos: isKhalidFollowing ? gameStore.getState().khalidPos : schedule.khalid.pos,
-      title: 'Adek Khalid',
-      prompt: isKhalidFollowing
-        ? 'Tekan [E] untuk Suruh Khalid Istirahat! 👦🏠'
-        : `Tekan [E] untuk Ajak Khalid Ikut! 👦🏃‍♂️ (${schedule.khalid.status})`,
-      dialog: {
-        speaker: 'Adek Khalid',
-        role: isKhalidFollowing ? 'Sahabat Petualang Cilik 👦🏃‍♂️' : `Pemain Drumband Cilik 👦🥁 (${schedule.khalid.status})`,
-        avatarBg: 'bg-amber-500',
-        text: isKhalidFollowing
-          ? 'Kak Khaulah! Khalid senang banget ikut lari-larian keliling desa! Mau Khalid terus ikut petualangan, atau istirahat di sini dulu?'
-          : schedule.khalid.text,
-        actionText: isKhalidFollowing ? '🏠 Adek Khalid Istirahat di Teras Dulu 🌸' : '🏃‍♂️ Ajak Adek Khalid Ikut Petualangan! ✨',
-        actionType: 'toggle_khalid_follow' as const,
+      {
+        id: 'khalid',
+        pos: isKhalidFollowing ? gameStore.getState().khalidPos : schedule.khalid.pos,
+        title: 'Adek Khalid',
+        prompt: isKhalidFollowing
+          ? 'Tekan [E] untuk Suruh Khalid Istirahat! 👦🏠'
+          : `Tekan [E] untuk Ajak Khalid Ikut! 👦🏃‍♂️ (${schedule.khalid.status})`,
+        dialog: {
+          speaker: 'Adek Khalid',
+          role: isKhalidFollowing ? 'Sahabat Petualang Cilik 👦🏃‍♂️' : `Pemain Drumband Cilik 👦🥁 (${schedule.khalid.status})`,
+          avatarBg: 'bg-amber-500',
+          text: isKhalidFollowing
+            ? 'Kak Khaulah! Khalid senang banget ikut lari-larian keliling desa! Mau Khalid terus ikut petualangan, atau istirahat di sini dulu?'
+            : schedule.khalid.text,
+          actionText: isKhalidFollowing ? '🏠 Adek Khalid Istirahat di Rumah Dulu 🌸' : '🏃‍♂️ Ajak Adek Khalid Ikut Petualangan! ✨',
+          actionType: 'toggle_khalid_follow' as const,
+        },
       },
-    },
-    {
-      id: 'faqih',
-      pos: schedule.faqih.pos,
-      title: 'Adek Faqih',
-      prompt: `Tekan [E] untuk Main bareng Faqih! 👶 (${schedule.faqih.status})`,
-      dialog: {
-        speaker: 'Adek Faqih',
-        role: `Adik Gemas Balap Mobilan 👶🚗 (${schedule.faqih.status})`,
-        avatarBg: 'bg-emerald-500',
-        text: schedule.faqih.text,
-        actionText: '🚗 Balapan Mobilan bareng Faqih! 💨',
-        actionType: 'play_toycar' as const,
+      {
+        id: 'faqih',
+        pos: schedule.faqih.pos,
+        title: 'Adek Faqih',
+        prompt: `Tekan [E] untuk Main bareng Faqih! 👶 (${schedule.faqih.status})`,
+        dialog: {
+          speaker: 'Adek Faqih',
+          role: `Adik Gemas Balap Mobilan 👶🚗 (${schedule.faqih.status})`,
+          avatarBg: 'bg-emerald-500',
+          text: schedule.faqih.text,
+          actionText: '🚗 Balapan Mobilan bareng Faqih! 💨',
+          actionType: 'play_toycar' as const,
+        },
       },
-    },
-  ];
+    ];
+
+    if (!isInsideHouse) {
+      return isKhalidFollowing ? [all[2]] : [];
+    }
+    return all;
+  };
 
   useFrame(() => {
     const playerPos = gameStore.getState().playerPos;
@@ -1412,73 +1420,85 @@ export const FamilyMembers: React.FC = () => {
 
   return (
     <group>
-      {/* 1. Abi */}
-      <group
-        onClick={(e) => {
-          e.stopPropagation();
-          gameStore.openDialog(members[0].dialog);
-        }}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          document.body.style.cursor = 'pointer';
-        }}
-        onPointerOut={() => {
-          document.body.style.cursor = 'auto';
-        }}
-      >
-        <AbiModel position={schedule.abi.pos} statusTag={schedule.abi.status} />
-      </group>
+      {/* 1. Abi (Hanya di dalam rumah) */}
+      {isInsideHouse && (
+        <group
+          onClick={(e) => {
+            e.stopPropagation();
+            const abiM = members.find((m) => m.id === 'abi');
+            if (abiM) gameStore.openDialog(abiM.dialog);
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          <AbiModel position={schedule.abi.pos} statusTag={schedule.abi.status} />
+        </group>
+      )}
 
-      {/* 2. Ummi */}
-      <group
-        onClick={(e) => {
-          e.stopPropagation();
-          gameStore.openDialog(members[1].dialog);
-        }}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          document.body.style.cursor = 'pointer';
-        }}
-        onPointerOut={() => {
-          document.body.style.cursor = 'auto';
-        }}
-      >
-        <UmmiModel position={schedule.ummi.pos} statusTag={schedule.ummi.status} />
-      </group>
+      {/* 2. Ummi (Hanya di dalam rumah) */}
+      {isInsideHouse && (
+        <group
+          onClick={(e) => {
+            e.stopPropagation();
+            const ummiM = members.find((m) => m.id === 'ummi');
+            if (ummiM) gameStore.openDialog(ummiM.dialog);
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          <UmmiModel position={schedule.ummi.pos} statusTag={schedule.ummi.status} />
+        </group>
+      )}
 
-      {/* 3. Adek Khalid */}
-      <group
-        onClick={(e) => {
-          e.stopPropagation();
-          gameStore.openDialog(members[2].dialog);
-        }}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          document.body.style.cursor = 'pointer';
-        }}
-        onPointerOut={() => {
-          document.body.style.cursor = 'auto';
-        }}
-      >
-        <KhalidModel position={schedule.khalid.pos} statusTag={schedule.khalid.status} />
-      </group>
+      {/* 3. Adek Khalid (Di dalam rumah ATAU ikut Kak Khaulah ke luar) */}
+      {(isInsideHouse || isKhalidFollowing) && (
+        <group
+          onClick={(e) => {
+            e.stopPropagation();
+            const khalidM = members.find((m) => m.id === 'khalid');
+            if (khalidM) gameStore.openDialog(khalidM.dialog);
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          <KhalidModel position={schedule.khalid.pos} statusTag={schedule.khalid.status} />
+        </group>
+      )}
 
-      {/* 4. Adek Faqih */}
-      <group
-        onClick={(e) => {
-          e.stopPropagation();
-          gameStore.openDialog(members[3].dialog);
-        }}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          document.body.style.cursor = 'pointer';
-        }}
-        onPointerOut={() => {
-          document.body.style.cursor = 'auto';
-        }}
-      >
-        <FaqihModel position={schedule.faqih.pos} statusTag={schedule.faqih.status} />
-      </group>
+      {/* 4. Adek Faqih (Hanya di dalam rumah) */}
+      {isInsideHouse && (
+        <group
+          onClick={(e) => {
+            e.stopPropagation();
+            const faqihM = members.find((m) => m.id === 'faqih');
+            if (faqihM) gameStore.openDialog(faqihM.dialog);
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          <FaqihModel position={schedule.faqih.pos} statusTag={schedule.faqih.status} />
+        </group>
+      )}
     </group>
   );
 };

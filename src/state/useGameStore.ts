@@ -136,6 +136,10 @@ export interface GameState {
   // Living NPC Director: Adek Khalid Follow Mode
   isKhalidFollowing: boolean;
   khalidPos: [number, number, number];
+  // Dedicated Indoor / Outdoor House System
+  isInsideHouse: boolean;
+  isDoorTransitioning: boolean;
+  doorTransitionText: string;
 }
 
 export interface SpawnedMagicItem {
@@ -166,6 +170,10 @@ function loadSavedPlayerPos(): [number, number, number] {
         if (Array.isArray(parsed) && parsed.length === 3) {
           const [x, y, z] = parsed.map(Number);
           if (!isNaN(x) && !isNaN(y) && !isNaN(z) && y > -6 && y < 100) {
+            // Relocate safely to front porch if previous save was inside old house footprint
+            if (Math.abs(x) < 8.5 && z < -6.4 && z > -17.6) {
+              return [0, 0.4, -4.5];
+            }
             return [x, Math.max(y, 0.4), z];
           }
         }
@@ -314,6 +322,9 @@ let state: GameState = {
   characterChatState: null,
   isKhalidFollowing: false,
   khalidPos: [-1.8, 0.2, -1.8],
+  isInsideHouse: initialPos[0] > 100,
+  isDoorTransitioning: false,
+  doorTransitionText: '',
 };
 
 // Sinkronkan tema audio awal sesuai waktu yang tersimpan di localStorage tanpa chime
@@ -589,6 +600,80 @@ export const gameStore = {
 
   setKhalidPos: (pos: [number, number, number]) => {
     state.khalidPos = pos;
+  },
+
+  enterHouse: (fromDoor: 'front' | 'back' = 'front') => {
+    soundManager.playDoorOpen();
+    const spawnTarget: [number, number, number] = fromDoor === 'front' ? [160, 0.4, -7.8] : [160, 0.4, -16.2];
+    const transitionMsg = fromDoor === 'front'
+      ? 'Cklek.. Masuk ke dalam rumah Khaulah yang nyaman! 🏡💖'
+      : 'Cklek.. Masuk ke rumah dari pintu belakang! 🏡✨';
+
+    state = {
+      ...state,
+      isDoorTransitioning: true,
+      doorTransitionText: '🏡 Masuk ke Rumah Khaulah...',
+      nearbyInteractable: null,
+    };
+    emitChange();
+
+    setTimeout(() => {
+      soundManager.playDoorClose();
+      const nextFollow = state.isKhalidFollowing;
+      state = {
+        ...state,
+        isInsideHouse: true,
+        playerPos: spawnTarget,
+        teleportTrigger: state.teleportTrigger + 1,
+        teleportTarget: spawnTarget,
+        bubbleMessage: transitionMsg,
+        cameraDistance: 5.4,
+        khalidPos: nextFollow ? [spawnTarget[0] - 1.2, spawnTarget[1], spawnTarget[2] + 0.8] : state.khalidPos,
+      };
+      emitChange();
+
+      setTimeout(() => {
+        state = { ...state, isDoorTransitioning: false };
+        emitChange();
+      }, 350);
+    }, 280);
+  },
+
+  exitHouse: (toDoor: 'front' | 'back' = 'front') => {
+    soundManager.playDoorOpen();
+    const spawnTarget: [number, number, number] = toDoor === 'front' ? [0, 0.4, -4.8] : [0, 0.4, -19.0];
+    const transitionMsg = toDoor === 'front'
+      ? 'Keluar ke halaman depan desa Karang Tengah! 🌳☀️'
+      : 'Horeee! Menuju area kolam renang dan waterpark! 🏊‍♀️🌴';
+
+    state = {
+      ...state,
+      isDoorTransitioning: true,
+      doorTransitionText: toDoor === 'front' ? '🌳 Keluar ke Halaman Depan...' : '🏊‍♀️ Menuju Kolam Renang...',
+      nearbyInteractable: null,
+    };
+    emitChange();
+
+    setTimeout(() => {
+      soundManager.playDoorClose();
+      const nextFollow = state.isKhalidFollowing;
+      state = {
+        ...state,
+        isInsideHouse: false,
+        playerPos: spawnTarget,
+        teleportTrigger: state.teleportTrigger + 1,
+        teleportTarget: spawnTarget,
+        bubbleMessage: transitionMsg,
+        cameraDistance: 7.5,
+        khalidPos: nextFollow ? [spawnTarget[0] - 1.2, spawnTarget[1], spawnTarget[2] + 0.8] : state.khalidPos,
+      };
+      emitChange();
+
+      setTimeout(() => {
+        state = { ...state, isDoorTransitioning: false };
+        emitChange();
+      }, 350);
+    }, 280);
   },
 
   setActiveRide: (ride: RideType) => {
