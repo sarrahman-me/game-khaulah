@@ -604,9 +604,9 @@ export const gameStore = {
 
   enterHouse: (fromDoor: 'front' | 'back' = 'front') => {
     soundManager.playDoorOpen();
-    const spawnTarget: [number, number, number] = fromDoor === 'front' ? [160, 0.4, -7.8] : [160, 0.4, -16.2];
+    const spawnTarget: [number, number, number] = fromDoor === 'front' ? [160, 0.4, -2.5] : [160, 0.4, -21.5];
     const transitionMsg = fromDoor === 'front'
-      ? 'Cklek.. Masuk ke dalam rumah Khaulah yang nyaman! 🏡💖'
+      ? 'Cklek.. Masuk ke dalam rumah Khaulah yang megah dan nyaman! 🏡💖'
       : 'Cklek.. Masuk ke rumah dari pintu belakang! 🏡✨';
 
     state = {
@@ -627,7 +627,7 @@ export const gameStore = {
         teleportTrigger: state.teleportTrigger + 1,
         teleportTarget: spawnTarget,
         bubbleMessage: transitionMsg,
-        cameraDistance: 5.4,
+        cameraDistance: 6.2,
         khalidPos: nextFollow ? [spawnTarget[0] - 1.2, spawnTarget[1], spawnTarget[2] + 0.8] : state.khalidPos,
       };
       emitChange();

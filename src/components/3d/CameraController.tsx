@@ -17,6 +17,7 @@ export const CameraController: React.FC = () => {
   const lastPointer = useRef({ x: 0, y: 0 });
   const lastManualInputTime = useRef<number>(0);
   const arrowKeys = useRef<{ [key: string]: boolean }>({});
+  const lastTeleportTrigger = useRef(gameStore.getState().teleportTrigger);
 
   const initialPlayerPos = gameStore.getState().playerPos;
   const currentCamPos = useRef(
@@ -207,8 +208,32 @@ export const CameraController: React.FC = () => {
       camAngleX.current += diff * followRate;
     }
 
+    // Check external teleport trigger (Door transitions / Presets / Respawn)
+    // Instantly snap camera without dragging through the void across 160 units
+    const currentTeleport = motion.teleportTrigger;
+    if (currentTeleport !== lastTeleportTrigger.current) {
+      lastTeleportTrigger.current = currentTeleport;
+      currentTargetPos.current.set(playerPos[0], playerPos[1] + 1.25, playerPos[2]);
+      const initCosY = Math.cos(camAngleY.current);
+      const initSinY = Math.sin(camAngleY.current);
+      const initDist = motion.isInsideHouse ? 6.0 : targetDistance;
+      const initOffX = -Math.sin(camAngleX.current) * initCosY * initDist;
+      const initOffZ = -Math.cos(camAngleX.current) * initCosY * initDist;
+      const initOffY = initSinY * initDist + 0.8;
+      currentCamPos.current.set(
+        playerPos[0] + initOffX,
+        playerPos[1] + 1.25 + initOffY,
+        playerPos[2] + initOffZ
+      );
+    }
+
     // Smoothly interpolate camera distance
     camDistance.current = THREE.MathUtils.lerp(camDistance.current, targetDistance, dt * 8);
+
+    // Indoor comfortable angle limits: avoid steep angles that could look through ceiling
+    if (motion.isInsideHouse) {
+      camAngleY.current = Math.max(0.12, Math.min(0.85, camAngleY.current));
+    }
 
     // Target is slightly above player center
     tempTarget.set(playerPos[0], playerPos[1] + 1.25, playerPos[2]);
@@ -227,7 +252,30 @@ export const CameraController: React.FC = () => {
       currentTargetPos.current.z + offsetZ
     );
 
-    currentCamPos.current.lerp(tempDesiredCamPos, dt * 7);
+    // STRICT INDOOR CAMERA VOLUME CLAMP:
+    // Guarantees camera NEVER clips outside the house walls or above ceiling
+    const INDOOR_BOUNDS = {
+      minX: 143.6,
+      maxX: 176.4,
+      minZ: -23.6,
+      maxZ: -0.6,
+      minY: 1.2,
+      maxY: 6.2, // Generous headroom below 7.6m ceiling
+    };
+
+    if (motion.isInsideHouse) {
+      tempDesiredCamPos.x = THREE.MathUtils.clamp(tempDesiredCamPos.x, INDOOR_BOUNDS.minX, INDOOR_BOUNDS.maxX);
+      tempDesiredCamPos.y = THREE.MathUtils.clamp(tempDesiredCamPos.y, INDOOR_BOUNDS.minY, INDOOR_BOUNDS.maxY);
+      tempDesiredCamPos.z = THREE.MathUtils.clamp(tempDesiredCamPos.z, INDOOR_BOUNDS.minZ, INDOOR_BOUNDS.maxZ);
+    }
+
+    currentCamPos.current.lerp(tempDesiredCamPos, dt * 8);
+
+    if (motion.isInsideHouse) {
+      currentCamPos.current.x = THREE.MathUtils.clamp(currentCamPos.current.x, INDOOR_BOUNDS.minX, INDOOR_BOUNDS.maxX);
+      currentCamPos.current.y = THREE.MathUtils.clamp(currentCamPos.current.y, INDOOR_BOUNDS.minY, INDOOR_BOUNDS.maxY);
+      currentCamPos.current.z = THREE.MathUtils.clamp(currentCamPos.current.z, INDOOR_BOUNDS.minZ, INDOOR_BOUNDS.maxZ);
+    }
 
     camera.position.copy(currentCamPos.current);
     camera.lookAt(currentTargetPos.current);

@@ -19,88 +19,88 @@ export const FAMILY_SCHEDULE: Record<
 > = {
   subuh: {
     abi: {
-      pos: [154.8, 0.2, -15.0],
+      pos: [148.0, 0.2, -18.0],
       status: 'Sholat & Dzikir di Musholla 🌅',
       text: 'Assalamu\'alaikum Kak Khaulah putri shalihah Abi! Fajar Subuh yang sejuk dan damai. Abi baru selesai sholat Subuh dan berdzikir mendoakan Kak Khaulah agar selalu cerdas, shalihah, dan bahagia! Abi sayang Khaulah!',
     },
     ummi: {
-      pos: [165.5, 0.2, -9.5],
+      pos: [172.0, 0.2, -6.0],
       status: 'Menyiapkan Sarapan di Dapur 🧕🍳',
       text: 'Assalamu\'alaikum Kak Khaulah bidadari shalihah Ummi! Ummi sedang menyiapkan sarapan kue pelangi dan susu hangat yang lezat di dapur. Ayo sarapan berkah dulu ya sayang!',
     },
     faqih: {
-      pos: [160.0, 0.2, -10.5],
+      pos: [160.0, 0.2, -10.0],
       status: 'Cilukba di Kereta Dorong 👶🍼',
       text: 'Uwaaa~ Cilukba! Adek Faqih bangun pagi ceria di kereta dorong hangat menyapa Kak Khaulah! 👶🍼',
     },
     khalid: {
-      pos: [165.5, 0.2, -15.5],
+      pos: [172.0, 0.2, -19.0],
       status: 'Bangun Tidur di Kasur Awan 👦💤',
       text: 'Hoaaam... Kak Khaulah! Khalid baru bangun tidur nih di kasur, tapi langsung semangat pas lihat Kak Khaulah! Ayo main bareng Khalid!',
     },
   },
   siang: {
     abi: {
-      pos: [154.8, 0.2, -9.5],
+      pos: [148.0, 0.2, -6.0],
       status: 'Fokus Coding Laptop 💻',
-      text: 'Assalamu\'alaikum Kak Khaulah putri shalihah Abi! Abi sedang fokus mengetik kode dan coding di laptop untuk keluarga. Senyum ceria Kak Khaulah bikin semangat Abi berkobar terus!',
+      text: 'Assalamu\'alaikum Kak Khaulah putri shalihah Abi! Abi sedang fokus mengetik kode dan coding di studio laptop untuk keluarga. Senyum ceria Kak Khaulah bikin semangat Abi berkobar terus!',
     },
     ummi: {
-      pos: [165.5, 0.2, -9.5],
+      pos: [172.0, 0.2, -6.0],
       status: 'Membuat Camilan Lezat di Dapur 🧕🧁',
       text: 'Assalamu\'alaikum Kak Khaulah sayang! Kebersihan itu sebagian dari iman, nak. Ummi sedang menyiapkan bekal cinta terenak di dapur untuk Khaulah, ayo ambil sayang!',
     },
     faqih: {
-      pos: [165.5, 0.2, -13.5],
+      pos: [172.0, 0.2, -16.0],
       status: 'Balap Mobilan di Karpet 🚗💨',
-      text: 'Ngeeeng! Brum brum pip pip! Adek Faqih lagi seru banget ngebutin mobil-mobilan di karpet sirkuit lintasan! Kak Khaulah ayo balapan bareng!',
+      text: 'Ngeeeng! Brum brum pip pip! Adek Faqih lagi seru banget ngebutin mobil-mobilan di arena sirkuit lintasan! Kak Khaulah ayo balapan bareng!',
     },
     khalid: {
-      pos: [163.5, 0.2, -13.5],
+      pos: [169.0, 0.2, -16.0],
       status: 'Latihan Drumband 🥁🎶',
       text: 'Kak Khaulah lihat nih! Khalid lagi latihan drumband! Dum-tak-tak-dum ratatat! Mau ajak Khalid ikut jalan-jalan keliling desa?',
     },
   },
   sore: {
     abi: {
-      pos: [158.8, 0.2, -11.5],
+      pos: [157.5, 0.2, -12.0],
       status: 'Santai Minum Teh Sore di Sofa 🍵🛋️',
       text: 'Alhamdulillah, senja sore yang syahdu di ruang tengah rumah kita. Senang sekali melihat Kak Khaulah bermain ceria dan sehat selalu!',
     },
     ummi: {
-      pos: [165.5, 0.2, -9.5],
+      pos: [172.0, 0.2, -6.0],
       status: 'Menyiapkan Teh & Buah Segar 🌸🫖',
       text: 'Senja sore yang indah, nak. Ummi sedang menyiapkan teh hangat dan buah manis di dapur. Ada donat manis untuk Khaulah!',
     },
     faqih: {
-      pos: [164.2, 0.2, -12.5],
+      pos: [170.0, 0.2, -14.0],
       status: 'Main Kerincingan Lucu 🪇✨',
       text: 'Kring kring! Adek Faqih goyang-goyangkan kerincingan warna-warni sambil tertawa riang menyapa Kak Khaulah! 🪇👶',
     },
     khalid: {
-      pos: [160.0, 0.2, -11.5],
+      pos: [160.0, 0.2, -12.0],
       status: 'Parade Drumband Cilik 🎶🥁',
       text: 'Dum-dum-tak! Adek Khalid siap mimpin parade drumband cilik! Kak Khaulah mau ajak Khalid ikut jalan-jalan keluar?',
     },
   },
   malam: {
     abi: {
-      pos: [158.8, 0.2, -11.5],
+      pos: [157.5, 0.2, -12.0],
       status: 'Kumpul Hangat di Sofa 🌙📖',
       text: 'MasyaAllah, malam bertabur bintang nan damai. Istirahat yang cukup ya anak pintar Abi, besok kita berpetualang lagi!',
     },
     ummi: {
-      pos: [161.2, 0.2, -11.5],
+      pos: [162.0, 0.2, -12.0],
       status: 'Mendongeng di Karpet 🧕📖',
       text: 'Malam bertabur bintang nan damai. Ummi sedang membacakan dongeng kisah nabi yang penuh hikmah. Jangan lupa cuci kaki, sikat gigi, dan berdoa sebelum tidur ya bidadari shalihah Ummi.',
     },
     faqih: {
-      pos: [166.5, 0.2, -16.0],
+      pos: [173.0, 0.2, -20.0],
       status: 'Tidur Pulas di Boks Bayi 💤👶',
       text: 'Ssshh... Adek Faqih tertidur pulas memeluk mobil-mobilan kesayangannya di boks bayi yang hangat! 💤👶',
     },
     khalid: {
-      pos: [160.4, 0.2, -11.5],
+      pos: [160.5, 0.2, -12.0],
       status: 'Dengarkan Dongeng Ummi 📖🧸',
       text: 'Kak Khaulah sini duduk bareng Khalid di karpet! Kita dengarkan dongeng Ummi sambil santai bersama keluarga!',
     },
