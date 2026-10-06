@@ -98,7 +98,7 @@ export const WelcomeModal: React.FC = () => {
             <div>
               <h4 className="font-bubble font-bold text-gray-800 text-xs sm:text-sm">Kontrol MacBook (Persis Roblox)</h4>
               <p className="text-gray-600 text-[11px] sm:text-xs">
-                <b>W A S D</b>: Jalan | <b>Spasi</b>: Lompat | <b>E</b>: Aksi & Naik Skuter | <b>H</b>: Bel Kring | <b>Q</b>: Joget | <b>R</b>: Kembali ke Rumah 🏡
+                <b>W A S D</b>: Jalan | <b>Panah / 2 Jari</b>: Kamera 🎥 | <b>Spasi</b>: Lompat | <b>E</b>: Aksi | <b>H</b>: Bel | <b>R</b>: Rumah 🏡
               </p>
             </div>
           </div>

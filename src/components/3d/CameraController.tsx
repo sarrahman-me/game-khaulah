@@ -16,6 +16,7 @@ export const CameraController: React.FC = () => {
   const isDragging = useRef(false);
   const lastPointer = useRef({ x: 0, y: 0 });
   const lastManualInputTime = useRef<number>(0);
+  const arrowKeys = useRef<{ [key: string]: boolean }>({});
 
   const initialPlayerPos = gameStore.getState().playerPos;
   const currentCamPos = useRef(
@@ -125,10 +126,15 @@ export const CameraController: React.FC = () => {
       lastManualInputTime.current = Date.now();
     };
 
-    // Roblox standard keyboard shortcuts for camera:
+    // Roblox standard keyboard shortcuts & Arrow keys for camera:
+    // Arrow Left / Right for horizontal orbit (like 2-finger trackpad swipe)
     // I / O for zoom, < / > for rotate
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'KeyI') {
+      if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+        e.preventDefault();
+        arrowKeys.current[e.code] = true;
+        lastManualInputTime.current = Date.now();
+      } else if (e.code === 'KeyI') {
         gameStore.zoomCamera(-1.0); // zoom in
       } else if (e.code === 'KeyO') {
         gameStore.zoomCamera(1.0); // zoom out
@@ -141,11 +147,23 @@ export const CameraController: React.FC = () => {
       }
     };
 
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+        arrowKeys.current[e.code] = false;
+      }
+    };
+
+    const handleBlur = () => {
+      arrowKeys.current = {};
+    };
+
     canvas.addEventListener('pointerdown', handlePointerDown);
     window.addEventListener('pointermove', handlePointerMove);
     window.addEventListener('pointerup', handlePointerUp);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
 
     return () => {
       canvas.removeEventListener('pointerdown', handlePointerDown);
@@ -153,6 +171,8 @@ export const CameraController: React.FC = () => {
       window.removeEventListener('pointerup', handlePointerUp);
       canvas.removeEventListener('wheel', handleWheel);
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
     };
   }, [gl, isShiftLock]);
 
@@ -163,8 +183,20 @@ export const CameraController: React.FC = () => {
     const isMoving = motion.isPlayerMoving;
     const facingAngle = motion.playerFacingAngle;
 
+    // Smooth continuous arrow keys camera control (Arrow Left & Arrow Right only)
+    const arrowRotSpeedX = 2.4; // rad/s
+
+    if (arrowKeys.current['ArrowLeft']) {
+      camAngleX.current += arrowRotSpeedX * dt;
+      lastManualInputTime.current = Date.now();
+    }
+    if (arrowKeys.current['ArrowRight']) {
+      camAngleX.current -= arrowRotSpeedX * dt;
+      lastManualInputTime.current = Date.now();
+    }
+
     // Brookhaven Soft Auto-Follow:
-    // When character is walking and no manual trackpad input occurred in the last ~1.2s,
+    // When character is walking and no manual trackpad/arrow input occurred in the last ~1.2s,
     // smoothly and gently align camera behind player's moving direction.
     if (!isShiftLock && isMoving && Date.now() - lastManualInputTime.current > 1200) {
       let diff = facingAngle - camAngleX.current;

@@ -100,11 +100,11 @@ export const VirtualJoystick: React.FC = () => {
     };
   }, [touchId, handleTouchMove, handleTouchEnd]);
 
-  // Keys active check
+  // Keys active check (WASD or Arrow Up/Down for movement)
   const isUp = activeKeys['KeyW'] || activeKeys['ArrowUp'];
   const isDown = activeKeys['KeyS'] || activeKeys['ArrowDown'];
-  const isLeft = activeKeys['KeyA'] || activeKeys['ArrowLeft'];
-  const isRight = activeKeys['KeyD'] || activeKeys['ArrowRight'];
+  const isLeft = activeKeys['KeyA'];
+  const isRight = activeKeys['KeyD'];
   const isJump = activeKeys['Space'];
 
   return (
@@ -210,7 +210,7 @@ export const VirtualJoystick: React.FC = () => {
         </div>
         <span className="text-white/30">•</span>
         <div className="flex items-center gap-1.5">
-          <kbd className="px-2 py-0.5 bg-white/20 rounded font-mono text-[11px] font-bold">2 Jari</kbd>
+          <kbd className="px-2 py-0.5 bg-white/20 rounded font-mono text-[11px] font-bold">2 Jari / Panah ◀ ▶</kbd>
           <span className="text-white/80">Kamera</span>
         </div>
         <span className="text-white/30">•</span>

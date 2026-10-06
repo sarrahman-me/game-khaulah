@@ -713,8 +713,8 @@ export const PlayerKhaulah: React.FC = () => {
 
     if (keys.current['KeyW'] || keys.current['ArrowUp']) moveZ += 1;
     if (keys.current['KeyS'] || keys.current['ArrowDown']) moveZ -= 1;
-    if (keys.current['KeyA'] || keys.current['ArrowLeft']) moveX -= 1;
-    if (keys.current['KeyD'] || keys.current['ArrowRight']) moveX += 1;
+    if (keys.current['KeyA']) moveX -= 1;
+    if (keys.current['KeyD']) moveX += 1;
 
     const joy = gameStore.getState().joystickVector;
     if (Math.abs(joy.x) > 0.05 || Math.abs(joy.y) > 0.05) {
