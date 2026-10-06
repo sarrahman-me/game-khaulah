@@ -1,8 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text, Billboard } from '@react-three/drei';
+import { Text, Billboard, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore, gameStore } from '../../../state/useGameStore';
+import { soundManager } from '../../../sound/audioManager';
 import {
   colliders,
   addSolidBox,
@@ -464,9 +465,141 @@ export const RumahKhaulahExterior: React.FC = () => {
 // 2. RUMAH KHAULAH GRAND INTERIOR (DUNIA DALAM RUMAH MEGAH & LUAS)
 // DIMENSI: Lebar 36m (X: 142 to 178), Panjang 25.6m (Z: -24.8 to 0.8), Tinggi 7.6m
 // ============================================================================
+const INTERACTIVE_FURNITURE = [
+  {
+    id: 'furniture_sofa',
+    pos: [157.5, 0.4, -12.0] as [number, number, number],
+    radius: 3.2,
+    title: 'Sofa Beludru Keluarga',
+    prompt: 'Tekan [E] untuk Duduk Santai di Sofa 🛋️💖',
+  },
+  {
+    id: 'furniture_tv',
+    pos: [160.0, 1.8, -16.5] as [number, number, number],
+    radius: 3.5,
+    title: 'Smart TV Kartun Keluarga',
+    prompt: 'Tekan [E] untuk Nonton TV Bersama 📺✨',
+  },
+  {
+    id: 'furniture_tea',
+    pos: [160.8, 0.4, -12.0] as [number, number, number],
+    radius: 2.8,
+    title: 'Teh Madu & Camilan Meja',
+    prompt: 'Tekan [E] untuk Minum Teh Madu Hangat 🍵🍯',
+  },
+  {
+    id: 'furniture_laptop',
+    pos: [148.0, 0.8, -5.2] as [number, number, number],
+    radius: 3.0,
+    title: 'Laptop Coding Studio Abi',
+    prompt: 'Tekan [E] untuk Mengetik Kode di Laptop Abi 💻✨',
+  },
+  {
+    id: 'furniture_books',
+    pos: [143.5, 1.2, -6.0] as [number, number, number],
+    radius: 3.0,
+    title: 'Rak Buku Ensiklopedia & Cerita',
+    prompt: 'Tekan [E] untuk Membaca Buku Cerita 📖🌟',
+  },
+  {
+    id: 'furniture_pray',
+    pos: [148.0, 0.3, -17.5] as [number, number, number],
+    radius: 3.0,
+    title: 'Sajadah Musholla Keluarga',
+    prompt: 'Tekan [E] untuk Berdoa di Musholla 🤲🕌✨',
+  },
+  {
+    id: 'furniture_tasbih',
+    pos: [143.5, 0.8, -18.0] as [number, number, number],
+    radius: 2.8,
+    title: 'Tasbih Digital & Meja Dzikir',
+    prompt: 'Tekan [E] untuk Berdzikir Memuji Allah 📿✨',
+  },
+  {
+    id: 'furniture_barstool',
+    pos: [172.0, 0.6, -4.7] as [number, number, number],
+    radius: 3.0,
+    title: 'Kursi Bar Marmer Dapur',
+    prompt: 'Tekan [E] untuk Duduk di Kursi Bar Dapur 🪑🍰',
+  },
+  {
+    id: 'furniture_cupcake',
+    pos: [173.4, 1.1, -6.0] as [number, number, number],
+    radius: 2.8,
+    title: 'Cupcake Pelangi & Buah Ummi',
+    prompt: 'Tekan [E] untuk Cicipi Cupcake Pelangi 🧁🍓',
+  },
+  {
+    id: 'furniture_fridge',
+    pos: [176.5, 1.2, -9.5] as [number, number, number],
+    radius: 3.0,
+    title: 'Kulkas Cerdas Penuh Minuman Segar',
+    prompt: 'Tekan [E] untuk Buka Kulkas & Susu Dingin 🥛❄️',
+  },
+  {
+    id: 'furniture_sink',
+    pos: [176.5, 0.9, -3.0] as [number, number, number],
+    radius: 2.8,
+    title: 'Wastafel & Cuci Tangan Wangi',
+    prompt: 'Tekan [E] untuk Cuci Tangan Bersih & Harum 🧼💧',
+  },
+  {
+    id: 'furniture_bed',
+    pos: [172.0, 0.6, -18.8] as [number, number, number],
+    radius: 3.2,
+    title: 'Kasur Bintang Awan Empuk',
+    prompt: 'Tekan [E] untuk Istirahat di Kasur Awan 🛏️⭐💤',
+  },
+  {
+    id: 'furniture_crib',
+    pos: [173.5, 0.6, -22.5] as [number, number, number],
+    radius: 3.0,
+    title: 'Boks Bayi Adek Faqih',
+    prompt: 'Tekan [E] untuk Putar Kotak Musik Bayi 👶🍼🎶',
+  },
+  {
+    id: 'furniture_racecar',
+    pos: [172.0, 0.4, -15.5] as [number, number, number],
+    radius: 3.0,
+    title: 'Sirkuit Balap Mini Adek Faqih',
+    prompt: 'Tekan [E] untuk Main Mobil Balap Cepat 🏎️💨',
+  },
+  {
+    id: 'furniture_drum',
+    pos: [169.0, 0.5, -16.0] as [number, number, number],
+    radius: 3.0,
+    title: 'Drum Marching Band Adek Khalid',
+    prompt: 'Tekan [E] untuk Main Drum Band Ceria 🥁🎶',
+  },
+  {
+    id: 'furniture_blocks',
+    pos: [168.0, 0.4, -22.0] as [number, number, number],
+    radius: 3.0,
+    title: 'Peti Mainan & Istana Balok Susun',
+    prompt: 'Tekan [E] untuk Menyusun Istana Balok 🧱🏰✨',
+  },
+];
+
 export const RumahKhaulahInterior: React.FC = () => {
   const isInsideHouse = useGameStore((s) => s.isInsideHouse);
   const lastNearExitRef = useRef<string | null>(null);
+  const [tvChannel, setTvChannel] = useState(1); // 0: Off, 1: Kartun Lucu, 2: Petualangan Antariksa, 3: Shalawat & Nasyid Ceria
+
+  const handleToggleTv = (e?: any) => {
+    if (e) e.stopPropagation();
+    const next = (tvChannel + 1) % 4;
+    setTvChannel(next);
+    soundManager.playStarCollect();
+    if (next === 0) {
+      gameStore.setMessage('Cklek! TV dimatikan untuk menghemat energi! 📺🔌');
+    } else if (next === 1) {
+      gameStore.setMessage('TV Channel 1: Kartun Kucing & Kelinci Lucu Berkejaran di Padang Rumput! 🐱🐰📺✨');
+    } else if (next === 2) {
+      gameStore.setMessage('TV Channel 2: Petualangan Astronot Cilik Menjelajah Bintang & Planet Warna-Warni! 🚀🌟🪐');
+    } else {
+      gameStore.setMessage('TV Channel 3: Shalawat & Nasyid Ceria Anak Shalihah! Hati jadi adem dan gembira! 🎶🌸✨');
+    }
+  };
 
   useEffect(() => {
     // ------------------------------------------------------------------------
@@ -480,7 +613,7 @@ export const RumahKhaulahInterior: React.FC = () => {
     colliders.push(cInterior);
 
     // ------------------------------------------------------------------------
-    // SOLID WALLS ENCLOSING THE SPACIOUS VILLA (HEIGHT: 7.6m)
+    // SOLID WALLS & LARGE FURNITURE ENCLOSING THE SPACIOUS VILLA (HEIGHT: 7.6m)
     // ------------------------------------------------------------------------
     const solids: SolidCollider[] = [
       // Outer Boundary Walls
@@ -502,6 +635,25 @@ export const RumahKhaulahInterior: React.FC = () => {
       // Right Hallway Archway Columns
       addSolidBox([165.8, 0, -24.8], [166.5, 6.0, -18.5], 'int_right_hall_back'),
       addSolidBox([165.8, 0, -5.5], [166.5, 6.0, 0.8], 'int_right_hall_front'),
+
+      // Living Room Coffee table
+      addSolidBox([159.7, 0, -12.7], [161.9, 0.6, -11.3], 'int_coffee_table'),
+      // TV Media Console Stand
+      addSolidBox([158.4, 0, -17.0], [161.6, 1.0, -16.0], 'int_tv_stand'),
+      // Abi's Desk
+      addSolidBox([146.6, 0, -6.6], [149.4, 1.2, -5.4], 'int_desk'),
+      // Abi's Bookshelves
+      addSolidBox([142.1, 0, -9.6], [142.9, 4.0, -2.4], 'int_bookshelf'),
+      // Musholla Quran Rehal
+      addSolidBox([147.4, 0, -19.6], [148.6, 0.6, -18.4], 'int_rehal'),
+      // Kitchen Island
+      addSolidBox([169.3, 0, -6.8], [174.7, 1.2, -5.2], 'int_kitchen_island'),
+      // Kitchen Refrigerator
+      addSolidBox([175.5, 0, -10.5], [177.5, 2.5, -8.5], 'int_fridge'),
+      // Kitchen Sink
+      addSolidBox([175.5, 0, -4.0], [177.5, 1.2, -2.0], 'int_sink'),
+      // Toy Chest
+      addSolidBox([167.0, 0, -15.0], [169.0, 1.0, -13.0], 'int_toy_chest'),
     ];
 
     return () => {
@@ -514,6 +666,7 @@ export const RumahKhaulahInterior: React.FC = () => {
   useFrame(() => {
     if (!isInsideHouse) return;
     const playerPos = gameStore.getState().playerPos;
+    const activeRide = gameStore.getState().activeRide;
 
     // Front Exit Door zone (at [160, 0.2, 0.5])
     const distFrontExit = Math.hypot(playerPos[0] - 160, playerPos[2] - 0.0);
@@ -529,6 +682,7 @@ export const RumahKhaulahInterior: React.FC = () => {
           prompt: 'Tekan [E] untuk Keluar ke Halaman Depan! 🌳🚪',
         });
       }
+      return;
     } else if (distBackExit < 3.0) {
       if (lastNearExitRef.current !== 'back') {
         lastNearExitRef.current = 'back';
@@ -538,11 +692,58 @@ export const RumahKhaulahInterior: React.FC = () => {
           prompt: 'Tekan [E] untuk Keluar ke Kolam Renang / Waterpark! 🏊‍♀️🌴',
         });
       }
+      return;
+    }
+
+    // Don't search furniture interactables if already riding something
+    if (activeRide !== 'none') {
+      if (lastNearExitRef.current !== null) {
+        lastNearExitRef.current = null;
+        const cur = gameStore.getState().nearbyInteractable;
+        if (cur?.id?.startsWith('furniture_') || cur?.id?.startsWith('interior_exit_')) {
+          gameStore.setNearbyInteractable(null);
+        }
+      }
+      return;
+    }
+
+    const curInteractable = gameStore.getState().nearbyInteractable;
+    const isFamilyNear =
+      curInteractable?.id === 'abi' ||
+      curInteractable?.id === 'ummi' ||
+      curInteractable?.id === 'khalid' ||
+      curInteractable?.id === 'faqih';
+    if (isFamilyNear) {
+      lastNearExitRef.current = null;
+      return;
+    }
+
+    // Check closest interactive furniture
+    let closestFurniture: (typeof INTERACTIVE_FURNITURE)[0] | null = null;
+    let closestDistSq = Infinity;
+
+    for (const f of INTERACTIVE_FURNITURE) {
+      const d = Math.hypot(playerPos[0] - f.pos[0], playerPos[2] - f.pos[2]);
+      if (d < f.radius && d < closestDistSq) {
+        closestDistSq = d;
+        closestFurniture = f;
+      }
+    }
+
+    if (closestFurniture) {
+      if (lastNearExitRef.current !== closestFurniture.id) {
+        lastNearExitRef.current = closestFurniture.id;
+        gameStore.setNearbyInteractable({
+          id: closestFurniture.id,
+          title: closestFurniture.title,
+          prompt: closestFurniture.prompt,
+        });
+      }
     } else {
       if (lastNearExitRef.current !== null) {
         lastNearExitRef.current = null;
         const cur = gameStore.getState().nearbyInteractable;
-        if (cur?.id === 'interior_exit_front' || cur?.id === 'interior_exit_back') {
+        if (cur?.id?.startsWith('furniture_') || cur?.id?.startsWith('interior_exit_')) {
           gameStore.setNearbyInteractable(null);
         }
       }
@@ -786,12 +987,28 @@ export const RumahKhaulahInterior: React.FC = () => {
       {/* ============================================================== */}
       {/* --- 5.1 GRAND CENTRAL LIVING ROOM & FOYER --- */}
       <group position={[0, 0.2, 0]}>
-        {/* Large Velvet L-Shaped Sectional Sofa */}
-        <group position={[-2.5, 0, 0]}>
+        {/* Large Velvet L-Shaped Sectional Sofa (INTERACTIVE: Duduk Santai) */}
+        <group
+          position={[-2.5, 0, 0]}
+          onClick={(e) => {
+            e.stopPropagation();
+            gameStore.setActiveRide('sofa');
+            gameStore.setMessage('Khaulah duduk santai di sofa beludru empuk! Nyaman sekali~ 🛋️💖');
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          {/* Main Seat Cushion */}
           <mesh position={[0, 0.35, 0]} castShadow>
             <boxGeometry args={[3.8, 0.55, 1.6]} />
             <meshStandardMaterial color="#E9D8A6" roughness={0.8} />
           </mesh>
+          {/* Back Cushion */}
           <mesh position={[0, 0.9, -0.65]} castShadow>
             <boxGeometry args={[3.8, 0.75, 0.35]} />
             <meshStandardMaterial color="#DDA15E" roughness={0.8} />
@@ -801,6 +1018,15 @@ export const RumahKhaulahInterior: React.FC = () => {
             <boxGeometry args={[1.0, 0.55, 1.4]} />
             <meshStandardMaterial color="#E9D8A6" roughness={0.8} />
           </mesh>
+          {/* Side Armrests */}
+          <mesh position={[1.8, 0.65, 0]} castShadow>
+            <boxGeometry args={[0.3, 0.5, 1.6]} />
+            <meshStandardMaterial color="#DDA15E" roughness={0.8} />
+          </mesh>
+          <mesh position={[-1.8, 0.65, 0.6]} castShadow>
+            <boxGeometry args={[0.3, 0.5, 2.6]} />
+            <meshStandardMaterial color="#DDA15E" roughness={0.8} />
+          </mesh>
           {/* Throw Pillows */}
           {[-1.2, 0, 1.2].map((px, pi) => (
             <mesh key={pi} position={[px, 0.7, -0.3]} rotation={[0.2, 0.2, 0]}>
@@ -808,9 +1034,15 @@ export const RumahKhaulahInterior: React.FC = () => {
               <meshStandardMaterial color={['#FFB5A7', '#F4ACB7', '#9A8C98'][pi]} />
             </mesh>
           ))}
+          {/* Interactive Billboard Prompt */}
+          <Billboard position={[0, 1.8, 0]}>
+            <Text fontSize={0.2} color="#FEF08A" anchorX="center" anchorY="middle">
+              🛋️ [E] Duduk di Sofa
+            </Text>
+          </Billboard>
         </group>
 
-        {/* Large Marble Coffee Table */}
+        {/* Large Marble Coffee Table & Honey Tea (INTERACTIVE: Minum Teh Madu) */}
         <group position={[0.8, 0, 0]}>
           <mesh position={[0, 0.3, 0]} castShadow>
             <boxGeometry args={[2.2, 0.12, 1.4]} />
@@ -825,14 +1057,207 @@ export const RumahKhaulahInterior: React.FC = () => {
             ))
           )}
           {/* Crystal Flower Vase & Roses */}
-          <mesh position={[0, 0.48, 0]}>
+          <mesh position={[-0.6, 0.48, 0]}>
             <cylinderGeometry args={[0.12, 0.09, 0.25, 12]} />
             <meshStandardMaterial color="#E0F2FE" transparent opacity={0.8} roughness={0.1} />
           </mesh>
-          <mesh position={[0, 0.65, 0]}>
+          <mesh position={[-0.6, 0.65, 0]}>
             <sphereGeometry args={[0.15, 8, 8]} />
             <meshStandardMaterial color="#FF006E" />
           </mesh>
+
+          {/* Interactive Tea Tray with Honey Tea & Cookies */}
+          <group
+            position={[0.3, 0.37, 0]}
+            onClick={(e) => {
+              e.stopPropagation();
+              soundManager.playSnackBuff();
+              gameStore.addSpeedBuff(25);
+              gameStore.setMessage('Sluuurp~ Khaulah menikmati teh madu hangat! Manis dan menyehatkan! (+Speed Boost ⚡🍵)');
+            }}
+            onPointerOver={(e) => {
+              e.stopPropagation();
+              document.body.style.cursor = 'pointer';
+            }}
+            onPointerOut={() => {
+              document.body.style.cursor = 'auto';
+            }}
+          >
+            {/* Wooden Tea Tray */}
+            <mesh castShadow>
+              <boxGeometry args={[1.0, 0.04, 0.7]} />
+              <meshStandardMaterial color="#8B5A2B" roughness={0.5} />
+            </mesh>
+            {/* Ceramic Teapot */}
+            <mesh position={[-0.25, 0.14, 0]} castShadow>
+              <sphereGeometry args={[0.12, 12, 12]} />
+              <meshStandardMaterial color="#FFF1E6" roughness={0.3} />
+            </mesh>
+            <mesh position={[-0.25, 0.24, 0]}>
+              <cylinderGeometry args={[0.04, 0.05, 0.06, 10]} />
+              <meshStandardMaterial color="#FBBF24" />
+            </mesh>
+            {/* Teacups with Honey Tea */}
+            {[0.12, 0.32].map((cx, ci) => (
+              <group key={ci} position={[cx, 0.06, 0]}>
+                <mesh castShadow>
+                  <cylinderGeometry args={[0.06, 0.045, 0.09, 12]} />
+                  <meshStandardMaterial color="#FFFFFF" roughness={0.3} />
+                </mesh>
+                <mesh position={[0, 0.035, 0]}>
+                  <cylinderGeometry args={[0.052, 0.052, 0.015, 12]} />
+                  <meshStandardMaterial color="#D97706" roughness={0.2} />
+                </mesh>
+              </group>
+            ))}
+            {/* Plate of Star Cookies */}
+            <mesh position={[0.05, 0.04, 0.2]}>
+              <cylinderGeometry args={[0.12, 0.1, 0.02, 12]} />
+              <meshStandardMaterial color="#FFFFFF" />
+            </mesh>
+            <mesh position={[0.05, 0.06, 0.2]}>
+              <cylinderGeometry args={[0.08, 0.08, 0.02, 5]} />
+              <meshStandardMaterial color="#F59E0B" roughness={0.7} />
+            </mesh>
+            {/* Gentle Warm Steam Sparkles */}
+            <Sparkles count={4} position={[0.22, 0.35, 0]} scale={0.4} size={1.2} speed={0.4} color="#FDE68A" />
+            <Billboard position={[0, 0.8, 0]}>
+              <Text fontSize={0.18} color="#FEF08A" anchorX="center" anchorY="middle">
+                🍵 [E] Minum Teh Madu
+              </Text>
+            </Billboard>
+          </group>
+        </group>
+
+        {/* Smart TV Media Credenza & 75" Screen (INTERACTIVE: Ganti Channel TV) */}
+        <group position={[0, 0, -4.5]}>
+          {/* Wooden TV Media Console Cabinet */}
+          <group position={[0, 0.4, 0]}>
+            <mesh castShadow receiveShadow>
+              <boxGeometry args={[3.2, 0.7, 0.8]} />
+              <meshStandardMaterial color="#7F4F24" roughness={0.5} />
+            </mesh>
+            {/* Cabinet Doors with Gold Trim */}
+            {[-1.0, 0, 1.0].map((dx, di) => (
+              <mesh key={di} position={[dx, 0, 0.41]}>
+                <boxGeometry args={[0.9, 0.55, 0.03]} />
+                <meshStandardMaterial color="#9C6644" roughness={0.6} />
+              </mesh>
+            ))}
+            {/* Modern Slim Soundbar on Console */}
+            <mesh position={[0, 0.38, 0.15]}>
+              <boxGeometry args={[2.0, 0.08, 0.12]} />
+              <meshStandardMaterial color="#1E293B" metalness={0.7} roughness={0.3} />
+            </mesh>
+          </group>
+
+          {/* 75-Inch Curved Smart TV */}
+          <group
+            position={[0, 1.8, 0]}
+            onClick={handleToggleTv}
+            onPointerOver={(e) => {
+              e.stopPropagation();
+              document.body.style.cursor = 'pointer';
+            }}
+            onPointerOut={() => {
+              document.body.style.cursor = 'auto';
+            }}
+          >
+            {/* TV Outer Frame & Wall Mount */}
+            <mesh castShadow>
+              <boxGeometry args={[3.2, 1.8, 0.1]} />
+              <meshStandardMaterial color="#0F172A" metalness={0.8} roughness={0.2} />
+            </mesh>
+            {/* TV Bezel Gold Trim */}
+            <mesh position={[0, -0.88, 0.05]}>
+              <boxGeometry args={[3.15, 0.03, 0.02]} />
+              <meshStandardMaterial color="#F59E0B" metalness={0.9} roughness={0.1} />
+            </mesh>
+            {/* Smart Screen Canvas */}
+            <mesh position={[0, 0, 0.06]}>
+              <boxGeometry args={[3.05, 1.65, 0.01]} />
+              <meshStandardMaterial
+                color={
+                  tvChannel === 0
+                    ? '#0F172A'
+                    : tvChannel === 1
+                    ? '#38BDF8'
+                    : tvChannel === 2
+                    ? '#7C3AED'
+                    : '#F472B6'
+                }
+                emissive={
+                  tvChannel === 0
+                    ? '#000000'
+                    : tvChannel === 1
+                    ? '#0284C7'
+                    : tvChannel === 2
+                    ? '#5B21B6'
+                    : '#DB2777'
+                }
+                emissiveIntensity={tvChannel === 0 ? 0.0 : 0.65}
+                roughness={0.15}
+              />
+            </mesh>
+
+            {/* Screen Graphics Based on Active Channel */}
+            {tvChannel === 1 && (
+              <group position={[0, 0, 0.08]}>
+                <Text position={[0, 0.45, 0]} fontSize={0.2} color="#FFFFFF" anchorX="center" anchorY="middle">
+                  🐱 KARTUN KUCING & KELINCI 🐰
+                </Text>
+                <mesh position={[-0.5, -0.15, 0]}>
+                  <sphereGeometry args={[0.22, 10, 10]} />
+                  <meshStandardMaterial color="#FEF08A" emissive="#FEF08A" emissiveIntensity={0.5} />
+                </mesh>
+                <mesh position={[0.5, -0.15, 0]}>
+                  <sphereGeometry args={[0.22, 10, 10]} />
+                  <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={0.5} />
+                </mesh>
+                <Sparkles count={8} scale={2.2} size={1.8} speed={0.5} color="#BAE6FD" />
+              </group>
+            )}
+
+            {tvChannel === 2 && (
+              <group position={[0, 0, 0.08]}>
+                <Text position={[0, 0.45, 0]} fontSize={0.2} color="#FEF08A" anchorX="center" anchorY="middle">
+                  🚀 PETUALANGAN ASTRONOT BINTANG 🌟
+                </Text>
+                <mesh position={[0, -0.15, 0]} rotation={[0, 0, 0.4]}>
+                  <coneGeometry args={[0.22, 0.55, 8]} />
+                  <meshStandardMaterial color="#EF4444" emissive="#EF4444" emissiveIntensity={0.6} />
+                </mesh>
+                <Sparkles count={12} scale={2.4} size={2.0} speed={0.8} color="#FEF08A" />
+              </group>
+            )}
+
+            {tvChannel === 3 && (
+              <group position={[0, 0, 0.08]}>
+                <Text position={[0, 0.45, 0]} fontSize={0.2} color="#FFFFFF" anchorX="center" anchorY="middle">
+                  🎶 SHALAWAT & NASYID CERIA 🌸
+                </Text>
+                <Text position={[0, -0.15, 0]} fontSize={0.35} color="#FEF08A" anchorX="center" anchorY="middle">
+                  🎵 ✨ 💖 ✨ 🎶
+                </Text>
+                <Sparkles count={10} scale={2.4} size={1.8} speed={0.6} color="#FBCFE8" />
+              </group>
+            )}
+
+            {tvChannel === 0 && (
+              <group position={[0, 0, 0.08]}>
+                <Text position={[0, 0, 0]} fontSize={0.18} color="#64748B" anchorX="center" anchorY="middle">
+                  [ TV STANDBY - KLIK UNTUK NYALAKAN ]
+                </Text>
+              </group>
+            )}
+
+            {/* TV Screen Interactive Billboard Prompt */}
+            <Billboard position={[0, 1.25, 0]}>
+              <Text fontSize={0.2} color="#FEF08A" anchorX="center" anchorY="middle">
+                📺 [E] Ganti Saluran TV
+              </Text>
+            </Billboard>
+          </group>
         </group>
 
         {/* Grand Hanging Crystal Chandelier */}
@@ -847,8 +1272,23 @@ export const RumahKhaulahInterior: React.FC = () => {
 
       {/* --- 5.2 EXECUTIVE CODING STUDIO ABI (WING KIRI DEPAN: X: -12, Z: 6) --- */}
       <group position={[-12.0, 0.2, 6.0]}>
-        {/* Full-Wall Library Bookshelves */}
-        <group position={[-5.4, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
+        {/* Full-Wall Library Bookshelves (INTERACTIVE: Baca Buku Cerita) */}
+        <group
+          position={[-4.5, 0, 0]}
+          rotation={[0, Math.PI / 2, 0]}
+          onClick={(e) => {
+            e.stopPropagation();
+            soundManager.playCheckpoint();
+            gameStore.setMessage('Khaulah membaca buku ensiklopedia bergambar tentang bintang dan hewan ajaib! 📖🌟');
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
           <mesh position={[0, 3.2, 0]} castShadow>
             <boxGeometry args={[7.2, 6.0, 0.4]} />
             <meshStandardMaterial color="#582F0E" roughness={0.6} />
@@ -858,13 +1298,33 @@ export const RumahKhaulahInterior: React.FC = () => {
             [-2.8, -2.0, -1.2, -0.4, 0.4, 1.2, 2.0, 2.8].map((sx, xi) => (
               <mesh key={`b-${si}-${xi}`} position={[sx, 1.2 + si * 1.0, 0.05]}>
                 <boxGeometry args={[0.18, 0.65, 0.35]} />
-                <meshStandardMaterial color={['#2B2D42', '#3D5A80', '#E07A5F', '#81B29A', '#F2CC8F', '#4A4E69'][(si + xi) % 6]} />
+                <meshStandardMaterial
+                  color={
+                    ['#2B2D42', '#3D5A80', '#E07A5F', '#81B29A', '#F2CC8F', '#4A4E69'][(si + xi) % 6]
+                  }
+                />
               </mesh>
             ))
           )}
+          {/* Open Picture Book Stand */}
+          <group position={[0, 1.3, 0.35]}>
+            <mesh castShadow>
+              <boxGeometry args={[0.7, 0.1, 0.5]} />
+              <meshStandardMaterial color="#D4A373" />
+            </mesh>
+            <mesh position={[0, 0.12, 0]} rotation={[-0.3, 0, 0]}>
+              <boxGeometry args={[0.62, 0.06, 0.42]} />
+              <meshStandardMaterial color="#FEF08A" emissive="#FEF08A" emissiveIntensity={0.3} />
+            </mesh>
+            <Billboard position={[0, 0.8, 0]}>
+              <Text fontSize={0.2} color="#FEF08A" anchorX="center" anchorY="middle">
+                📖 [E] Baca Buku Cerita
+              </Text>
+            </Billboard>
+          </group>
         </group>
 
-        {/* Executive Programmer Desk & Chair */}
+        {/* Executive Programmer Desk & Chair & Laptop (INTERACTIVE: Ketik Kode di Laptop) */}
         <group position={[0, 0, 0]}>
           <mesh position={[0, 0.8, 0]} castShadow receiveShadow>
             <boxGeometry args={[2.6, 0.1, 1.2]} />
@@ -899,6 +1359,87 @@ export const RumahKhaulahInterior: React.FC = () => {
               <meshStandardMaterial color="#A7F3D0" emissive="#059669" emissiveIntensity={0.5} />
             </mesh>
           </group>
+
+          {/* Abi's Ergonomic Executive Mesh Chair */}
+          <group position={[0, 0, 0.8]}>
+            {/* Seat Cushion */}
+            <mesh position={[0, 0.48, 0]} castShadow>
+              <boxGeometry args={[0.65, 0.1, 0.6]} />
+              <meshStandardMaterial color="#1E293B" roughness={0.7} />
+            </mesh>
+            {/* High Ergonomic Backrest */}
+            <mesh position={[0, 0.95, -0.26]} rotation={[-0.1, 0, 0]} castShadow>
+              <boxGeometry args={[0.6, 0.85, 0.08]} />
+              <meshStandardMaterial color="#334155" roughness={0.6} />
+            </mesh>
+            {/* Armrests */}
+            {[-0.32, 0.32].map((ax, ai) => (
+              <mesh key={ai} position={[ax, 0.72, -0.05]} castShadow>
+                <boxGeometry args={[0.08, 0.05, 0.4]} />
+                <meshStandardMaterial color="#0F172A" />
+              </mesh>
+            ))}
+            {/* Center Swivel Stem & 5-Star Wheel Base */}
+            <mesh position={[0, 0.24, 0]}>
+              <cylinderGeometry args={[0.04, 0.04, 0.45, 10]} />
+              <meshStandardMaterial color="#94A3B8" metalness={0.9} roughness={0.2} />
+            </mesh>
+            <mesh position={[0, 0.06, 0]}>
+              <cylinderGeometry args={[0.32, 0.35, 0.08, 8]} />
+              <meshStandardMaterial color="#0F172A" />
+            </mesh>
+          </group>
+
+          {/* Interactive Laptop & Mechanical Keyboard on Desk */}
+          <group
+            position={[0, 0.85, 0.2]}
+            onClick={(e) => {
+              e.stopPropagation();
+              gameStore.setActiveRide('chair_abi');
+              soundManager.playKeyboardTyping();
+              gameStore.setMessage('Tuk-tak-tuk-tak! Khaulah mengetik kode game di laptop Abi: print("Aku sayang Abi!") 💻❤️');
+            }}
+            onPointerOver={(e) => {
+              e.stopPropagation();
+              document.body.style.cursor = 'pointer';
+            }}
+            onPointerOut={() => {
+              document.body.style.cursor = 'auto';
+            }}
+          >
+            {/* Laptop Base */}
+            <mesh castShadow>
+              <boxGeometry args={[0.55, 0.02, 0.38]} />
+              <meshStandardMaterial color="#94A3B8" metalness={0.8} roughness={0.2} />
+            </mesh>
+            {/* Open Display Lid */}
+            <group position={[0, 0.01, -0.18]} rotation={[0.4, 0, 0]}>
+              <mesh castShadow>
+                <boxGeometry args={[0.55, 0.38, 0.015]} />
+                <meshStandardMaterial color="#64748B" metalness={0.7} />
+              </mesh>
+              {/* Glowing Code Screen */}
+              <mesh position={[0, 0.02, 0.01]}>
+                <boxGeometry args={[0.51, 0.33, 0.005]} />
+                <meshStandardMaterial color="#38BDF8" emissive="#0284C7" emissiveIntensity={0.8} />
+              </mesh>
+            </group>
+            {/* RGB Mechanical Keyboard & Mouse */}
+            <mesh position={[0, 0.015, 0.04]}>
+              <boxGeometry args={[0.45, 0.01, 0.16]} />
+              <meshStandardMaterial color="#0F172A" emissive="#EC4899" emissiveIntensity={0.4} />
+            </mesh>
+            <mesh position={[0.35, 0.015, 0.04]}>
+              <boxGeometry args={[0.07, 0.02, 0.11]} />
+              <meshStandardMaterial color="#0F172A" emissive="#38BDF8" emissiveIntensity={0.5} />
+            </mesh>
+            {/* Interactive Billboard */}
+            <Billboard position={[0, 0.9, 0]}>
+              <Text fontSize={0.2} color="#FEF08A" anchorX="center" anchorY="middle">
+                💻 [E] Ketik Kode di Laptop
+              </Text>
+            </Billboard>
+          </group>
         </group>
 
         {/* Motivational Frame: CODING WITH LOVE FOR KELUARGA */}
@@ -916,14 +1457,59 @@ export const RumahKhaulahInterior: React.FC = () => {
         >
           💻 CODING WITH LOVE FOR KELUARGA ❤️
         </Text>
-
         <pointLight position={[0, 4.5, 0]} color="#FEF08A" intensity={1.2} distance={14} />
       </group>
 
       {/* --- 5.3 FAMILY PRAYER SANCTUARY / MUSHOLLA (WING KIRI BELAKANG: X: -12, Z: -6) --- */}
       <group position={[-12.0, 0.2, -6.0]}>
+        {/* Soft Sajadah Musholla Keluarga (INTERACTIVE: Sholat & Berdoa Khusyuk) */}
+        <group
+          position={[0, 0.02, 0.5]}
+          onClick={(e) => {
+            e.stopPropagation();
+            gameStore.setActiveRide('pray');
+            gameStore.setMessage('Alhamdulillah, Khaulah berdoa dengan khusyuk di musholla: "Semoga keluarga bahagia selalu!" 🤲🕌✨');
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          {/* Main Turkish Prayer Rug Mat */}
+          <mesh receiveShadow>
+            <boxGeometry args={[1.5, 0.03, 2.4]} />
+            <meshStandardMaterial color="#1B4D3E" roughness={0.85} />
+          </mesh>
+          {/* Golden Arched Mihrab Motif Border */}
+          <mesh position={[0, 0.02, 0]}>
+            <boxGeometry args={[1.3, 0.005, 2.15]} />
+            <meshStandardMaterial color="#FBBF24" roughness={0.6} />
+          </mesh>
+          <mesh position={[0, 0.025, 0]}>
+            <boxGeometry args={[1.15, 0.005, 1.95]} />
+            <meshStandardMaterial color="#064E3B" roughness={0.9} />
+          </mesh>
+          {/* Soft Fringe Tassels */}
+          {[-1.15, 1.15].map((fz, fi) => (
+            <mesh key={fi} position={[0, 0.015, fz]}>
+              <boxGeometry args={[1.4, 0.01, 0.08]} />
+              <meshStandardMaterial color="#FEF08A" />
+            </mesh>
+          ))}
+          {/* Celestial Golden Light Particle Glow */}
+          <Sparkles count={8} position={[0, 0.5, 0]} scale={1.8} size={1.6} speed={0.3} color="#FEF08A" />
+          <Billboard position={[0, 1.1, 0]}>
+            <Text fontSize={0.2} color="#FEF08A" anchorX="center" anchorY="middle">
+              🤲 [E] Sholat & Berdoa Khusyuk
+            </Text>
+          </Billboard>
+        </group>
+
         {/* Large Wooden Quran Stand (Rehal) & Mushaf */}
-        <group position={[0, 0.2, -4.5]}>
+        <group position={[0, 0.2, -1.2]}>
           <mesh castShadow>
             <boxGeometry args={[1.0, 0.35, 0.8]} />
             <meshStandardMaterial color="#7F4F24" roughness={0.6} />
@@ -932,6 +1518,53 @@ export const RumahKhaulahInterior: React.FC = () => {
             <boxGeometry args={[0.85, 0.1, 0.65]} />
             <meshStandardMaterial color="#FFFBEB" />
           </mesh>
+          {/* Golden Quran Cover */}
+          <mesh position={[0, 0.32, 0]} rotation={[-0.2, 0, 0]}>
+            <boxGeometry args={[0.8, 0.03, 0.6]} />
+            <meshStandardMaterial color="#D97706" metalness={0.7} roughness={0.3} />
+          </mesh>
+        </group>
+
+        {/* Tasbih Digital & Meja Dzikir (INTERACTIVE: Dzikir Tasbih) */}
+        <group
+          position={[-4.5, 0, 0]}
+          onClick={(e) => {
+            e.stopPropagation();
+            soundManager.playFamilyChord();
+            gameStore.setMessage('Subhanallah, Walhamdulillah, Wala ilaha illallah, Wallahu Akbar! Hati jadi tenang! 📿✨');
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          {/* Carved Wood Side Table */}
+          <mesh position={[0, 0.4, 0]} castShadow>
+            <cylinderGeometry args={[0.45, 0.4, 0.8, 16]} />
+            <meshStandardMaterial color="#582F0E" roughness={0.5} />
+          </mesh>
+          {/* Crystal Tasbih Beads Loop */}
+          <mesh position={[0, 0.83, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.2, 0.035, 8, 24]} />
+            <meshStandardMaterial color="#FBBF24" metalness={0.7} roughness={0.2} emissive="#FBBF24" emissiveIntensity={0.3} />
+          </mesh>
+          {/* Digital Tasbih Counter Box */}
+          <mesh position={[0.22, 0.83, 0]}>
+            <boxGeometry args={[0.12, 0.08, 0.14]} />
+            <meshStandardMaterial color="#1E293B" />
+          </mesh>
+          <mesh position={[0.22, 0.875, 0]}>
+            <boxGeometry args={[0.09, 0.005, 0.07]} />
+            <meshStandardMaterial color="#10B981" emissive="#10B981" emissiveIntensity={0.8} />
+          </mesh>
+          <Billboard position={[0, 1.4, 0]}>
+            <Text fontSize={0.2} color="#FEF08A" anchorX="center" anchorY="middle">
+              📿 [E] Berdzikir Tasbih
+            </Text>
+          </Billboard>
         </group>
 
         {/* Large Wall Calligraphy Frame: BISMILLAHIRRAHMANIRRAHIM */}
@@ -948,8 +1581,6 @@ export const RumahKhaulahInterior: React.FC = () => {
         >
           بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
         </Text>
-
-        {/* Peaceful Celestial Dawn Light */}
         <pointLight position={[0, 4.8, 0]} color="#BAE6FD" intensity={1.3} distance={16} />
       </group>
 
@@ -965,30 +1596,215 @@ export const RumahKhaulahInterior: React.FC = () => {
             <boxGeometry args={[5.4, 0.08, 1.7]} />
             <meshStandardMaterial color="#CBD5E1" roughness={0.1} />
           </mesh>
-          {/* Ceramic Tiered Dessert Stand with Cupcakes & Fruit Bowl */}
-          <mesh position={[1.4, 1.2, 0]}>
-            <sphereGeometry args={[0.3, 14, 14]} />
-            <meshStandardMaterial color="#FFFFFF" />
+
+          {/* Tiered Ceramic Dessert Stand with Cupcakes (INTERACTIVE: Cicipi Cupcake) */}
+          <group
+            position={[1.4, 1.06, 0]}
+            onClick={(e) => {
+              e.stopPropagation();
+              soundManager.playSnackBuff();
+              gameStore.addSpeedBuff(30);
+              gameStore.setMessage('Nyam nyam! Cupcake pelangi buatan Ummi manis dan lezat! (+Speed Boost ⚡🧁)');
+            }}
+            onPointerOver={(e) => {
+              e.stopPropagation();
+              document.body.style.cursor = 'pointer';
+            }}
+            onPointerOut={() => {
+              document.body.style.cursor = 'auto';
+            }}
+          >
+            {/* Stand Base & Pedestal */}
+            <mesh position={[0, 0.05, 0]}>
+              <cylinderGeometry args={[0.28, 0.35, 0.05, 16]} />
+              <meshStandardMaterial color="#FFFFFF" roughness={0.2} />
+            </mesh>
+            <mesh position={[0, 0.2, 0]}>
+              <cylinderGeometry args={[0.04, 0.04, 0.3, 10]} />
+              <meshStandardMaterial color="#F59E0B" metalness={0.8} />
+            </mesh>
+            <mesh position={[0, 0.35, 0]}>
+              <cylinderGeometry args={[0.22, 0.22, 0.04, 16]} />
+              <meshStandardMaterial color="#FFFFFF" roughness={0.2} />
+            </mesh>
+            {/* Rainbow Pastel Cupcakes */}
+            {[-0.14, 0.14].map((cx, ci) =>
+              [-0.12, 0.12].map((cz, zi) => (
+                <group key={`${ci}-${zi}`} position={[cx, 0.12, cz]}>
+                  {/* Cupcake Wrapper */}
+                  <mesh castShadow>
+                    <cylinderGeometry args={[0.065, 0.05, 0.08, 10]} />
+                    <meshStandardMaterial color={['#FDE68A', '#FBCFE8', '#BAE6FD', '#A7F3D0'][(ci + zi) % 4]} />
+                  </mesh>
+                  {/* Swirled Frosting */}
+                  <mesh position={[0, 0.06, 0]}>
+                    <sphereGeometry args={[0.065, 8, 8]} />
+                    <meshStandardMaterial color={['#EC4899', '#06B6D4', '#F59E0B', '#10B981'][(ci + zi) % 4]} />
+                  </mesh>
+                  {/* Cherry on Top */}
+                  <mesh position={[0, 0.13, 0]}>
+                    <sphereGeometry args={[0.02, 6, 6]} />
+                    <meshStandardMaterial color="#DC2626" />
+                  </mesh>
+                </group>
+              ))
+            )}
+            <Billboard position={[0, 0.8, 0]}>
+              <Text fontSize={0.18} color="#FEF08A" anchorX="center" anchorY="middle">
+                🧁 [E] Cicipi Cupcake Pelangi
+              </Text>
+            </Billboard>
+          </group>
+
+          {/* Kitchen Island Barstools (INTERACTIVE: Duduk di Kursi Bar) */}
+          <group
+            position={[0, 0, 1.3]}
+            onClick={(e) => {
+              e.stopPropagation();
+              gameStore.setActiveRide('barstool');
+              gameStore.setMessage('Khaulah duduk di kursi bar marmer menikmati camilan lezat Ummi! 🪑🍰');
+            }}
+            onPointerOver={(e) => {
+              e.stopPropagation();
+              document.body.style.cursor = 'pointer';
+            }}
+            onPointerOut={() => {
+              document.body.style.cursor = 'auto';
+            }}
+          >
+            {[-1.6, -0.6, 0.6, 1.6].map((sx, si) => (
+              <group key={si} position={[sx, 0, 0]}>
+                {/* Round Padded Seat */}
+                <mesh position={[0, 0.55, 0]} castShadow>
+                  <cylinderGeometry args={[0.24, 0.24, 0.1, 16]} />
+                  <meshStandardMaterial color="#7F4F24" roughness={0.4} />
+                </mesh>
+                {/* Chrome Stem & Footrest Ring */}
+                <mesh position={[0, 0.28, 0]}>
+                  <cylinderGeometry args={[0.035, 0.035, 0.52, 10]} />
+                  <meshStandardMaterial color="#CBD5E1" metalness={0.9} roughness={0.1} />
+                </mesh>
+                <mesh position={[0, 0.2, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                  <torusGeometry args={[0.15, 0.015, 6, 16]} />
+                  <meshStandardMaterial color="#CBD5E1" metalness={0.9} roughness={0.1} />
+                </mesh>
+                <mesh position={[0, 0.02, 0]}>
+                  <cylinderGeometry args={[0.22, 0.24, 0.04, 16]} />
+                  <meshStandardMaterial color="#0F172A" />
+                </mesh>
+              </group>
+            ))}
+            <Billboard position={[0, 1.4, 0]}>
+              <Text fontSize={0.2} color="#FEF08A" anchorX="center" anchorY="middle">
+                🪑 [E] Duduk di Kursi Bar
+              </Text>
+            </Billboard>
+          </group>
+        </group>
+
+        {/* Smart Refrigerator (INTERACTIVE: Buka Kulkas & Susu Dingin) */}
+        <group
+          position={[4.5, 0, -3.5]}
+          onClick={(e) => {
+            e.stopPropagation();
+            soundManager.playDoorOpen();
+            soundManager.playSnackBuff();
+            gameStore.setMessage('Glek glek glek~ Susu dingin segar dari kulkas membuat Khaulah kuat dan bersemangat! 🥛❄️💪');
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          {/* Main Refrigerator Body */}
+          <mesh position={[0, 1.25, 0]} castShadow>
+            <boxGeometry args={[1.5, 2.4, 1.2]} />
+            <meshStandardMaterial color="#D1FAE5" roughness={0.3} />
           </mesh>
-          {[-0.1, 0.1].map((fx, fi) => (
-            <mesh key={fi} position={[1.4 + fx, 1.35, 0]}>
-              <sphereGeometry args={[0.1, 8, 8]} />
-              <meshStandardMaterial color={fi === 0 ? '#E63946' : '#FFB703'} />
+          {/* French Door Seam & Handles */}
+          <mesh position={[0, 1.25, 0.61]}>
+            <boxGeometry args={[0.02, 2.3, 0.02]} />
+            <meshStandardMaterial color="#475569" />
+          </mesh>
+          {[-0.1, 0.1].map((hx, hi) => (
+            <mesh key={hi} position={[hx, 1.3, 0.64]}>
+              <cylinderGeometry args={[0.02, 0.02, 0.6, 8]} />
+              <meshStandardMaterial color="#F8FAFC" metalness={0.9} roughness={0.1} />
             </mesh>
           ))}
-          {/* Kitchen Stools */}
-          {[-1.6, -0.6, 0.6, 1.6].map((sx, si) => (
-            <group key={si} position={[sx, 0, 1.3]}>
-              <mesh position={[0, 0.45, 0]}>
-                <cylinderGeometry args={[0.22, 0.22, 0.08, 16]} />
-                <meshStandardMaterial color="#7F4F24" />
-              </mesh>
-              <mesh position={[0, 0.22, 0]}>
-                <cylinderGeometry args={[0.03, 0.03, 0.44, 8]} />
-                <meshStandardMaterial color="#0F172A" />
-              </mesh>
-            </group>
-          ))}
+          {/* Smart Screen Display & Water Dispenser */}
+          <mesh position={[-0.4, 1.5, 0.61]}>
+            <boxGeometry args={[0.35, 0.5, 0.02]} />
+            <meshStandardMaterial color="#0F172A" emissive="#06B6D4" emissiveIntensity={0.6} />
+          </mesh>
+          {/* Cute Family Magnet Photos */}
+          <mesh position={[0.4, 1.7, 0.61]}>
+            <boxGeometry args={[0.2, 0.15, 0.02]} />
+            <meshStandardMaterial color="#FEF08A" />
+          </mesh>
+          <Billboard position={[0, 2.6, 0]}>
+            <Text fontSize={0.2} color="#FEF08A" anchorX="center" anchorY="middle">
+              🥛 [E] Buka Kulkas & Susu Dingin
+            </Text>
+          </Billboard>
+        </group>
+
+        {/* Kitchen Sink & Handwashing Station (INTERACTIVE: Cuci Tangan) */}
+        <group
+          position={[4.5, 0, 3.0]}
+          onClick={(e) => {
+            e.stopPropagation();
+            soundManager.playWaterSplash();
+            gameStore.setMessage('Khaulah mencuci tangan bersih dengan sabun wangi! Kuman hilang, tangan harum! 🧼💧✨');
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          {/* Kitchen Countertop Base */}
+          <mesh position={[0, 0.45, 0]} castShadow>
+            <boxGeometry args={[1.5, 0.9, 2.2]} />
+            <meshStandardMaterial color="#F8FAFC" roughness={0.3} />
+          </mesh>
+          <mesh position={[0, 0.92, 0]} castShadow>
+            <boxGeometry args={[1.6, 0.06, 2.3]} />
+            <meshStandardMaterial color="#94A3B8" roughness={0.2} metalness={0.2} />
+          </mesh>
+          {/* Stainless Undermount Sink Basin */}
+          <mesh position={[0, 0.88, 0]}>
+            <boxGeometry args={[0.9, 0.15, 1.2]} />
+            <meshStandardMaterial color="#0284C7" roughness={0.1} metalness={0.8} />
+          </mesh>
+          {/* Gooseneck Chrome Faucet */}
+          <group position={[0.42, 1.05, 0]}>
+            <mesh>
+              <cylinderGeometry args={[0.025, 0.025, 0.35, 10]} />
+              <meshStandardMaterial color="#E2E8F0" metalness={0.9} roughness={0.1} />
+            </mesh>
+            <mesh position={[-0.12, 0.16, 0]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.025, 0.025, 0.24, 10]} />
+              <meshStandardMaterial color="#E2E8F0" metalness={0.9} roughness={0.1} />
+            </mesh>
+          </group>
+          {/* Foaming Soap Dispenser */}
+          <mesh position={[0.4, 1.02, 0.5]}>
+            <cylinderGeometry args={[0.05, 0.05, 0.15, 10]} />
+            <meshStandardMaterial color="#F472B6" />
+          </mesh>
+          {/* Floating Fresh Soap Bubbles */}
+          <Sparkles count={8} position={[0, 1.2, 0]} scale={0.8} size={1.6} speed={0.5} color="#93C5FD" />
+          <Billboard position={[0, 1.8, 0]}>
+            <Text fontSize={0.2} color="#FEF08A" anchorX="center" anchorY="middle">
+              🧼 [E] Cuci Tangan Bersih
+            </Text>
+          </Billboard>
         </group>
 
         <pointLight position={[0, 4.5, 0]} color="#FEF9C3" intensity={1.3} distance={14} />
@@ -996,18 +1812,321 @@ export const RumahKhaulahInterior: React.FC = () => {
 
       {/* --- 5.5 KIDS WONDERLAND PLAYROOM & BEDROOM (WING KANAN BELAKANG: X: 12, Z: -6) --- */}
       <group position={[12.0, 0.2, -6.0]}>
-        {/* Colorful Toy Chest Organizer */}
-        <group position={[-3.2, 0, 2.5]}>
-          <mesh position={[0, 0.45, 0]} castShadow>
-            <boxGeometry args={[2.0, 0.9, 1.0]} />
-            <meshStandardMaterial color="#FFB703" roughness={0.5} />
+        {/* Starry Cloud Bed (INTERACTIVE: Istirahat di Kasur Awan) */}
+        <group
+          position={[0, 0, -0.8]}
+          onClick={(e) => {
+            e.stopPropagation();
+            gameStore.setActiveRide('bed');
+            gameStore.setMessage('Hoaaam~ Kasur awan empuk sekali! Khaulah beristirahat di kasur bintang! 🛏️💤');
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          {/* Bed Wooden Frame */}
+          <mesh position={[0, 0.25, 0]} castShadow>
+            <boxGeometry args={[2.4, 0.35, 3.2]} />
+            <meshStandardMaterial color="#DDD6FE" roughness={0.5} />
           </mesh>
-          {[-0.6, -0.2, 0.2, 0.6].map((bx, bi) => (
-            <mesh key={bi} position={[bx, 0.95, (bi % 2 === 0 ? 0.15 : -0.15)]} castShadow>
-              <boxGeometry args={[0.25, 0.25, 0.25]} />
-              <meshStandardMaterial color={['#EF476F', '#06D6A0', '#118AB2', '#8338EC'][bi]} />
+          {/* Ultra Plush Mattress */}
+          <mesh position={[0, 0.5, 0]} castShadow>
+            <boxGeometry args={[2.2, 0.3, 3.0]} />
+            <meshStandardMaterial color="#FFFFFF" roughness={0.8} />
+          </mesh>
+          {/* Starry Galaxy Pattern Duvet / Blanket */}
+          <mesh position={[0, 0.58, 0.4]}>
+            <boxGeometry args={[2.22, 0.16, 2.2]} />
+            <meshStandardMaterial color="#818CF8" roughness={0.7} />
+          </mesh>
+          {/* Pillows */}
+          {[-0.55, 0.55].map((px, pi) => (
+            <mesh key={pi} position={[px, 0.68, -1.0]} rotation={[0.2, 0, 0]}>
+              <boxGeometry args={[0.8, 0.18, 0.55]} />
+              <meshStandardMaterial color="#FBCFE8" roughness={0.8} />
             </mesh>
           ))}
+          {/* Cloud Headboard */}
+          <group position={[0, 0.95, -1.55]}>
+            <mesh castShadow>
+              <boxGeometry args={[2.4, 1.1, 0.15]} />
+              <meshStandardMaterial color="#C4B5FD" roughness={0.6} />
+            </mesh>
+            {[-0.8, 0, 0.8].map((cx, ci) => (
+              <mesh key={ci} position={[cx, 0.55, 0]}>
+                <sphereGeometry args={[0.38, 12, 12]} />
+                <meshStandardMaterial color="#DDD6FE" roughness={0.5} />
+              </mesh>
+            ))}
+          </group>
+          {/* Glowing Star Nightlight beside Bed */}
+          <group position={[-1.4, 0.45, -1.0]}>
+            <mesh position={[0, -0.2, 0]}>
+              <cylinderGeometry args={[0.25, 0.25, 0.5, 12]} />
+              <meshStandardMaterial color="#F8FAFC" />
+            </mesh>
+            <mesh position={[0, 0.15, 0]}>
+              <sphereGeometry args={[0.15, 10, 10]} />
+              <meshStandardMaterial color="#FEF08A" emissive="#FEF08A" emissiveIntensity={0.8} />
+            </mesh>
+            <pointLight color="#FEF08A" intensity={0.9} distance={4} />
+          </group>
+          <Billboard position={[0, 1.8, 0]}>
+            <Text fontSize={0.2} color="#FEF08A" anchorX="center" anchorY="middle">
+              🛏️ [E] Istirahat di Kasur Awan
+            </Text>
+          </Billboard>
+        </group>
+
+        {/* Baby Crib Adek Faqih (INTERACTIVE: Putar Musik Bayi) */}
+        <group
+          position={[1.5, 0, -4.5]}
+          onClick={(e) => {
+            e.stopPropagation();
+            soundManager.playBabyGiggle();
+            gameStore.setMessage('Kling-kling~ Khaulah memutar musik pengantar tidur lembut untuk Adek Faqih! 👶🍼🎶');
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          {/* Crib Frame & Railings */}
+          <mesh position={[0, 0.45, 0]} castShadow>
+            <boxGeometry args={[1.2, 0.7, 1.8]} />
+            <meshStandardMaterial color="#FEF9C3" roughness={0.5} />
+          </mesh>
+          {/* Soft Baby Mattress & Quilt */}
+          <mesh position={[0, 0.55, 0]}>
+            <boxGeometry args={[1.05, 0.3, 1.65]} />
+            <meshStandardMaterial color="#BAE6FD" roughness={0.7} />
+          </mesh>
+          {/* Hanging Rotating Crib Mobile Toy */}
+          <group position={[0, 1.35, 0]}>
+            <mesh>
+              <cylinderGeometry args={[0.02, 0.02, 0.4, 8]} />
+              <meshStandardMaterial color="#FCD34D" />
+            </mesh>
+            <mesh position={[0, -0.2, 0]}>
+              <sphereGeometry args={[0.08, 8, 8]} />
+              <meshStandardMaterial color="#F472B6" />
+            </mesh>
+            {[-0.25, 0.25].map((mx, mi) => (
+              <mesh key={mi} position={[mx, -0.32, 0]}>
+                <sphereGeometry args={[0.06, 6, 6]} />
+                <meshStandardMaterial color={mi === 0 ? '#38BDF8' : '#FBBF24'} />
+              </mesh>
+            ))}
+          </group>
+          <Sparkles count={6} position={[0, 0.8, 0]} scale={1.2} size={1.4} speed={0.4} color="#C4B5FD" />
+          <Billboard position={[0, 1.6, 0]}>
+            <Text fontSize={0.2} color="#FEF08A" anchorX="center" anchorY="middle">
+              👶 [E] Putar Kotak Musik Bayi
+            </Text>
+          </Billboard>
+        </group>
+
+        {/* Figure-8 Toy Racecar Circuit (INTERACTIVE: Balap Mobilan Mini) */}
+        <group
+          position={[0, 0, 2.5]}
+          onClick={(e) => {
+            e.stopPropagation();
+            soundManager.playToyCar();
+            gameStore.setMessage('Ngeeeng! Brum brum! Mobil balap mini meluncur kencang di arena sirkuit! 🏎️💨');
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          {/* Figure-8 Track Mat */}
+          <mesh position={[0, 0.02, 0]} receiveShadow>
+            <boxGeometry args={[2.8, 0.02, 2.2]} />
+            <meshStandardMaterial color="#334155" roughness={0.8} />
+          </mesh>
+          {/* Track White Dashed Lines */}
+          <mesh position={[0, 0.03, 0]}>
+            <torusGeometry args={[0.65, 0.04, 6, 20]} />
+            <meshStandardMaterial color="#F8FAFC" />
+          </mesh>
+          {/* Miniature Toy Racecars */}
+          <group position={[-0.45, 0.07, 0]} rotation={[0, 0.6, 0]}>
+            <mesh castShadow>
+              <boxGeometry args={[0.3, 0.08, 0.16]} />
+              <meshStandardMaterial color="#EF4444" roughness={0.3} />
+            </mesh>
+            <mesh position={[0, 0.07, 0]}>
+              <boxGeometry args={[0.15, 0.07, 0.14]} />
+              <meshStandardMaterial color="#0284C7" />
+            </mesh>
+          </group>
+          <group position={[0.45, 0.07, 0]} rotation={[0, -0.6, 0]}>
+            <mesh castShadow>
+              <boxGeometry args={[0.3, 0.08, 0.16]} />
+              <meshStandardMaterial color="#06B6D4" roughness={0.3} />
+            </mesh>
+            <mesh position={[0, 0.07, 0]}>
+              <boxGeometry args={[0.15, 0.07, 0.14]} />
+              <meshStandardMaterial color="#FBBF24" />
+            </mesh>
+          </group>
+          {/* Checkered Start/Finish Arch */}
+          <group position={[0, 0.28, 0]}>
+            <mesh>
+              <boxGeometry args={[0.5, 0.55, 0.08]} />
+              <meshStandardMaterial color="#0F172A" />
+            </mesh>
+            <mesh position={[0, 0.2, 0]}>
+              <boxGeometry args={[0.55, 0.15, 0.1]} />
+              <meshStandardMaterial color="#F59E0B" />
+            </mesh>
+          </group>
+          <Billboard position={[0, 1.1, 0]}>
+            <Text fontSize={0.2} color="#FEF08A" anchorX="center" anchorY="middle">
+              🏎️ [E] Balap Mobilan Mini
+            </Text>
+          </Billboard>
+        </group>
+
+        {/* Marching Band Drum Set (INTERACTIVE: Main Drum Band) */}
+        <group
+          position={[-3.0, 0, 2.0]}
+          onClick={(e) => {
+            e.stopPropagation();
+            soundManager.playDrumband();
+            gameStore.setMessage('Dum-dum-tak ratatat! Khaulah memainkan drum marching band dengan penuh semangat! 🥁🎶');
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          {/* Snare Drum Cylinder */}
+          <mesh position={[0, 0.55, 0]} castShadow>
+            <cylinderGeometry args={[0.32, 0.32, 0.25, 16]} />
+            <meshStandardMaterial color="#E11D48" roughness={0.3} metalness={0.2} />
+          </mesh>
+          {/* Drum Skin Head */}
+          <mesh position={[0, 0.68, 0]}>
+            <cylinderGeometry args={[0.3, 0.3, 0.015, 16]} />
+            <meshStandardMaterial color="#FFFBEB" roughness={0.6} />
+          </mesh>
+          {/* Chrome Tripod Stand */}
+          <mesh position={[0, 0.25, 0]}>
+            <cylinderGeometry args={[0.03, 0.03, 0.48, 8]} />
+            <meshStandardMaterial color="#CBD5E1" metalness={0.9} roughness={0.1} />
+          </mesh>
+          {/* Golden Crash Cymbal */}
+          <group position={[0.42, 0.8, -0.15]} rotation={[0.2, 0, 0.2]}>
+            <mesh>
+              <cylinderGeometry args={[0.28, 0.28, 0.02, 16]} />
+              <meshStandardMaterial color="#F59E0B" metalness={0.95} roughness={0.15} />
+            </mesh>
+            <mesh position={[0, -0.38, 0]}>
+              <cylinderGeometry args={[0.025, 0.025, 0.75, 8]} />
+              <meshStandardMaterial color="#CBD5E1" metalness={0.9} />
+            </mesh>
+          </group>
+          {/* Pair of Wooden Drumsticks */}
+          <mesh position={[-0.1, 0.72, 0]} rotation={[0, 0, 0.6]}>
+            <cylinderGeometry args={[0.015, 0.01, 0.38, 8]} />
+            <meshStandardMaterial color="#D4A373" />
+          </mesh>
+          <mesh position={[0.1, 0.72, 0]} rotation={[0, 0, -0.6]}>
+            <cylinderGeometry args={[0.015, 0.01, 0.38, 8]} />
+            <meshStandardMaterial color="#D4A373" />
+          </mesh>
+          <Billboard position={[0, 1.4, 0]}>
+            <Text fontSize={0.2} color="#FEF08A" anchorX="center" anchorY="middle">
+              🥁 [E] Main Drum Marching Band
+            </Text>
+          </Billboard>
+        </group>
+
+        {/* Toy Chest & Castle Stacking Blocks (INTERACTIVE: Susun Istana Balok) */}
+        <group
+          position={[-4.0, 0, -4.0]}
+          onClick={(e) => {
+            e.stopPropagation();
+            soundManager.playCheckpoint();
+            gameStore.setMessage('Ting ting ting! Khaulah menyusun istana balok warna-warni yang tinggi sekali! 🧱🏰✨');
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          {/* Honey Yellow Toy Chest */}
+          <group position={[0, 0, 0]}>
+            <mesh position={[0, 0.45, 0]} castShadow>
+              <boxGeometry args={[1.8, 0.85, 1.1]} />
+              <meshStandardMaterial color="#FBBF24" roughness={0.5} />
+            </mesh>
+            {/* Open Chest Lid */}
+            <mesh position={[0, 0.95, -0.45]} rotation={[-0.6, 0, 0]}>
+              <boxGeometry args={[1.85, 0.1, 1.15]} />
+              <meshStandardMaterial color="#F59E0B" roughness={0.4} />
+            </mesh>
+            {/* Cute Teddy Bear Peeking Out */}
+            <group position={[0, 0.88, 0]}>
+              <mesh castShadow>
+                <sphereGeometry args={[0.18, 10, 10]} />
+                <meshStandardMaterial color="#92400E" roughness={0.8} />
+              </mesh>
+              {[-0.12, 0.12].map((ex, ei) => (
+                <mesh key={ei} position={[ex, 0.14, 0]}>
+                  <sphereGeometry args={[0.06, 6, 6]} />
+                  <meshStandardMaterial color="#78350F" />
+                </mesh>
+              ))}
+            </group>
+          </group>
+
+          {/* Stacking Block Castle Tower */}
+          <group position={[1.4, 0, 0]}>
+            {/* Tower Base Cylinders & Cubes */}
+            {[-0.25, 0.25].map((bx, bi) => (
+              <mesh key={bi} position={[bx, 0.2, 0]} castShadow>
+                <boxGeometry args={[0.35, 0.4, 0.35]} />
+                <meshStandardMaterial color={bi === 0 ? '#EF4444' : '#3B82F6'} />
+              </mesh>
+            ))}
+            {/* Bridge Arch */}
+            <mesh position={[0, 0.45, 0]}>
+              <boxGeometry args={[0.85, 0.12, 0.35]} />
+              <meshStandardMaterial color="#10B981" />
+            </mesh>
+            {/* Upper Spires & Cones */}
+            <mesh position={[0, 0.68, 0]}>
+              <cylinderGeometry args={[0.14, 0.14, 0.32, 10]} />
+              <meshStandardMaterial color="#F59E0B" />
+            </mesh>
+            <mesh position={[0, 0.95, 0]}>
+              <coneGeometry args={[0.18, 0.3, 10]} />
+              <meshStandardMaterial color="#8B5CF6" />
+            </mesh>
+          </group>
+          <Billboard position={[0.7, 1.6, 0]}>
+            <Text fontSize={0.2} color="#FEF08A" anchorX="center" anchorY="middle">
+              🧱 [E] Susun Istana Balok
+            </Text>
+          </Billboard>
         </group>
 
         {/* Playroom Gentle Rainbow Light */}

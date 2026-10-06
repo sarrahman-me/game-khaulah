@@ -5,7 +5,22 @@ import { soundManager } from '../sound/audioManager';
 export type AccessoryType = 'none' | 'bunny_ears' | 'fairy_wings' | 'princess_crown' | 'cat_ears' | 'star_halo';
 export type PetType = 'none' | 'puppy' | 'kitten' | 'fairy';
 export type EmoteType = 'none' | 'wave' | 'dance' | 'cheer';
-export type RideType = 'none' | 'slide' | 'swing' | 'carousel' | 'ferris' | 'train' | 'boat' | 'firetruck' | 'pool_slide' | 'flamingo';
+export type RideType =
+  | 'none'
+  | 'slide'
+  | 'swing'
+  | 'carousel'
+  | 'ferris'
+  | 'train'
+  | 'boat'
+  | 'firetruck'
+  | 'pool_slide'
+  | 'flamingo'
+  | 'sofa'
+  | 'bed'
+  | 'chair_abi'
+  | 'barstool'
+  | 'pray';
 
 export type TimeOfDay = 'subuh' | 'siang' | 'sore' | 'malam';
 
@@ -690,6 +705,16 @@ export const gameStore = {
         soundManager.playWaterSplash();
       } else if (ride === 'firetruck') {
         soundManager.playFireSiren();
+      } else if (ride === 'sofa') {
+        soundManager.playFamilyChord();
+      } else if (ride === 'bed') {
+        soundManager.playTrampoline();
+      } else if (ride === 'chair_abi') {
+        soundManager.playKeyboardTyping();
+      } else if (ride === 'barstool') {
+        soundManager.playHighFive();
+      } else if (ride === 'pray') {
+        soundManager.playFamilyChord();
       }
       state = {
         ...state,

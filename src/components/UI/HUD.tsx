@@ -187,6 +187,58 @@ export const HUD: React.FC = () => {
     } else if (id === 'marshmallow') {
       gameStore.executeDialogAction('take_snack');
       gameStore.setMessage('Nyam nyam! Khaulah menikmati marshmallow bakar manis! (+Speed Boost ⚡🍡)');
+    } else if (id === 'furniture_sofa') {
+      gameStore.setActiveRide('sofa');
+      gameStore.setMessage('Khaulah duduk santai di sofa beludru empuk! Nyaman sekali~ 🛋️💖');
+    } else if (id === 'furniture_bed') {
+      gameStore.setActiveRide('bed');
+      gameStore.setMessage('Hoaaam~ Kasur awan empuk sekali! Khaulah beristirahat di kasur bintang! 🛏️💤');
+    } else if (id === 'furniture_laptop') {
+      gameStore.setActiveRide('chair_abi');
+      soundManager.playKeyboardTyping();
+      gameStore.setMessage('Tuk-tak-tuk-tak! Khaulah mengetik kode game di laptop Abi: print("Aku sayang Abi!") 💻❤️');
+    } else if (id === 'furniture_barstool') {
+      gameStore.setActiveRide('barstool');
+      gameStore.setMessage('Khaulah duduk di kursi bar marmer menikmati camilan lezat Ummi! 🪑🍰');
+    } else if (id === 'furniture_pray') {
+      gameStore.setActiveRide('pray');
+      gameStore.setMessage('Alhamdulillah, Khaulah berdoa dengan khusyuk di musholla: "Semoga keluarga bahagia selalu!" 🤲🕌✨');
+    } else if (id === 'furniture_tv') {
+      soundManager.playStarCollect();
+      gameStore.setMessage('Khaulah menyalakan kartun seru di TV keluarga! Horeee! 📺🎶✨');
+    } else if (id === 'furniture_tea') {
+      soundManager.playSnackBuff();
+      gameStore.addSpeedBuff(25);
+      gameStore.setMessage('Sluuurp~ Khaulah menikmati teh madu hangat! Manis dan menyehatkan! (+Speed Boost ⚡🍵)');
+    } else if (id === 'furniture_cupcake') {
+      soundManager.playSnackBuff();
+      gameStore.addSpeedBuff(30);
+      gameStore.setMessage('Nyam nyam! Cupcake pelangi buatan Ummi manis dan lezat! (+Speed Boost ⚡🧁)');
+    } else if (id === 'furniture_fridge') {
+      soundManager.playDoorOpen();
+      soundManager.playSnackBuff();
+      gameStore.setMessage('Glek glek glek~ Susu dingin segar dari kulkas membuat Khaulah kuat dan bersemangat! 🥛❄️💪');
+    } else if (id === 'furniture_sink') {
+      soundManager.playWaterSplash();
+      gameStore.setMessage('Khaulah mencuci tangan bersih dengan sabun wangi! Kuman hilang, tangan harum! 🧼💧✨');
+    } else if (id === 'furniture_books') {
+      soundManager.playCheckpoint();
+      gameStore.setMessage('Khaulah membaca buku ensiklopedia bergambar tentang bintang dan hewan ajaib! 📖🌟');
+    } else if (id === 'furniture_tasbih') {
+      soundManager.playFamilyChord();
+      gameStore.setMessage('Subhanallah, Walhamdulillah, Wala ilaha illallah, Wallahu Akbar! Hati jadi tenang! 📿✨');
+    } else if (id === 'furniture_crib') {
+      soundManager.playBabyGiggle();
+      gameStore.setMessage('Kling-kling~ Khaulah memutar musik pengantar tidur lembut untuk Adek Faqih! 👶🍼🎶');
+    } else if (id === 'furniture_racecar') {
+      soundManager.playToyCar();
+      gameStore.setMessage('Ngeeeng! Brum brum! Mobil balap mini meluncur kencang di arena sirkuit! 🏎️💨');
+    } else if (id === 'furniture_drum') {
+      soundManager.playDrumband();
+      gameStore.setMessage('Dum-dum-tak ratatat! Khaulah memainkan drum marching band dengan penuh semangat! 🥁🎶');
+    } else if (id === 'furniture_blocks') {
+      soundManager.playCheckpoint();
+      gameStore.setMessage('Ting ting ting! Khaulah menyusun istana balok warna-warni yang tinggi sekali! 🧱🏰✨');
     }
   };
 
@@ -459,6 +511,16 @@ export const HUD: React.FC = () => {
                   ? '🛝 Turun dari Seluncuran [E]'
                   : activeRide === 'flamingo'
                   ? '🦩 Turun Pelampung [SPASI / E]'
+                  : activeRide === 'sofa'
+                  ? '🛋️ Berdiri dari Sofa [SPASI / E / Gerak]'
+                  : activeRide === 'bed'
+                  ? '🛏️ Bangun dari Kasur [SPASI / E / Gerak]'
+                  : activeRide === 'chair_abi'
+                  ? '💻 Selesai Mengetik [SPASI / E / Gerak]'
+                  : activeRide === 'barstool'
+                  ? '🪑 Turun dari Kursi Bar [SPASI / E / Gerak]'
+                  : activeRide === 'pray'
+                  ? '🤲 Selesai Berdoa [SPASI / E / Gerak]'
                   : '🚒 Turun Damkar [E]'}
               </span>
             </button>

@@ -262,6 +262,58 @@ export const PlayerKhaulah: React.FC = () => {
             gameStore.exitHouse('front');
           } else if (near.id === 'interior_exit_back') {
             gameStore.exitHouse('back');
+          } else if (near.id === 'furniture_sofa') {
+            gameStore.setActiveRide('sofa');
+            gameStore.setMessage('Khaulah duduk santai di sofa beludru empuk! Nyaman sekali~ 🛋️💖');
+          } else if (near.id === 'furniture_bed') {
+            gameStore.setActiveRide('bed');
+            gameStore.setMessage('Hoaaam~ Kasur awan empuk sekali! Khaulah beristirahat di kasur bintang! 🛏️💤');
+          } else if (near.id === 'furniture_laptop') {
+            gameStore.setActiveRide('chair_abi');
+            soundManager.playKeyboardTyping();
+            gameStore.setMessage('Tuk-tak-tuk-tak! Khaulah mengetik kode game di laptop Abi: print("Aku sayang Abi!") 💻❤️');
+          } else if (near.id === 'furniture_barstool') {
+            gameStore.setActiveRide('barstool');
+            gameStore.setMessage('Khaulah duduk di kursi bar marmer menikmati camilan lezat Ummi! 🪑🍰');
+          } else if (near.id === 'furniture_pray') {
+            gameStore.setActiveRide('pray');
+            gameStore.setMessage('Alhamdulillah, Khaulah berdoa dengan khusyuk di musholla: "Semoga keluarga bahagia selalu!" 🤲🕌✨');
+          } else if (near.id === 'furniture_tv') {
+            soundManager.playStarCollect();
+            gameStore.setMessage('Khaulah menyalakan kartun seru di TV keluarga! Horeee! 📺🎶✨');
+          } else if (near.id === 'furniture_tea') {
+            soundManager.playSnackBuff();
+            gameStore.addSpeedBuff(25);
+            gameStore.setMessage('Sluuurp~ Khaulah menikmati teh madu hangat! Manis dan menyehatkan! (+Speed Boost ⚡🍵)');
+          } else if (near.id === 'furniture_cupcake') {
+            soundManager.playSnackBuff();
+            gameStore.addSpeedBuff(30);
+            gameStore.setMessage('Nyam nyam! Cupcake pelangi buatan Ummi manis dan lezat! (+Speed Boost ⚡🧁)');
+          } else if (near.id === 'furniture_fridge') {
+            soundManager.playDoorOpen();
+            soundManager.playSnackBuff();
+            gameStore.setMessage('Glek glek glek~ Susu dingin segar dari kulkas membuat Khaulah kuat dan bersemangat! 🥛❄️💪');
+          } else if (near.id === 'furniture_sink') {
+            soundManager.playWaterSplash();
+            gameStore.setMessage('Khaulah mencuci tangan bersih dengan sabun wangi! Kuman hilang, tangan harum! 🧼💧✨');
+          } else if (near.id === 'furniture_books') {
+            soundManager.playCheckpoint();
+            gameStore.setMessage('Khaulah membaca buku ensiklopedia bergambar tentang bintang dan hewan ajaib! 📖🌟');
+          } else if (near.id === 'furniture_tasbih') {
+            soundManager.playFamilyChord();
+            gameStore.setMessage('Subhanallah, Walhamdulillah, Wala ilaha illallah, Wallahu Akbar! Hati jadi tenang! 📿✨');
+          } else if (near.id === 'furniture_crib') {
+            soundManager.playBabyGiggle();
+            gameStore.setMessage('Kling-kling~ Khaulah memutar musik pengantar tidur lembut untuk Adek Faqih! 👶🍼🎶');
+          } else if (near.id === 'furniture_racecar') {
+            soundManager.playToyCar();
+            gameStore.setMessage('Ngeeeng! Brum brum! Mobil balap mini meluncur kencang di arena sirkuit! 🏎️💨');
+          } else if (near.id === 'furniture_drum') {
+            soundManager.playDrumband();
+            gameStore.setMessage('Dum-dum-tak ratatat! Khaulah memainkan drum marching band dengan penuh semangat! 🥁🎶');
+          } else if (near.id === 'furniture_blocks') {
+            soundManager.playCheckpoint();
+            gameStore.setMessage('Ting ting ting! Khaulah menyusun istana balok warna-warni yang tinggi sekali! 🧱🏰✨');
           } else if (near.id === 'scooter') {
             gameStore.mountScooter();
           } else if (near.id === 'bu_guru') {
@@ -736,6 +788,144 @@ export const PlayerKhaulah: React.FC = () => {
         pos.current.y += 0.5;
         soundManager.playWaterSplash();
         gameStore.setMessage('Hoppp! Khaulah melompat dari pelampung flamingo! 🦩🌊');
+      }
+
+      groupRef.current.position.copy(pos.current);
+      groupRef.current.rotation.y = facingAngle.current;
+      gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, false);
+      return;
+    }
+
+    // Indoor Furniture Ride 1: Living Room Sofa
+    if (activeRide === 'sofa') {
+      const time = state.clock.getElapsedTime();
+      pos.current.set(157.5, 0.46 + Math.sin(time * 2) * 0.015, -12.0);
+      facingAngle.current = Math.PI / 2; // Looking East towards TV & coffee table
+
+      if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.4; leftArmRef.current.rotation.z = -0.15; }
+      if (rightArmRef.current) { rightArmRef.current.rotation.x = -0.4; rightArmRef.current.rotation.z = 0.15; }
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.45;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.45;
+      if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.35;
+
+      const joy = gameStore.getState().joystickVector;
+      const moved = keys.current['KeyW'] || keys.current['KeyS'] || keys.current['KeyA'] || keys.current['KeyD'] ||
+                    keys.current['ArrowUp'] || keys.current['ArrowDown'] || Math.hypot(joy.x, joy.y) > 0.15;
+      if (keys.current['Space'] || gameStore.getState().isJumpPressed || moved) {
+        gameStore.setActiveRide('none');
+        pos.current.set(158.8, 0.4, -12.0);
+        if (keys.current['Space'] || gameStore.getState().isJumpPressed) velocityY.current = 6;
+      }
+
+      groupRef.current.position.copy(pos.current);
+      groupRef.current.rotation.y = facingAngle.current;
+      gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, false);
+      return;
+    }
+
+    // Indoor Furniture Ride 2: Starry Cloud Bed
+    if (activeRide === 'bed') {
+      const time = state.clock.getElapsedTime();
+      const bounce = Math.abs(Math.sin(time * 4)) * 0.08;
+      pos.current.set(172.0, 0.52 + bounce, -18.8);
+      facingAngle.current = Math.PI / 2;
+
+      if (leftArmRef.current) { leftArmRef.current.rotation.x = -Math.PI * 0.65; leftArmRef.current.rotation.z = -0.2; }
+      if (rightArmRef.current) { rightArmRef.current.rotation.x = -Math.PI * 0.65; rightArmRef.current.rotation.z = 0.2; }
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.35;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.35;
+      if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.25;
+
+      const joy = gameStore.getState().joystickVector;
+      const moved = keys.current['KeyW'] || keys.current['KeyS'] || keys.current['KeyA'] || keys.current['KeyD'] ||
+                    keys.current['ArrowUp'] || keys.current['ArrowDown'] || Math.hypot(joy.x, joy.y) > 0.15;
+      if (keys.current['Space'] || gameStore.getState().isJumpPressed || moved) {
+        gameStore.setActiveRide('none');
+        pos.current.set(170.6, 0.4, -18.8);
+        if (keys.current['Space'] || gameStore.getState().isJumpPressed) velocityY.current = 6;
+      }
+
+      groupRef.current.position.copy(pos.current);
+      groupRef.current.rotation.y = facingAngle.current;
+      gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, false);
+      return;
+    }
+
+    // Indoor Furniture Ride 3: Abi's Executive Coding Chair
+    if (activeRide === 'chair_abi') {
+      const time = state.clock.getElapsedTime();
+      pos.current.set(148.0, 0.52, -5.2);
+      facingAngle.current = -Math.PI; // Facing North towards monitors
+
+      const typeCycle = Math.sin(time * 16);
+      if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.72 + typeCycle * 0.08; leftArmRef.current.rotation.z = 0.15; }
+      if (rightArmRef.current) { rightArmRef.current.rotation.x = -0.72 - typeCycle * 0.08; rightArmRef.current.rotation.z = -0.15; }
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.45;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.45;
+      if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.35;
+
+      const joy = gameStore.getState().joystickVector;
+      const moved = keys.current['KeyW'] || keys.current['KeyS'] || keys.current['KeyA'] || keys.current['KeyD'] ||
+                    keys.current['ArrowUp'] || keys.current['ArrowDown'] || Math.hypot(joy.x, joy.y) > 0.15;
+      if (keys.current['Space'] || gameStore.getState().isJumpPressed || moved) {
+        gameStore.setActiveRide('none');
+        pos.current.set(148.0, 0.4, -4.2);
+        if (keys.current['Space'] || gameStore.getState().isJumpPressed) velocityY.current = 6;
+      }
+
+      groupRef.current.position.copy(pos.current);
+      groupRef.current.rotation.y = facingAngle.current;
+      gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, false);
+      return;
+    }
+
+    // Indoor Furniture Ride 4: Kitchen Island Barstool
+    if (activeRide === 'barstool') {
+      const time = state.clock.getElapsedTime();
+      pos.current.set(172.0, 0.72, -4.7);
+      facingAngle.current = -Math.PI; // Facing North towards counter
+
+      const dangle = Math.sin(time * 3) * 0.08;
+      if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.55; leftArmRef.current.rotation.z = -0.1; }
+      if (rightArmRef.current) { rightArmRef.current.rotation.x = -0.55; rightArmRef.current.rotation.z = 0.1; }
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.38 + dangle;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.38 - dangle;
+      if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.32;
+
+      const joy = gameStore.getState().joystickVector;
+      const moved = keys.current['KeyW'] || keys.current['KeyS'] || keys.current['KeyA'] || keys.current['KeyD'] ||
+                    keys.current['ArrowUp'] || keys.current['ArrowDown'] || Math.hypot(joy.x, joy.y) > 0.15;
+      if (keys.current['Space'] || gameStore.getState().isJumpPressed || moved) {
+        gameStore.setActiveRide('none');
+        pos.current.set(172.0, 0.4, -3.6);
+        if (keys.current['Space'] || gameStore.getState().isJumpPressed) velocityY.current = 6;
+      }
+
+      groupRef.current.position.copy(pos.current);
+      groupRef.current.rotation.y = facingAngle.current;
+      gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, false);
+      return;
+    }
+
+    // Indoor Furniture Ride 5: Family Musholla Prayer Rug
+    if (activeRide === 'pray') {
+      pos.current.set(148.0, 0.28, -17.5);
+      facingAngle.current = -Math.PI; // Facing North towards holy Quran rehal
+
+      if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.75; leftArmRef.current.rotation.z = 0.32; }
+      if (rightArmRef.current) { rightArmRef.current.rotation.x = -0.75; rightArmRef.current.rotation.z = -0.32; }
+      if (headRef.current) headRef.current.rotation.x = 0.16;
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.5;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.5;
+      if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.42;
+
+      const joy = gameStore.getState().joystickVector;
+      const moved = keys.current['KeyW'] || keys.current['KeyS'] || keys.current['KeyA'] || keys.current['KeyD'] ||
+                    keys.current['ArrowUp'] || keys.current['ArrowDown'] || Math.hypot(joy.x, joy.y) > 0.15;
+      if (keys.current['Space'] || gameStore.getState().isJumpPressed || moved) {
+        gameStore.setActiveRide('none');
+        pos.current.set(148.0, 0.4, -16.2);
+        if (keys.current['Space'] || gameStore.getState().isJumpPressed) velocityY.current = 6;
       }
 
       groupRef.current.position.copy(pos.current);
