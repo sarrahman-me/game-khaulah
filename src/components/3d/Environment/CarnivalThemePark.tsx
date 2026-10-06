@@ -178,17 +178,17 @@ export const CarnivalThemePark: React.FC = () => {
     const playerPos = gameStore.getState().playerPos;
 
     // Check distances to Carousel, Ferris Wheel, and Cotton Candy
-    const distCarousel = Math.hypot(playerPos[0] - 28, playerPos[2] - 22);
-    const distFerris = Math.hypot(playerPos[0] - 43, playerPos[2] - 32);
-    const distCandy = Math.hypot(playerPos[0] - 35, playerPos[2] - 20);
+    const distCarousel = Math.hypot(playerPos[0] - 58, playerPos[2] - 41);
+    const distFerris = Math.hypot(playerPos[0] - 73, playerPos[2] - 51);
+    const distCandy = Math.hypot(playerPos[0] - 65, playerPos[2] - 39);
 
-    if (distCarousel < 4.5 && activeRide === 'none') {
+    if (distCarousel < 4.8 && activeRide === 'none') {
       gameStore.setNearbyInteractable({
         id: 'carousel',
         title: 'Komedi Putar Kuda Ceria 🎠🎶',
         prompt: 'Tekan [E] untuk Naik Komedi Putar! ✨',
       });
-    } else if (distFerris < 4.8 && activeRide === 'none') {
+    } else if (distFerris < 5.2 && activeRide === 'none') {
       gameStore.setNearbyInteractable({
         id: 'ferris_wheel',
         title: 'Bianglala Mini Bintang 🎡☁️',
@@ -209,7 +209,7 @@ export const CarnivalThemePark: React.FC = () => {
   });
 
   return (
-    <group position={[35, 0, 29]}>
+    <group position={[65, 0, 48]}>
       {/* --- FESTIVAL PLAZA PAVING (Warm Stone Pavers with Festive Borders) --- */}
       <mesh position={[0, 0.252, 0]} receiveShadow>
         <boxGeometry args={[34, 0.02, 30]} />
@@ -328,7 +328,7 @@ export const CarnivalThemePark: React.FC = () => {
       </group>
 
       {/* --- CHECKPOINT 7 (Alun-Alun Karnaval) --- */}
-      <CheckpointFlag index={7} position={[-1, 0.3, -1]} />
+      <CheckpointFlag index={7} position={[-13, 0.3, -10]} />
 
       {/* --- STAR COLLECTIBLES --- */}
       <StarCollectible id="star_carnival_1" position={[-7, 1.2, -7]} color="#FF006E" />

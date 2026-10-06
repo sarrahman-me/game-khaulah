@@ -158,15 +158,15 @@ const FruitTree: React.FC<{ pos: [number, number, number]; fruitColor: string; f
 };
 
 export const PettingFarm: React.FC = () => {
-  const farmCenter: [number, number, number] = [-35, 0, -3];
+  const farmCenter: [number, number, number] = [-65, 0, -6];
 
   useFrame(() => {
     const playerPos = gameStore.getState().playerPos;
 
     // Check interaction with Bunny Pen
-    const distBunny = Math.hypot(playerPos[0] - (-38), playerPos[2] - (-2));
-    const distSheep = Math.hypot(playerPos[0] - (-31), playerPos[2] - (-5));
-    const distFarmer = Math.hypot(playerPos[0] - (-28), playerPos[2] - 1);
+    const distBunny = Math.hypot(playerPos[0] - (-68), playerPos[2] - (-5));
+    const distSheep = Math.hypot(playerPos[0] - (-61), playerPos[2] - (-8));
+    const distFarmer = Math.hypot(playerPos[0] - (-58), playerPos[2] - (-2));
 
     if (distBunny < 4.0) {
       gameStore.setNearbyInteractable({
@@ -412,7 +412,7 @@ export const PettingFarm: React.FC = () => {
       </group>
 
       {/* --- 6. CHECKPOINT 4 (Taman Hewan) --- */}
-      <CheckpointFlag index={4} position={[1, 0.3, 1]} />
+      <CheckpointFlag index={4} position={[7, 0.3, 2]} />
 
       {/* --- 7. STARS TO COLLECT --- */}
       <StarCollectible id="star_farm_1" position={[-3, 1.2, 1]} color="#FFD166" />

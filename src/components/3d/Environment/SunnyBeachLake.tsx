@@ -256,10 +256,10 @@ export const SunnyBeachLake: React.FC = () => {
     }
 
     const playerPos = gameStore.getState().playerPos;
-    // Boat Pier Proximity Check (Dock is at [-27, 26])
-    const distBoat = Math.hypot(playerPos[0] - (-27), playerPos[2] - 26);
+    // Boat Pier Proximity Check (Dock is at [-57, 44])
+    const distBoat = Math.hypot(playerPos[0] - (-57), playerPos[2] - 44);
 
-    if (distBoat < 4.5 && activeRide === 'none') {
+    if (distBoat < 4.8 && activeRide === 'none') {
       gameStore.setNearbyInteractable({
         id: 'swan_boat',
         title: 'Perahu Bebek Kayuh 🦢⛵',
@@ -274,7 +274,7 @@ export const SunnyBeachLake: React.FC = () => {
   });
 
   return (
-    <group position={[-35, 0, 29]}>
+    <group position={[-65, 0, 48]}>
       {/* ============================================================== */}
       {/* 1. CRYSTAL CLEAR SHIMMERING LAKE WATER & LAKE BED              */}
       {/* ============================================================== */}
@@ -501,7 +501,7 @@ export const SunnyBeachLake: React.FC = () => {
       {/* ============================================================== */}
       {/* 8. CHECKPOINT 5 (Danau & Pantai at Pier Entrance)              */}
       {/* ============================================================== */}
-      <CheckpointFlag index={5} position={[12, 0.26, -4]} />
+      <CheckpointFlag index={5} position={[17, 0.26, -4]} />
 
       {/* ============================================================== */}
       {/* 9. STAR COLLECTIBLES                                           */}

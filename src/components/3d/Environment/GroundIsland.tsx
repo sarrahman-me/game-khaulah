@@ -93,7 +93,7 @@ const AnimatedFlower: React.FC<AnimatedFlowerProps> = ({ x, z, color, seed }) =>
   );
 };
 
-// Continuous Village River flowing across the entire island (X: -55 to +55, Z: 8.5 to 13.5)
+// Continuous Village River flowing across the entire island (X: -100 to +100, Z: 14.5 to 21.5)
 const ContinuousVillageRiver: React.FC = () => {
   const waterRef = useRef<THREE.Mesh>(null);
 
@@ -104,29 +104,31 @@ const ContinuousVillageRiver: React.FC = () => {
   });
 
   // Generate riverbank stone clusters along the continuous river
-  const riverPebbleXs = [-46, -38, -30, -17, -10, -4, 4, 10, 16, 29, 37, 45];
+  const riverPebbleXs = [-88, -75, -62, -49, -36, -24, -12, 12, 24, 36, 49, 62, 75, 88];
   const lilyPadData = [
-    { x: -35, z: -0.6 },
-    { x: -28, z: 0.8 },
-    { x: -14, z: -0.5 },
-    { x: -7, z: 0.7 },
-    { x: 7, z: -0.8 },
-    { x: 14, z: 0.5 },
-    { x: 30, z: -0.4 },
-    { x: 40, z: 0.6 },
+    { x: -70, z: -1.0 },
+    { x: -55, z: 1.2 },
+    { x: -35, z: -0.8 },
+    { x: -22, z: 1.0 },
+    { x: -10, z: -0.9 },
+    { x: 10, z: 1.1 },
+    { x: 22, z: -0.7 },
+    { x: 35, z: 0.9 },
+    { x: 55, z: -1.0 },
+    { x: 70, z: 1.2 },
   ];
 
   return (
-    <group position={[0, 0, 11]}>
+    <group position={[0, 0, 18]}>
       {/* Clean Sandy Pebble River Bed (Trench depth) */}
       <mesh position={[0, -0.35, 0]}>
-        <boxGeometry args={[110, 0.5, 4.6]} />
+        <boxGeometry args={[200, 0.5, 6.6]} />
         <meshStandardMaterial color="#D4C5A9" roughness={0.9} />
       </mesh>
 
       {/* Realistic Glistening Blue River Water Surface */}
       <mesh ref={waterRef} position={[0, 0.16, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[110, 4.6]} />
+        <planeGeometry args={[200, 6.6]} />
         <meshStandardMaterial
           color="#0096C7"
           emissive="#0077B6"
@@ -138,15 +140,15 @@ const ContinuousVillageRiver: React.FC = () => {
         />
       </mesh>
 
-      {/* South Riverbank Smooth Stone Curb (Z: -2.35) */}
-      <mesh position={[0, 0.15, -2.35]} receiveShadow>
-        <boxGeometry args={[110, 0.3, 0.3]} />
+      {/* South Riverbank Smooth Stone Curb (Z: -3.35) */}
+      <mesh position={[0, 0.15, -3.35]} receiveShadow>
+        <boxGeometry args={[200, 0.3, 0.3]} />
         <meshStandardMaterial color="#8D877B" roughness={0.8} />
       </mesh>
 
-      {/* North Riverbank Smooth Stone Curb (Z: +2.35) */}
-      <mesh position={[0, 0.15, 2.35]} receiveShadow>
-        <boxGeometry args={[110, 0.3, 0.3]} />
+      {/* North Riverbank Smooth Stone Curb (Z: +3.35) */}
+      <mesh position={[0, 0.15, 3.35]} receiveShadow>
+        <boxGeometry args={[200, 0.3, 0.3]} />
         <meshStandardMaterial color="#8D877B" roughness={0.8} />
       </mesh>
 
@@ -154,12 +156,12 @@ const ContinuousVillageRiver: React.FC = () => {
       {riverPebbleXs.map((px, idx) => (
         <React.Fragment key={idx}>
           {/* South Bank Stones */}
-          <mesh position={[px, 0.16, -2.2]} scale={[0.45, 0.22, 0.35]}>
+          <mesh position={[px, 0.16, -3.2]} scale={[0.45, 0.22, 0.35]}>
             <sphereGeometry args={[0.7, 8, 8]} />
             <meshStandardMaterial color="#A8A29E" roughness={0.85} />
           </mesh>
           {/* North Bank Stones */}
-          <mesh position={[px + 2.5, 0.16, 2.2]} scale={[0.45, 0.22, 0.35]}>
+          <mesh position={[px + 2.5, 0.16, 3.2]} scale={[0.45, 0.22, 0.35]}>
             <sphereGeometry args={[0.7, 8, 8]} />
             <meshStandardMaterial color="#94A3B8" roughness={0.85} />
           </mesh>
@@ -181,12 +183,12 @@ const ContinuousVillageRiver: React.FC = () => {
 
       {/* Riverbank Steps at Central Bridge (South & North) for easy splash access */}
       {[-1, 1].map((side, i) => (
-        <group key={i} position={[side * 3.4, 0.05, 0]}>
-          <mesh position={[0, 0.05, -2.1]}>
+        <group key={i} position={[side * 3.8, 0.05, 0]}>
+          <mesh position={[0, 0.05, -3.1]}>
             <boxGeometry args={[1.6, 0.15, 0.7]} />
             <meshStandardMaterial color="#CBD5E1" roughness={0.7} />
           </mesh>
-          <mesh position={[0, 0.05, 2.1]}>
+          <mesh position={[0, 0.05, 3.1]}>
             <boxGeometry args={[1.6, 0.15, 0.7]} />
             <meshStandardMaterial color="#CBD5E1" roughness={0.7} />
           </mesh>
@@ -199,46 +201,46 @@ const ContinuousVillageRiver: React.FC = () => {
 // 1. Central Wooden Arch Footbridge (Connects Rumah Khaulah to TK Karang Tengah)
 const CentralWoodenBridge: React.FC = () => {
   return (
-    <group position={[0, 0.25, 11]}>
+    <group position={[0, 0.25, 18]}>
       {/* Arch Support Under-beams */}
-      {[-1.75, 1.75].map((bx, idx) => (
+      {[-1.9, 1.9].map((bx, idx) => (
         <mesh key={idx} position={[bx, 0.02, 0]} castShadow>
-          <boxGeometry args={[0.25, 0.35, 6.0]} />
+          <boxGeometry args={[0.25, 0.35, 8.4]} />
           <meshStandardMaterial color="#582F0E" roughness={0.8} />
         </mesh>
       ))}
 
       {/* Main Bridge Wooden Plank Deck */}
       <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
-        <boxGeometry args={[3.8, 0.2, 5.8]} />
+        <boxGeometry args={[4.4, 0.2, 8.4]} />
         <meshStandardMaterial color="#8D5B4C" roughness={0.75} />
       </mesh>
 
       {/* Bridge Plank Groove Accents */}
-      {[-2.2, -1.1, 0, 1.1, 2.2].map((pz, idx) => (
+      {[-3.6, -2.4, -1.2, 0, 1.2, 2.4, 3.6].map((pz, idx) => (
         <mesh key={idx} position={[0, 0.26, pz]}>
-          <boxGeometry args={[3.75, 0.015, 0.05]} />
+          <boxGeometry args={[4.35, 0.015, 0.05]} />
           <meshStandardMaterial color="#582F0E" />
         </mesh>
       ))}
 
       {/* Bridge Wooden Handrails (Left & Right) */}
-      {[-1.85, 1.85].map((rx, idx) => (
+      {[-2.1, 2.1].map((rx, idx) => (
         <group key={idx} position={[rx, 0.7, 0]}>
           {/* Top Rail */}
           <mesh castShadow>
-            <boxGeometry args={[0.16, 0.14, 5.8]} />
+            <boxGeometry args={[0.16, 0.14, 8.4]} />
             <meshStandardMaterial color="#6F4E37" roughness={0.7} />
           </mesh>
           {/* Baluster Posts */}
-          {[-2.5, -1.25, 0, 1.25, 2.5].map((pz, pi) => (
+          {[-3.8, -2.5, -1.25, 0, 1.25, 2.5, 3.8].map((pz, pi) => (
             <mesh key={pi} position={[0, -0.32, pz]} castShadow>
               <cylinderGeometry args={[0.06, 0.07, 0.65, 8]} />
               <meshStandardMaterial color="#6F4E37" />
             </mesh>
           ))}
           {/* Warm Corner Lanterns on Bridge Entrance Posts */}
-          {[-2.5, 2.5].map((lz, li) => (
+          {[-3.8, 3.8].map((lz, li) => (
             <group key={li} position={[0, 0.2, lz]}>
               <mesh castShadow>
                 <boxGeometry args={[0.22, 0.28, 0.22]} />
@@ -259,20 +261,20 @@ const CentralWoodenBridge: React.FC = () => {
 // 2. West Country Timber Bridge (Connects Petting Farm to Lake & Beach)
 const WestRusticBridge: React.FC = () => {
   return (
-    <group position={[-23, 0.25, 11]}>
+    <group position={[-45, 0.25, 18]}>
       {/* Bridge Wooden Plank Floor */}
       <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
-        <boxGeometry args={[4.4, 0.2, 5.8]} />
+        <boxGeometry args={[4.8, 0.2, 8.4]} />
         <meshStandardMaterial color="#8D5B4C" roughness={0.8} />
       </mesh>
       {/* Log Handrails */}
-      {[-2.1, 2.1].map((rx, idx) => (
+      {[-2.3, 2.3].map((rx, idx) => (
         <group key={idx} position={[rx, 0.65, 0]}>
           <mesh castShadow>
-            <boxGeometry args={[0.15, 0.12, 5.8]} />
+            <boxGeometry args={[0.15, 0.12, 8.4]} />
             <meshStandardMaterial color="#582F0E" roughness={0.8} />
           </mesh>
-          {[-2.3, -0.8, 0.8, 2.3].map((pz, pi) => (
+          {[-3.6, -1.8, 0, 1.8, 3.6].map((pz, pi) => (
             <mesh key={pi} position={[0, -0.3, pz]} castShadow>
               <cylinderGeometry args={[0.07, 0.07, 0.6, 6]} />
               <meshStandardMaterial color="#582F0E" />
@@ -287,21 +289,21 @@ const WestRusticBridge: React.FC = () => {
 // 3. East Stone & Masonry Bridge (Connects Town Street to Carnival Plaza)
 const EastAvenueStoneBridge: React.FC = () => {
   return (
-    <group position={[23, 0.25, 11]}>
+    <group position={[45, 0.25, 18]}>
       {/* Stone Paved Deck */}
       <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
-        <boxGeometry args={[4.4, 0.22, 5.8]} />
+        <boxGeometry args={[4.8, 0.22, 8.4]} />
         <meshStandardMaterial color="#CBD5E1" roughness={0.65} />
       </mesh>
       {/* Stone Parapet Balustrades */}
-      {[-2.1, 2.1].map((rx, idx) => (
+      {[-2.3, 2.3].map((rx, idx) => (
         <group key={idx} position={[rx, 0.6, 0]}>
           <mesh castShadow>
-            <boxGeometry args={[0.22, 0.5, 5.8]} />
+            <boxGeometry args={[0.22, 0.5, 8.4]} />
             <meshStandardMaterial color="#94A3B8" roughness={0.6} />
           </mesh>
           {/* Post Caps */}
-          {[-2.7, 2.7].map((pz, pi) => (
+          {[-3.8, 3.8].map((pz, pi) => (
             <group key={pi} position={[0, 0.35, pz]}>
               <mesh castShadow>
                 <boxGeometry args={[0.3, 0.15, 0.3]} />
@@ -326,55 +328,71 @@ const InterconnectedWalkways: React.FC = () => {
       {/* ------------------------------------------------------------------ */}
       {/* 1. CENTRAL NORTH-SOUTH VILLAGE AVENUE                               */}
       {/* ------------------------------------------------------------------ */}
-      {/* South Path: From Rumah Khaulah Porch (Z: -6) to Central Bridge (Z: 8.5) */}
-      <mesh position={[0, 0.255, 1.25]} receiveShadow>
-        <boxGeometry args={[3.4, 0.02, 14.5]} />
+      {/* South Path: From Rumah Khaulah Porch (Z: -6) to Central Bridge (Z: 13.8) */}
+      <mesh position={[0, 0.255, 3.9]} receiveShadow>
+        <boxGeometry args={[4.2, 0.02, 19.8]} />
         <meshStandardMaterial color="#D6CEBE" roughness={0.7} />
       </mesh>
-      {/* North Path: From Central Bridge (Z: 13.5) through School Gate to School Door (Z: 36) */}
-      <mesh position={[0, 0.255, 24.75]} receiveShadow>
-        <boxGeometry args={[3.4, 0.02, 22.5]} />
+      {/* North Path: From Central Bridge (Z: 22.2) through School Gate to School Door (Z: 54) */}
+      <mesh position={[0, 0.255, 38.1]} receiveShadow>
+        <boxGeometry args={[4.2, 0.02, 31.8]} />
         <meshStandardMaterial color="#D6CEBE" roughness={0.7} />
       </mesh>
 
       {/* ------------------------------------------------------------------ */}
-      {/* 2. SOUTH CROSS-VILLAGE ROAD (EAST-WEST at Z: 1.5)                  */}
-      {/* Connects Town Street (East: X: 15 to 48) past Rumah Khaulah to Farm (West: X: -15 to -48) */}
+      {/* 2. SOUTH CROSS-VILLAGE ROAD (EAST-WEST at Z: 0)                     */}
+      {/* Connects Town Street (East: X: 45 to 85) past Rumah Khaulah to Farm (West: X: -45 to -85) */}
       {/* ------------------------------------------------------------------ */}
       {/* Center connector across front garden */}
-      <mesh position={[0, 0.254, 1.5]} receiveShadow>
-        <boxGeometry args={[32, 0.02, 3.4]} />
+      <mesh position={[0, 0.254, 0]} receiveShadow>
+        <boxGeometry args={[90, 0.02, 4.2]} />
         <meshStandardMaterial color="#C9BFAD" roughness={0.75} />
       </mesh>
       {/* West connector road leading into Petting Farm entrance */}
-      <mesh position={[-32, 0.254, 1.5]} receiveShadow>
-        <boxGeometry args={[32, 0.02, 3.4]} />
+      <mesh position={[-65, 0.254, 0]} receiveShadow>
+        <boxGeometry args={[50, 0.02, 4.2]} />
         <meshStandardMaterial color="#C2B7A3" roughness={0.8} />
       </mesh>
       {/* East connector road leading into Town Street */}
-      <mesh position={[32, 0.254, 1.5]} receiveShadow>
-        <boxGeometry args={[32, 0.02, 3.4]} />
+      <mesh position={[65, 0.254, 0]} receiveShadow>
+        <boxGeometry args={[50, 0.02, 4.2]} />
         <meshStandardMaterial color="#D0C7B8" roughness={0.75} />
       </mesh>
 
       {/* ------------------------------------------------------------------ */}
-      {/* 3. NORTH CROSS-VILLAGE PROMENADE (EAST-WEST at Z: 17.5)            */}
+      {/* 3. NORTH CROSS-VILLAGE PROMENADE (EAST-WEST at Z: 25)               */}
       {/* Connects Carnival Plaza past School Gate to Beach & Lake Pier       */}
       {/* ------------------------------------------------------------------ */}
       {/* Center promenade in front of school gate */}
-      <mesh position={[0, 0.254, 17.5]} receiveShadow>
-        <boxGeometry args={[32, 0.02, 3.2]} />
+      <mesh position={[0, 0.254, 25]} receiveShadow>
+        <boxGeometry args={[90, 0.02, 4.2]} />
         <meshStandardMaterial color="#D8D0C3" roughness={0.7} />
       </mesh>
       {/* West promenade leading to Lake Pier and Beach */}
-      <mesh position={[-25, 0.254, 17.5]} receiveShadow>
-        <boxGeometry args={[18, 0.02, 3.2]} />
+      <mesh position={[-65, 0.254, 25]} receiveShadow>
+        <boxGeometry args={[50, 0.02, 4.2]} />
         <meshStandardMaterial color="#D8D0C3" roughness={0.7} />
       </mesh>
       {/* East promenade leading into Carnival Plaza */}
-      <mesh position={[32, 0.254, 17.5]} receiveShadow>
-        <boxGeometry args={[32, 0.02, 3.2]} />
+      <mesh position={[65, 0.254, 25]} receiveShadow>
+        <boxGeometry args={[50, 0.02, 4.2]} />
         <meshStandardMaterial color="#D8D0C3" roughness={0.7} />
+      </mesh>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* 4. NORTH-SOUTH WEST ROAD (Connecting Farm to Beach across Bridge)   */}
+      {/* ------------------------------------------------------------------ */}
+      <mesh position={[-45, 0.254, 6.5]} receiveShadow>
+        <boxGeometry args={[4.2, 0.02, 37]} />
+        <meshStandardMaterial color="#C9BFAD" roughness={0.75} />
+      </mesh>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* 5. NORTH-SOUTH EAST AVENUE (Connecting Town to Carnival across Bridge) */}
+      {/* ------------------------------------------------------------------ */}
+      <mesh position={[45, 0.254, 6.5]} receiveShadow>
+        <boxGeometry args={[4.2, 0.02, 37]} />
+        <meshStandardMaterial color="#D0C7B8" roughness={0.75} />
       </mesh>
     </group>
   );
@@ -382,35 +400,35 @@ const InterconnectedWalkways: React.FC = () => {
 
 export const GroundIsland: React.FC = () => {
   useEffect(() => {
-    // 1. South Village Landmass (Rumah Khaulah, Backyard Pool, Farm, Town; Z: -36 to 8.5, X: -55 to 55)
+    // 1. South Village Landmass (Rumah Khaulah, Backyard Pool, Farm, Town; Z: -62 to 14.5, X: -100 to 100)
     const southBox = new THREE.Box3(
-      new THREE.Vector3(-55, -1, -36),
-      new THREE.Vector3(55, 0.25, 8.5)
+      new THREE.Vector3(-100, -1, -62),
+      new THREE.Vector3(100, 0.25, 14.5)
     );
-    // 2. Central Arch Bridge (Z: 8.5 to 13.5, X: -3.0 to 3.0)
+    // 2. Central Arch Bridge (Z: 13.8 to 22.2, X: -3.5 to 3.5)
     const centralBridgeBox = new THREE.Box3(
-      new THREE.Vector3(-3.0, -0.5, 8.5),
-      new THREE.Vector3(3.0, 0.5, 13.5)
+      new THREE.Vector3(-3.5, -0.5, 13.8),
+      new THREE.Vector3(3.5, 0.5, 22.2)
     );
-    // 3. West Country Bridge (Z: 8.5 to 13.5, X: -26.0 to -20.0)
+    // 3. West Country Bridge (Z: 13.8 to 22.2, X: -48.5 to -41.5)
     const westBridgeBox = new THREE.Box3(
-      new THREE.Vector3(-26.0, -0.5, 8.5),
-      new THREE.Vector3(-20.0, 0.5, 13.5)
+      new THREE.Vector3(-48.5, -0.5, 13.8),
+      new THREE.Vector3(-41.5, 0.5, 22.2)
     );
-    // 4. East Stone Bridge (Z: 8.5 to 13.5, X: 20.0 to 26.0)
+    // 4. East Stone Bridge (Z: 13.8 to 22.2, X: 41.5 to 48.5)
     const eastBridgeBox = new THREE.Box3(
-      new THREE.Vector3(20.0, -0.5, 8.5),
-      new THREE.Vector3(26.0, 0.5, 13.5)
+      new THREE.Vector3(41.5, -0.5, 13.8),
+      new THREE.Vector3(48.5, 0.5, 22.2)
     );
-    // 5. North School & Carnival Landmass (Z: 13.5 to 48, X: -18 to 55)
+    // 5. North School, Beach & Carnival Landmass (Z: 21.5 to 76, X: -100 to 100)
     const northBox = new THREE.Box3(
-      new THREE.Vector3(-18, -1, 13.5),
-      new THREE.Vector3(55, 0.25, 48)
+      new THREE.Vector3(-100, -1, 21.5),
+      new THREE.Vector3(100, 0.25, 76)
     );
-    // 6. Walkable Riverbed Floor (shallow water splash floor; Z: 8.5 to 13.5, X: -55 to 55)
+    // 6. Walkable Riverbed Floor (shallow water splash floor; Z: 14.5 to 21.5, X: -100 to 100)
     const riverbedBox = new THREE.Box3(
-      new THREE.Vector3(-55, -1.0, 8.5),
-      new THREE.Vector3(55, 0.14, 13.5)
+      new THREE.Vector3(-100, -1.0, 14.5),
+      new THREE.Vector3(100, 0.14, 21.5)
     );
 
     const c1 = { box: southBox, type: 'ground' as const };
@@ -433,27 +451,27 @@ export const GroundIsland: React.FC = () => {
   return (
     <group position={[0, 0, 0]}>
       {/* ============================================================== */}
-      {/* 1. UNIFIED SOUTH VILLAGE TERRAIN (Z: -36 to 8.5, X: -55 to 55) */}
+      {/* 1. UNIFIED SOUTH VILLAGE TERRAIN (Z: -62 to 14.5, X: -100 to 100) */}
       {/* Natural lush green grass covering the house, backyard & shops  */}
       {/* ============================================================== */}
-      <mesh position={[0, -0.2, -13.75]} receiveShadow>
-        <boxGeometry args={[110, 0.9, 44.5]} />
+      <mesh position={[0, -0.2, -23.75]} receiveShadow>
+        <boxGeometry args={[200, 0.9, 76.5]} />
         <meshStandardMaterial color="#4C8C2B" roughness={0.78} />
       </mesh>
       {/* Rich Fertile Earth Base beneath South Terrain */}
-      <mesh position={[0, -1.8, -13.75]}>
-        <boxGeometry args={[110.5, 2.3, 45.0]} />
+      <mesh position={[0, -1.8, -23.75]}>
+        <boxGeometry args={[200.5, 2.3, 77.0]} />
         <meshStandardMaterial color="#543D2B" roughness={0.95} />
       </mesh>
 
-      {/* South Island Perimeter Stone Retaining Wall (Z: -36) */}
-      <mesh position={[0, 0.15, -36]} receiveShadow>
-        <boxGeometry args={[110, 0.4, 0.35]} />
+      {/* South Island Perimeter Stone Retaining Wall (Z: -62) */}
+      <mesh position={[0, 0.15, -62]} receiveShadow>
+        <boxGeometry args={[200, 0.4, 0.35]} />
         <meshStandardMaterial color="#78716C" roughness={0.8} />
       </mesh>
 
       {/* ============================================================== */}
-      {/* 2. CONTINUOUS VILLAGE RIVER & REALISTIC BRIDGES (Z: 8.5 to 13.5)*/}
+      {/* 2. CONTINUOUS VILLAGE RIVER & REALISTIC BRIDGES (Z: 14.5 to 21.5)*/}
       {/* Flowing seamlessly across entire island from West to East       */}
       {/* ============================================================== */}
       <ContinuousVillageRiver />
@@ -462,34 +480,34 @@ export const GroundIsland: React.FC = () => {
       <EastAvenueStoneBridge />
 
       {/* ============================================================== */}
-      {/* 3. UNIFIED NORTH VILLAGE TERRAIN (School & Carnival: X: -18 to 55, Z: 13.5 to 48) */}
-      {/* Matching natural lush green grass covering the School and Carnival */}
+      {/* 3. UNIFIED NORTH VILLAGE TERRAIN (Z: 21.5 to 76, X: -100 to 100) */}
+      {/* Matching natural lush green grass covering School, Beach & Carnival */}
       {/* ============================================================== */}
-      <mesh position={[18.5, -0.2, 30.75]} receiveShadow>
-        <boxGeometry args={[73, 0.9, 34.5]} />
+      <mesh position={[0, -0.2, 48.75]} receiveShadow>
+        <boxGeometry args={[200, 0.9, 54.5]} />
         <meshStandardMaterial color="#4C8C2B" roughness={0.78} />
       </mesh>
       {/* Rich Fertile Earth Base beneath North Terrain */}
-      <mesh position={[0, -1.8, 30.75]}>
-        <boxGeometry args={[110.5, 2.3, 35.0]} />
+      <mesh position={[0, -1.8, 48.75]}>
+        <boxGeometry args={[200.5, 2.3, 55.0]} />
         <meshStandardMaterial color="#543D2B" roughness={0.95} />
       </mesh>
 
-      {/* North Island Perimeter Stone Retaining Wall (Z: 48) */}
-      <mesh position={[0, 0.15, 48]} receiveShadow>
-        <boxGeometry args={[110, 0.4, 0.35]} />
+      {/* North Island Perimeter Stone Retaining Wall (Z: 76) */}
+      <mesh position={[0, 0.15, 76]} receiveShadow>
+        <boxGeometry args={[200, 0.4, 0.35]} />
         <meshStandardMaterial color="#78716C" roughness={0.8} />
       </mesh>
 
       {/* East & West Perimeter Stone Retaining Walls */}
-      {[-55, 55].map((wx, idx) => (
+      {[-100, 100].map((wx, idx) => (
         <React.Fragment key={idx}>
-          <mesh position={[wx, 0.15, -13.75]} receiveShadow>
-            <boxGeometry args={[0.35, 0.4, 44.5]} />
+          <mesh position={[wx, 0.15, -23.75]} receiveShadow>
+            <boxGeometry args={[0.35, 0.4, 76.5]} />
             <meshStandardMaterial color="#78716C" roughness={0.8} />
           </mesh>
-          <mesh position={[wx, 0.15, 30.75]} receiveShadow>
-            <boxGeometry args={[0.35, 0.4, 34.5]} />
+          <mesh position={[wx, 0.15, 48.75]} receiveShadow>
+            <boxGeometry args={[0.35, 0.4, 54.5]} />
             <meshStandardMaterial color="#78716C" roughness={0.8} />
           </mesh>
         </React.Fragment>
@@ -507,30 +525,44 @@ export const GroundIsland: React.FC = () => {
       {/* ============================================================== */}
       {[
         // Around Rumah Khaulah Garden & South Avenue
-        { pos: [-10, 0.25, -6], leafColor: '#2D6A4F', scale: 1.25, seed: 0 },
-        { pos: [10, 0.25, -6], leafColor: '#386641', scale: 1.3, seed: 1.5 },
-        { pos: [-11, 0.25, 3], leafColor: '#40916C', scale: 1.15, seed: 2.3 },
-        { pos: [11, 0.25, 4], leafColor: '#2D6A4F', scale: 1.1, seed: 3.8 },
+        { pos: [-12, 0.25, -6], leafColor: '#2D6A4F', scale: 1.25, seed: 0 },
+        { pos: [12, 0.25, -6], leafColor: '#386641', scale: 1.3, seed: 1.5 },
+        { pos: [-14, 0.25, 4], leafColor: '#40916C', scale: 1.15, seed: 2.3 },
+        { pos: [14, 0.25, 4], leafColor: '#2D6A4F', scale: 1.1, seed: 3.8 },
+        { pos: [-8, 0.25, 9], leafColor: '#52B788', scale: 1.2, seed: 4.5 },
+        { pos: [8, 0.25, 9], leafColor: '#52B788', scale: 1.2, seed: 5.0 },
 
         // Riverbank Trees (Shading the beautiful blue river)
-        { pos: [-15, 0.25, 7.5], leafColor: '#52B788', scale: 1.25, seed: 4.1 },
-        { pos: [15, 0.25, 7.5], leafColor: '#52B788', scale: 1.25, seed: 5.2 },
-        { pos: [-15, 0.25, 14.5], leafColor: '#386641', scale: 1.2, seed: 5.7 },
-        { pos: [15, 0.25, 14.5], leafColor: '#386641', scale: 1.2, seed: 6.0 },
+        { pos: [-28, 0.25, 13.0], leafColor: '#52B788', scale: 1.25, seed: 4.1 },
+        { pos: [28, 0.25, 13.0], leafColor: '#52B788', scale: 1.25, seed: 5.2 },
+        { pos: [-62, 0.25, 13.0], leafColor: '#386641', scale: 1.2, seed: 5.7 },
+        { pos: [62, 0.25, 13.0], leafColor: '#386641', scale: 1.2, seed: 6.0 },
+        { pos: [-28, 0.25, 23.0], leafColor: '#386641', scale: 1.2, seed: 6.2 },
+        { pos: [28, 0.25, 23.0], leafColor: '#386641', scale: 1.2, seed: 6.8 },
 
         // Near TK Karang Tengah Schoolyard & Promenade
-        { pos: [-12, 0.25, 22], leafColor: '#2D6A4F', scale: 1.2, seed: 6.3 },
-        { pos: [12, 0.25, 22], leafColor: '#40916C', scale: 1.15, seed: 7.1 },
-        { pos: [-12, 0.25, 38], leafColor: '#386641', scale: 1.3, seed: 8.4 },
-        { pos: [12, 0.25, 38], leafColor: '#386641', scale: 1.3, seed: 9.0 },
+        { pos: [-16, 0.25, 30], leafColor: '#2D6A4F', scale: 1.25, seed: 6.3 },
+        { pos: [16, 0.25, 30], leafColor: '#40916C', scale: 1.2, seed: 7.1 },
+        { pos: [-16, 0.25, 50], leafColor: '#386641', scale: 1.3, seed: 8.4 },
+        { pos: [16, 0.25, 50], leafColor: '#386641', scale: 1.3, seed: 9.0 },
 
-        // West Boundary (Farm & Beach Buffer)
-        { pos: [-49, 0.25, 6], leafColor: '#2D6A4F', scale: 1.2, seed: 10.2 },
-        { pos: [-49, 0.25, 24], leafColor: '#40916C', scale: 1.25, seed: 11.1 },
+        // Farm & West Meadows
+        { pos: [-32, 0.25, -6], leafColor: '#2D6A4F', scale: 1.3, seed: 9.5 },
+        { pos: [-32, 0.25, 6], leafColor: '#40916C', scale: 1.25, seed: 9.8 },
+        { pos: [-90, 0.25, -10], leafColor: '#2D6A4F', scale: 1.35, seed: 10.2 },
+        { pos: [-90, 0.25, 45], leafColor: '#40916C', scale: 1.3, seed: 11.1 },
 
-        // East Boundary (Town & Carnival Buffer)
-        { pos: [49, 0.25, 6], leafColor: '#386641', scale: 1.2, seed: 12.3 },
-        { pos: [49, 0.25, 24], leafColor: '#2D6A4F', scale: 1.25, seed: 13.5 },
+        // Town & East Meadows
+        { pos: [32, 0.25, -6], leafColor: '#386641', scale: 1.25, seed: 11.8 },
+        { pos: [32, 0.25, 6], leafColor: '#2D6A4F', scale: 1.2, seed: 12.1 },
+        { pos: [90, 0.25, -10], leafColor: '#386641', scale: 1.3, seed: 12.3 },
+        { pos: [90, 0.25, 45], leafColor: '#2D6A4F', scale: 1.35, seed: 13.5 },
+
+        // Backyard Waterpark Groves
+        { pos: [-24, 0.25, -28], leafColor: '#2D6A4F', scale: 1.3, seed: 14.1 },
+        { pos: [24, 0.25, -28], leafColor: '#386641', scale: 1.3, seed: 14.6 },
+        { pos: [-24, 0.25, -52], leafColor: '#40916C', scale: 1.35, seed: 15.2 },
+        { pos: [24, 0.25, -52], leafColor: '#2D6A4F', scale: 1.35, seed: 15.8 },
       ].map((tree, idx) => (
         <AnimatedTree
           key={idx}
@@ -546,20 +578,22 @@ export const GroundIsland: React.FC = () => {
       {/* ============================================================== */}
       {[
         // Home Yard Flowers
-        { x: -5, z: -2, c: '#FF4D6D', seed: 0.2 },
-        { x: 5, z: -2, c: '#FFB703', seed: 1.1 },
-        { x: -4, z: 4, c: '#9B5DE5', seed: 2.5 },
-        { x: 4, z: 5, c: '#FF758F', seed: 3.4 },
+        { x: -6, z: -2, c: '#FF4D6D', seed: 0.2 },
+        { x: 6, z: -2, c: '#FFB703', seed: 1.1 },
+        { x: -5, z: 5, c: '#9B5DE5', seed: 2.5 },
+        { x: 5, z: 6, c: '#FF758F', seed: 3.4 },
         // Riverbank Wildflowers
-        { x: -8, z: 8.2, c: '#FFFFFF', seed: 3.8 },
-        { x: 8, z: 8.2, c: '#FFD166', seed: 4.0 },
-        { x: -8, z: 13.8, c: '#FF4D6D', seed: 4.4 },
-        { x: 8, z: 13.8, c: '#FFFFFF', seed: 4.7 },
+        { x: -10, z: 13.2, c: '#FFFFFF', seed: 3.8 },
+        { x: 10, z: 13.2, c: '#FFD166', seed: 4.0 },
+        { x: -10, z: 22.8, c: '#FF4D6D', seed: 4.4 },
+        { x: 10, z: 22.8, c: '#FFFFFF', seed: 4.7 },
+        { x: -30, z: 13.2, c: '#FF758F', seed: 4.9 },
+        { x: 30, z: 13.2, c: '#9B5DE5', seed: 5.1 },
         // Schoolyard Flowers
-        { x: -6, z: 20, c: '#FF758F', seed: 5.2 },
-        { x: 6, z: 20, c: '#FFD166', seed: 5.8 },
-        { x: -5, z: 35, c: '#FFFFFF', seed: 6.3 },
-        { x: 5, z: 35, c: '#FF4D6D', seed: 7.4 },
+        { x: -7, z: 27, c: '#FF758F', seed: 5.2 },
+        { x: 7, z: 27, c: '#FFD166', seed: 5.8 },
+        { x: -6, z: 45, c: '#FFFFFF', seed: 6.3 },
+        { x: 6, z: 45, c: '#FF4D6D', seed: 7.4 },
       ].map((flower, idx) => (
         <AnimatedFlower
           key={idx}
@@ -571,10 +605,10 @@ export const GroundIsland: React.FC = () => {
       ))}
 
       {/* ============================================================== */}
-      {/* 7. RAINBOW SKYWAY PORTAL ARCHWAY (Behind School, Z: 48)        */}
+      {/* 7. RAINBOW SKYWAY PORTAL ARCHWAY (Behind School, Z: 68)        */}
       {/* Kid-friendly portal to fantasy obby jumping platforms          */}
       {/* ============================================================== */}
-      <group position={[0, 0.25, 48]}>
+      <group position={[0, 0.25, 68]}>
         <mesh position={[-2.4, 2.0, 0]}>
           <cylinderGeometry args={[0.3, 0.35, 4.0, 12]} />
           <meshStandardMaterial color="#FF9F1C" />

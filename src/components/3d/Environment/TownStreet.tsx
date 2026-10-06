@@ -89,9 +89,9 @@ export const TownStreet: React.FC = () => {
     const playerPos = gameStore.getState().playerPos;
 
     // Check distances to Mart, Bakery, and Firetruck
-    const distMart = Math.hypot(playerPos[0] - 27, playerPos[2] - (-2));
-    const distBakery = Math.hypot(playerPos[0] - 40, playerPos[2] - (-2));
-    const distTruck = Math.hypot(playerPos[0] - 45, playerPos[2] - 3);
+    const distMart = Math.hypot(playerPos[0] - 57, playerPos[2] - (-10));
+    const distBakery = Math.hypot(playerPos[0] - 69, playerPos[2] - (-10));
+    const distTruck = Math.hypot(playerPos[0] - 79, playerPos[2] - (-3));
 
     if (distMart < 4.0) {
       gameStore.setNearbyInteractable({
@@ -120,7 +120,7 @@ export const TownStreet: React.FC = () => {
   });
 
   return (
-    <group position={[35, 0, -3]}>
+    <group position={[65, 0, -6]}>
       {/* --- 1. ASPHALT ROADWAY, SIDEWALKS & CROSSWALKS --- */}
       {/* North Sidewalk (In front of shops) */}
       <mesh position={[0, 0.05, -1.8]} receiveShadow>
@@ -312,7 +312,7 @@ export const TownStreet: React.FC = () => {
       )}
 
       {/* --- CHECKPOINT 6 (Desa Pertokoan) --- */}
-      <CheckpointFlag index={6} position={[-1, 0.3, 1]} />
+      <CheckpointFlag index={6} position={[-7, 0.3, 2]} />
 
       {/* --- STAR COLLECTIBLES --- */}
       <StarCollectible id="star_town_1" position={[-8, 1.2, 0]} color="#FFD166" />

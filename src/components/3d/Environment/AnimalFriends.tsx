@@ -333,7 +333,7 @@ export const AnimalFriends: React.FC = () => {
       {/* Bebek Kuki berenang santai di sungai desa */}
       <SingleAnimal
         type="duck"
-        position={[0, 0.15, 11]}
+        position={[0, 0.15, 18]}
         name="Bebek Kuki 🦆"
         dialogue="Kweeeek! Khaulah mau berangkat ke TK Karang Tengah ya? Selamat bermain! 🦆"
       />
@@ -341,7 +341,7 @@ export const AnimalFriends: React.FC = () => {
       {/* Kucing Tomi bermain di halaman TK Karang Tengah */}
       <SingleAnimal
         type="cat"
-        position={[-6, 0.25, 22]}
+        position={[-8, 0.25, 34]}
         name="Kucing Tomi 🐱"
         dialogue="Miawww! Kucing Tomi senang melihat Khaulah ceria di TK! 🐾"
       />
@@ -349,7 +349,7 @@ export const AnimalFriends: React.FC = () => {
       {/* Kelinci Cici melompat di taman bunga rumah Khaulah */}
       <SingleAnimal
         type="bunny"
-        position={[-5, 0.25, 3]}
+        position={[-6, 0.25, 4]}
         name="Kelinci Cici 🐰"
         dialogue="Hoppp! Ayo balapan lari melintasi jembatan kayu, Khaulah! 🥕"
       />
@@ -357,7 +357,7 @@ export const AnimalFriends: React.FC = () => {
       {/* Panda Bobo asyik santai di dekat taman bermain TK */}
       <SingleAnimal
         type="panda"
-        position={[6, 0.25, 34]}
+        position={[7, 0.25, 46]}
         name="Panda Bobo 🐼"
         dialogue="Hai Khaulah! Semangat belajar dan main perosotan di TK Karang Tengah ya! 🎋"
       />

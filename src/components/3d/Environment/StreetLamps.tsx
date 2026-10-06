@@ -119,59 +119,67 @@ export const StreetLamp: React.FC<StreetLampProps> = ({ pos, rotationY = 0, hasP
 
 // Daftar jaringan lampu jalan desa di seluruh jalan raya, trotoar, dan alun-alun
 const STREET_LAMP_CONFIGS: StreetLampProps[] = [
-  // --- JALUR UTAMA 1: RUMAH KHAULAH ➔ JEMBATAN TENGAH (Z: -6 s/d 8.5) ---
-  { pos: [2.5, 0, -4.5], rotationY: -Math.PI / 2, hasPointLight: true },
-  { pos: [-2.5, 0, -4.5], rotationY: Math.PI / 2, hasPointLight: false },
-  { pos: [2.5, 0, 1.0], rotationY: -Math.PI / 2, hasPointLight: true },
-  { pos: [-2.5, 0, 1.0], rotationY: Math.PI / 2, hasPointLight: false },
-  { pos: [2.5, 0, 7.0], rotationY: -Math.PI / 2, hasPointLight: true },
-  { pos: [-2.5, 0, 7.0], rotationY: Math.PI / 2, hasPointLight: false },
+  // --- JALUR UTAMA 1: RUMAH KHAULAH ➔ JEMBATAN TENGAH (Z: -6 s/d 14) ---
+  { pos: [2.8, 0, -4.5], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [-2.8, 0, -4.5], rotationY: Math.PI / 2, hasPointLight: false },
+  { pos: [2.8, 0, 2.0], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [-2.8, 0, 2.0], rotationY: Math.PI / 2, hasPointLight: false },
+  { pos: [2.8, 0, 8.5], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [-2.8, 0, 8.5], rotationY: Math.PI / 2, hasPointLight: false },
+  { pos: [2.8, 0, 13.5], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [-2.8, 0, 13.5], rotationY: Math.PI / 2, hasPointLight: false },
 
-  // --- JALUR UTAMA 2: JEMBATAN ➔ GERBANG TK ➔ PINTU TK (Z: 13.5 s/d 35) ---
-  { pos: [2.5, 0, 15.0], rotationY: -Math.PI / 2, hasPointLight: true },
-  { pos: [-2.5, 0, 15.0], rotationY: Math.PI / 2, hasPointLight: false },
-  { pos: [2.5, 0, 21.0], rotationY: -Math.PI / 2, hasPointLight: true },
-  { pos: [-2.5, 0, 21.0], rotationY: Math.PI / 2, hasPointLight: false },
-  { pos: [2.5, 0, 27.5], rotationY: -Math.PI / 2, hasPointLight: true },
-  { pos: [-2.5, 0, 27.5], rotationY: Math.PI / 2, hasPointLight: false },
-  { pos: [2.5, 0, 34.0], rotationY: -Math.PI / 2, hasPointLight: true },
-  { pos: [-2.5, 0, 34.0], rotationY: Math.PI / 2, hasPointLight: false },
+  // --- JALUR UTAMA 2: JEMBATAN ➔ GERBANG TK ➔ PINTU TK (Z: 22 s/d 55) ---
+  { pos: [2.8, 0, 23.0], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [-2.8, 0, 23.0], rotationY: Math.PI / 2, hasPointLight: false },
+  { pos: [2.8, 0, 30.0], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [-2.8, 0, 30.0], rotationY: Math.PI / 2, hasPointLight: false },
+  { pos: [2.8, 0, 40.0], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [-2.8, 0, 40.0], rotationY: Math.PI / 2, hasPointLight: false },
+  { pos: [2.8, 0, 52.0], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [-2.8, 0, 52.0], rotationY: Math.PI / 2, hasPointLight: false },
 
-  // --- JALUR SELATAN TIMUR: KE ARAH DESA PERTOKOAN (Z: 1.5, X: 4 s/d 36) ---
-  { pos: [10, 0, 3.4], rotationY: Math.PI, hasPointLight: true },
-  { pos: [18, 0, 3.4], rotationY: Math.PI, hasPointLight: false },
-  { pos: [26, 0, 3.4], rotationY: Math.PI, hasPointLight: true },
-  { pos: [34, 0, 3.4], rotationY: Math.PI, hasPointLight: false },
+  // --- JALUR SELATAN TIMUR: KE ARAH DESA PERTOKOAN (Z: 2.4, X: 12 s/d 72) ---
+  { pos: [14, 0, 2.4], rotationY: Math.PI, hasPointLight: true },
+  { pos: [28, 0, 2.4], rotationY: Math.PI, hasPointLight: false },
+  { pos: [42, 0, 2.4], rotationY: Math.PI, hasPointLight: true },
+  { pos: [56, 0, 2.4], rotationY: Math.PI, hasPointLight: false },
+  { pos: [70, 0, 2.4], rotationY: Math.PI, hasPointLight: true },
 
-  // --- JALUR SELATAN BARAT: KE ARAH PETERNAKAN HEWAN (Z: 1.5, X: -4 s/d -36) ---
-  { pos: [-10, 0, 3.4], rotationY: Math.PI, hasPointLight: true },
-  { pos: [-18, 0, 3.4], rotationY: Math.PI, hasPointLight: false },
-  { pos: [-26, 0, 3.4], rotationY: Math.PI, hasPointLight: true },
-  { pos: [-34, 0, 3.4], rotationY: Math.PI, hasPointLight: false },
+  // --- JALUR SELATAN BARAT: KE ARAH PETERNAKAN HEWAN (Z: 2.4, X: -12 s/d -72) ---
+  { pos: [-14, 0, 2.4], rotationY: Math.PI, hasPointLight: true },
+  { pos: [-28, 0, 2.4], rotationY: Math.PI, hasPointLight: false },
+  { pos: [-42, 0, 2.4], rotationY: Math.PI, hasPointLight: true },
+  { pos: [-56, 0, 2.4], rotationY: Math.PI, hasPointLight: false },
+  { pos: [-70, 0, 2.4], rotationY: Math.PI, hasPointLight: true },
 
-  // --- JALUR UTARA TIMUR: KE ARAH ALUN-ALUN KARNAVAL & PASAR MALAM (Z: 17.5, X: 4 s/d 36) ---
-  { pos: [10, 0, 15.6], rotationY: 0, hasPointLight: true },
-  { pos: [18, 0, 15.6], rotationY: 0, hasPointLight: false },
-  { pos: [26, 0, 15.6], rotationY: 0, hasPointLight: true },
-  { pos: [34, 0, 15.6], rotationY: 0, hasPointLight: false },
+  // --- JALUR UTARA TIMUR: KE ARAH ALUN-ALUN KARNAVAL & PASAR MALAM (Z: 22.8, X: 14 s/d 70) ---
+  { pos: [14, 0, 22.8], rotationY: 0, hasPointLight: true },
+  { pos: [28, 0, 22.8], rotationY: 0, hasPointLight: false },
+  { pos: [42, 0, 22.8], rotationY: 0, hasPointLight: true },
+  { pos: [56, 0, 22.8], rotationY: 0, hasPointLight: false },
+  { pos: [70, 0, 22.8], rotationY: 0, hasPointLight: true },
 
-  // --- ALUN-ALUN KARNAVAL & THEME PARK (Z: 20 s/d 36, X: 24 s/d 44) ---
-  { pos: [24, 0, 24], rotationY: -Math.PI / 2, hasPointLight: true },
-  { pos: [44, 0, 24], rotationY: Math.PI / 2, hasPointLight: true },
-  { pos: [24, 0, 33], rotationY: -Math.PI / 2, hasPointLight: true },
-  { pos: [44, 0, 33], rotationY: Math.PI / 2, hasPointLight: true },
+  // --- JALUR UTARA BARAT: KE ARAH DANAU BEBEK & PANTAI PASIR (Z: 22.8, X: -14 s/d -70) ---
+  { pos: [-14, 0, 22.8], rotationY: 0, hasPointLight: true },
+  { pos: [-28, 0, 22.8], rotationY: 0, hasPointLight: false },
+  { pos: [-42, 0, 22.8], rotationY: 0, hasPointLight: true },
+  { pos: [-56, 0, 22.8], rotationY: 0, hasPointLight: false },
+  { pos: [-70, 0, 22.8], rotationY: 0, hasPointLight: true },
 
-  // --- JALUR UTARA BARAT: KE ARAH DANAU BEBEK & PANTAI PASIR (Z: 17.5, X: -4 s/d -36) ---
-  { pos: [-10, 0, 15.6], rotationY: 0, hasPointLight: true },
-  { pos: [-18, 0, 15.6], rotationY: 0, hasPointLight: false },
-  { pos: [-26, 0, 15.6], rotationY: 0, hasPointLight: true },
-  { pos: [-34, 0, 15.6], rotationY: 0, hasPointLight: false },
+  // --- PENGHUBUNG UTARA-SELATAN JEMBATAN BARAT (X: -47.5) ---
+  { pos: [-47.5, 0, 6.0], rotationY: Math.PI / 2, hasPointLight: true },
+  { pos: [-47.5, 0, 12.0], rotationY: Math.PI / 2, hasPointLight: false },
 
-  // --- AREA KOLAM RENANG & HALAMAN BELAKANG (Z: -12 s/d -24) ---
-  { pos: [3.5, 0, -13], rotationY: -Math.PI / 2, hasPointLight: true },
-  { pos: [-3.5, 0, -13], rotationY: Math.PI / 2, hasPointLight: false },
-  { pos: [3.5, 0, -22], rotationY: -Math.PI / 2, hasPointLight: true },
-  { pos: [-3.5, 0, -22], rotationY: Math.PI / 2, hasPointLight: false },
+  // --- PENGHUBUNG UTARA-SELATAN JEMBATAN TIMUR (X: 47.5) ---
+  { pos: [47.5, 0, 6.0], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [47.5, 0, 12.0], rotationY: -Math.PI / 2, hasPointLight: false },
+
+  // --- AREA KOLAM RENANG & HALAMAN BELAKANG (Z: -14 s/d -28) ---
+  { pos: [4.0, 0, -14], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [-4.0, 0, -14], rotationY: Math.PI / 2, hasPointLight: false },
+  { pos: [4.0, 0, -26], rotationY: -Math.PI / 2, hasPointLight: true },
+  { pos: [-4.0, 0, -26], rotationY: Math.PI / 2, hasPointLight: false },
 ];
 
 export const StreetLamps: React.FC = () => {

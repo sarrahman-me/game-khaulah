@@ -420,10 +420,10 @@ export const SchoolQuest: React.FC = () => {
       <WaterBottleItem position={[4.5, 0.55, -2.5]} />
 
       {/* Item 3: Buku Gambar on riverside picnic spot before bridge */}
-      <DrawingBookItem position={[-4.2, 0.45, 6.5]} />
+      <DrawingBookItem position={[-4.5, 0.45, 11.0]} />
 
       {/* 2. Ibu Santi welcoming students at TK gate */}
-      <BuGuruTeacher position={[2.5, 0.2, 19.5]} />
+      <BuGuruTeacher position={[3.0, 0.2, 27.5]} />
     </group>
   );
 };

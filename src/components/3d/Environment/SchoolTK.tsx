@@ -13,22 +13,22 @@ export const SchoolTK: React.FC = () => {
 
   // Register physical colliders for SchoolTK
   useEffect(() => {
-    // School yard ground (Z: 18 to 44, X: -14 to 14)
+    // School yard ground (Z: 24 to 68, X: -24 to 24)
     const yardBox = new THREE.Box3(
-      new THREE.Vector3(-15, -1, 18),
-      new THREE.Vector3(15, 0.4, 46)
+      new THREE.Vector3(-24, -1, 24),
+      new THREE.Vector3(24, 0.4, 68)
     );
 
     // School building main block (solid wall)
     const schoolBuildingBox = new THREE.Box3(
-      new THREE.Vector3(-12, 0, 36),
-      new THREE.Vector3(12, 6, 45)
+      new THREE.Vector3(-14, 0, 52),
+      new THREE.Vector3(14, 6.5, 64)
     );
 
     // Slide platform top
     const slideTopBox = new THREE.Box3(
-      new THREE.Vector3(6.5, 0, 24),
-      new THREE.Vector3(9.5, 2.3, 27)
+      new THREE.Vector3(7.5, 0, 40.5),
+      new THREE.Vector3(10.5, 2.3, 43.5)
     );
 
     const c1 = { box: yardBox, type: 'ground' as const };
@@ -71,20 +71,20 @@ export const SchoolTK: React.FC = () => {
     // 4. Proximity Check for Slide & Swing Rides
     const playerPos = gameStore.getState().playerPos;
 
-    // Slide location: [8, 0, 25.5]
-    const distSlideSq = Math.pow(playerPos[0] - 8, 2) + Math.pow(playerPos[2] - 25.5, 2);
-    // Swing location: [-8, 0, 26]
-    const distSwingSq = Math.pow(playerPos[0] - (-8), 2) + Math.pow(playerPos[2] - 26, 2);
+    // Slide location: [9, 0, 42]
+    const distSlideSq = Math.pow(playerPos[0] - 9, 2) + Math.pow(playerPos[2] - 42, 2);
+    // Swing location: [-9, 0, 42]
+    const distSwingSq = Math.pow(playerPos[0] - (-9), 2) + Math.pow(playerPos[2] - 42, 2);
 
     const activeRide = gameStore.getState().activeRide;
 
-    if (distSlideSq < 8.0 && activeRide === 'none') {
+    if (distSlideSq < 10.0 && activeRide === 'none') {
       gameStore.setNearbyInteractable({
         id: 'slide',
         title: 'Perosotan TK Karang Tengah',
         prompt: 'Tekan [E] atau Sentuh Tombol untuk Meluncur Wuuush! 🛝',
       });
-    } else if (distSwingSq < 8.0 && activeRide === 'none') {
+    } else if (distSwingSq < 10.0 && activeRide === 'none') {
       gameStore.setNearbyInteractable({
         id: 'swing',
         title: 'Ayunan Ceria TK Karang Tengah',
@@ -101,9 +101,9 @@ export const SchoolTK: React.FC = () => {
   return (
     <group position={[0, 0, 0]}>
       {/* ============================================================== */}
-      {/* 1. GERBANG RESMI: "TK KARANG TENGAH 1 ATAP" (Z: 18)           */}
+      {/* 1. GERBANG RESMI: "TK KARANG TENGAH 1 ATAP" (Z: 26)           */}
       {/* ============================================================== */}
-      <group position={[0, 0.2, 18]}>
+      <group position={[0, 0.2, 26]}>
         {/* Left Gate Pillar (Colorful) */}
         <mesh position={[-3.8, 1.8, 0]} castShadow>
           <boxGeometry args={[0.7, 3.6, 0.7]} />
@@ -201,9 +201,9 @@ export const SchoolTK: React.FC = () => {
       </group>
 
       {/* ============================================================== */}
-      {/* 2. GEDUNG UTAMA TK KARANG TENGAH 1 ATAP (Z: 40)               */}
+      {/* 2. GEDUNG UTAMA TK KARANG TENGAH 1 ATAP (Z: 58)               */}
       {/* ============================================================== */}
-      <group position={[0, 0.2, 40]}>
+      <group position={[0, 0.2, 58]}>
         {/* Main Classroom Wall (Pastel Butter Yellow) */}
         <mesh position={[0, 2.8, 0]} castShadow receiveShadow>
           <boxGeometry args={[22, 5.6, 8]} />
@@ -312,9 +312,9 @@ export const SchoolTK: React.FC = () => {
       </group>
 
       {/* ============================================================== */}
-      {/* 3. TIANG BENDERA MERAH PUTIH INDONESIA (Z: 24, Center-Left)   */}
+      {/* 3. TIANG BENDERA MERAH PUTIH INDONESIA (Z: 34, Center-Left)   */}
       {/* ============================================================== */}
-      <group position={[-2.5, 0.2, 23]}>
+      <group position={[-3.5, 0.2, 34]}>
         {/* Tiered White Pedestal */}
         <mesh position={[0, 0.15, 0]} receiveShadow>
           <cylinderGeometry args={[1.2, 1.4, 0.3, 16]} />
@@ -352,14 +352,14 @@ export const SchoolTK: React.FC = () => {
       </group>
 
       {/* ============================================================== */}
-      {/* 4. PEROSOTAN INTERAKTIF TK (SLIDE) (X: 8, Z: 26)               */}
+      {/* 4. PEROSOTAN INTERAKTIF TK (SLIDE) (X: 9, Z: 42)               */}
       {/* ============================================================== */}
       <group
-        position={[8, 0.2, 26]}
+        position={[9, 0.2, 42]}
         onClick={(e) => {
           e.stopPropagation();
           const playerPos = gameStore.getState().playerPos;
-          const distSq = Math.pow(playerPos[0] - 8, 2) + Math.pow(playerPos[2] - 25.5, 2);
+          const distSq = Math.pow(playerPos[0] - 9, 2) + Math.pow(playerPos[2] - 42, 2);
           if (distSq < 16.0) {
             gameStore.setActiveRide('slide');
           } else {
@@ -433,14 +433,14 @@ export const SchoolTK: React.FC = () => {
       </group>
 
       {/* ============================================================== */}
-      {/* 5. AYUNAN INTERAKTIF TK (SWING SET) (X: -8, Z: 26)             */}
+      {/* 5. AYUNAN INTERAKTIF TK (SWING SET) (X: -9, Z: 42)             */}
       {/* ============================================================== */}
       <group
-        position={[-8, 0.2, 26]}
+        position={[-9, 0.2, 42]}
         onClick={(e) => {
           e.stopPropagation();
           const playerPos = gameStore.getState().playerPos;
-          const distSq = Math.pow(playerPos[0] - (-8), 2) + Math.pow(playerPos[2] - 26, 2);
+          const distSq = Math.pow(playerPos[0] - (-9), 2) + Math.pow(playerPos[2] - 42, 2);
           if (distSq < 16.0) {
             gameStore.setActiveRide('swing');
           } else {
@@ -522,7 +522,7 @@ export const SchoolTK: React.FC = () => {
       {/* 6. JUNGKAT-JUNGKIT (SEESAW) & KOTAK PASIR (SANDBOX)             */}
       {/* ============================================================== */}
       {/* Seesaw */}
-      <group position={[3.5, 0.2, 31]}>
+      <group position={[4, 0.2, 48]}>
         {/* Base Fulcrum */}
         <mesh position={[0, 0.35, 0]} castShadow>
           <coneGeometry args={[0.35, 0.7, 8]} />
@@ -547,7 +547,7 @@ export const SchoolTK: React.FC = () => {
       </group>
 
       {/* Sandbox (Kotak Pasir) */}
-      <group position={[-3.5, 0.2, 31]}>
+      <group position={[-4, 0.2, 48]}>
         {/* Wooden Border Frame */}
         <mesh position={[0, 0.15, 0]}>
           <boxGeometry args={[3.4, 0.25, 3.4]} />

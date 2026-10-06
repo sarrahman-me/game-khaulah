@@ -47,7 +47,7 @@ export const PlayerKhaulah: React.FC = () => {
   const pos = useRef(new THREE.Vector3(0, 1, -4));
   const velocityY = useRef(0);
   const isGrounded = useRef(false);
-  const moveSpeed = 9;
+  const moveSpeed = 10.5;
   const jumpVelocity = 11;
   const trampolineJumpVelocity = 24;
   const gravity = 25;
@@ -88,11 +88,11 @@ export const PlayerKhaulah: React.FC = () => {
         if (ride !== 'none') {
           gameStore.setActiveRide('none');
           if (ride === 'boat') {
-            pos.current.set(-25, 0.4, 25);
+            pos.current.set(-52, 0.4, 44);
           } else if (ride === 'carousel') {
-            pos.current.set(28, 0.4, 17);
+            pos.current.set(58, 0.4, 36);
           } else if (ride === 'ferris') {
-            pos.current.set(43, 0.4, 27);
+            pos.current.set(73, 0.4, 46);
           } else if (ride === 'flamingo') {
             pos.current.set(4, 0.4, -20);
           } else if (ride === 'pool_slide') {
@@ -179,13 +179,13 @@ export const PlayerKhaulah: React.FC = () => {
               actionType: 'play_toycar',
             });
           } else if (near.id === 'slide') {
-            const distSq = Math.pow(pos.current.x - 8, 2) + Math.pow(pos.current.z - 25.5, 2);
-            if (distSq < 16.0) {
+            const distSq = Math.pow(pos.current.x - 9, 2) + Math.pow(pos.current.z - 42, 2);
+            if (distSq < 25.0) {
               gameStore.setActiveRide('slide');
             }
           } else if (near.id === 'swing') {
-            const distSq = Math.pow(pos.current.x - (-8), 2) + Math.pow(pos.current.z - 26, 2);
-            if (distSq < 16.0) {
+            const distSq = Math.pow(pos.current.x - (-9), 2) + Math.pow(pos.current.z - 42, 2);
+            if (distSq < 25.0) {
               gameStore.setActiveRide('swing');
             }
           } else if (near.id === 'farm_bunny') {
@@ -276,13 +276,13 @@ export const PlayerKhaulah: React.FC = () => {
     const activeRide = gameStore.getState().activeRide;
     let effectiveMoveSpeed = moveSpeed;
     if (ridingScooter) {
-      effectiveMoveSpeed = speedBuff > 0 ? 21.0 : 16.0;
+      effectiveMoveSpeed = speedBuff > 0 ? 26.0 : 20.0;
     } else if (activeRide === 'firetruck') {
-      effectiveMoveSpeed = speedBuff > 0 ? 20.0 : 15.0;
+      effectiveMoveSpeed = speedBuff > 0 ? 25.0 : 19.0;
     } else if (activeRide === 'boat') {
-      effectiveMoveSpeed = 7.5;
+      effectiveMoveSpeed = 8.5;
     } else if (speedBuff > 0) {
-      effectiveMoveSpeed = 13.5;
+      effectiveMoveSpeed = 15.0;
     }
 
     // Check external respawn trigger (e.g. from R key)
@@ -300,7 +300,7 @@ export const PlayerKhaulah: React.FC = () => {
       if (slideTimer.current < 0.28) {
         // Climbing ladder
         const t = slideTimer.current / 0.28;
-        pos.current.set(8, 0.4 + t * 1.9, 27.2 - t * 1.2);
+        pos.current.set(9, 0.4 + t * 2.1, 43.2 - t * 1.2);
         facingAngle.current = Math.PI;
 
         const climb = Math.sin(slideTimer.current * 30);
@@ -310,7 +310,7 @@ export const PlayerKhaulah: React.FC = () => {
         if (rightLegRef.current) rightLegRef.current.rotation.x = climb * 0.6;
       } else if (slideTimer.current < 0.42) {
         // Sitting at top
-        pos.current.set(8, 2.3, 26);
+        pos.current.set(9, 2.5, 42.0);
         facingAngle.current = 0;
         if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.5; leftArmRef.current.rotation.z = -0.3; }
         if (rightArmRef.current) { rightArmRef.current.rotation.x = -0.5; rightArmRef.current.rotation.z = 0.3; }
@@ -320,7 +320,7 @@ export const PlayerKhaulah: React.FC = () => {
       } else if (slideTimer.current < 0.88) {
         // Sliding down chute wuuush: joyful hands in the air!
         const t = (slideTimer.current - 0.42) / 0.46;
-        pos.current.set(8, 2.3 - t * 1.9, 26 - t * 4.2);
+        pos.current.set(9, 2.5 - t * 2.1, 42.0 - t * 3.8);
         facingAngle.current = 0;
 
         if (leftArmRef.current) { leftArmRef.current.rotation.x = -Math.PI * 0.85; leftArmRef.current.rotation.z = -0.35; }
@@ -331,7 +331,7 @@ export const PlayerKhaulah: React.FC = () => {
         if (hijabDrapeRef.current) hijabDrapeRef.current.rotation.x = 0.35;
       } else {
         // Finished slide!
-        pos.current.set(8, 0.4, 21.6);
+        pos.current.set(9, 0.4, 38.2);
         slideTimer.current = 0;
         gameStore.setActiveRide('none');
         gameStore.setMessage('WUUUSSHH! Hore, Khaulah meluncur seru di perosotan TK! 🛝✨');
@@ -347,9 +347,9 @@ export const PlayerKhaulah: React.FC = () => {
     if (activeRide === 'swing') {
       const time = state.clock.getElapsedTime();
       const swingPhase = Math.sin(time * 2.5);
-      const swingZ = 26 + swingPhase * 1.3;
-      const swingY = 0.9 + Math.abs(swingPhase) * 0.25;
-      pos.current.set(-6.9, swingY, swingZ);
+      const swingZ = 42 + swingPhase * 1.3;
+      const swingY = 1.0 + Math.abs(swingPhase) * 0.25;
+      pos.current.set(-7.9, swingY, swingZ);
       facingAngle.current = 0;
 
       // Realistic sitting pose holding chains & swinging legs
@@ -363,7 +363,7 @@ export const PlayerKhaulah: React.FC = () => {
       if (keys.current['Space'] || gameStore.getState().isJumpPressed) {
         gameStore.setActiveRide('none');
         velocityY.current = 8;
-        pos.current.z += 1.2;
+        pos.current.z -= 1.2;
         gameStore.setMessage('Hoppp! Khaulah melompat turun dari ayunan! 🎡✨');
       }
 
@@ -378,7 +378,7 @@ export const PlayerKhaulah: React.FC = () => {
       const time = state.clock.getElapsedTime();
       const angle = time * 0.45;
       const r = 2.8;
-      pos.current.set(28 + Math.cos(angle) * r, 1.2 + Math.sin(time * 3) * 0.2, 22 + Math.sin(angle) * r);
+      pos.current.set(58 + Math.cos(angle) * r, 1.2 + Math.sin(time * 3) * 0.2, 41 + Math.sin(angle) * r);
       facingAngle.current = -angle + Math.PI / 2;
 
       if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.7; leftArmRef.current.rotation.z = -0.2; }
@@ -389,7 +389,7 @@ export const PlayerKhaulah: React.FC = () => {
 
       if (keys.current['Space'] || gameStore.getState().isJumpPressed) {
         gameStore.setActiveRide('none');
-        pos.current.set(28, 0.4, 17);
+        pos.current.set(58, 0.4, 36);
         velocityY.current = 6;
       }
 
@@ -404,7 +404,7 @@ export const PlayerKhaulah: React.FC = () => {
       const time = state.clock.getElapsedTime();
       const angle = time * 0.22;
       const r = 5.2;
-      pos.current.set(43 + Math.cos(angle) * r, 7.0 + Math.sin(angle) * r - 0.2, 32);
+      pos.current.set(73 + Math.cos(angle) * r, 7.0 + Math.sin(angle) * r - 0.2, 51);
       facingAngle.current = Math.PI / 2;
 
       if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.5; leftArmRef.current.rotation.z = -0.2; }
@@ -415,7 +415,7 @@ export const PlayerKhaulah: React.FC = () => {
 
       if (keys.current['Space'] || gameStore.getState().isJumpPressed) {
         gameStore.setActiveRide('none');
-        pos.current.set(43, 0.4, 27);
+        pos.current.set(73, 0.4, 46);
         velocityY.current = 6;
       }
 

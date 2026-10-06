@@ -6,12 +6,12 @@ import { useGameStore, gameStore } from '../../../state/useGameStore';
 
 // Function to compute position and heading along the rectangular track loop with rounded corners
 export function getTrainTrackPose(progress: number): { pos: THREE.Vector3; heading: number } {
-  // Rectangle bounds: X: [-48, 48] (width 96), Z: [-34, 42] (height 76)
-  // Total perimeter = 2 * (96 + 76) = 344 units
-  const minX = -48;
-  const maxX = 48;
-  const minZ = -34;
-  const maxZ = 42;
+  // Rectangle bounds: X: [-92, 92] (width 184), Z: [-58, 72] (height 130)
+  // Total perimeter = 2 * (184 + 130) = 628 units
+  const minX = -92;
+  const maxX = 92;
+  const minZ = -58;
+  const maxZ = 72;
   const width = maxX - minX;
   const depth = maxZ - minZ;
   const perimeter = 2 * (width + depth);
@@ -252,55 +252,55 @@ export const VillageTrain: React.FC = () => {
   return (
     <group position={[0, 0, 0]}>
       {/* --- 1. CONTINUOUS PERIMETER RAILWAY TRACKS & GRAVEL BALLAST --- */}
-      {/* South Track (Z: -34, X: -48 to 48) */}
-      <mesh position={[0, 0.265, -34]} receiveShadow>
-        <boxGeometry args={[96, 0.04, 1.6]} />
+      {/* South Track (Z: -58, X: -92 to 92) */}
+      <mesh position={[0, 0.265, -58]} receiveShadow>
+        <boxGeometry args={[184, 0.04, 1.6]} />
         <meshStandardMaterial color="#78716C" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0.29, -34]}>
-        <boxGeometry args={[96, 0.02, 0.8]} />
+      <mesh position={[0, 0.29, -58]}>
+        <boxGeometry args={[184, 0.02, 0.8]} />
         <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.4} />
       </mesh>
 
-      {/* North Track (Z: 42, X: -48 to 48) */}
-      <mesh position={[0, 0.265, 42]} receiveShadow>
-        <boxGeometry args={[96, 0.04, 1.6]} />
+      {/* North Track (Z: 72, X: -92 to 92) */}
+      <mesh position={[0, 0.265, 72]} receiveShadow>
+        <boxGeometry args={[184, 0.04, 1.6]} />
         <meshStandardMaterial color="#78716C" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0.29, 42]}>
-        <boxGeometry args={[96, 0.02, 0.8]} />
+      <mesh position={[0, 0.29, 72]}>
+        <boxGeometry args={[184, 0.02, 0.8]} />
         <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.4} />
       </mesh>
 
-      {/* West Track (X: -48, Z: -34 to 42, center Z: 4, depth: 76) */}
-      <mesh position={[-48, 0.265, 4]} receiveShadow>
-        <boxGeometry args={[1.6, 0.04, 76]} />
+      {/* West Track (X: -92, Z: -58 to 72, center Z: 7, depth: 130) */}
+      <mesh position={[-92, 0.265, 7]} receiveShadow>
+        <boxGeometry args={[1.6, 0.04, 130]} />
         <meshStandardMaterial color="#78716C" roughness={0.9} />
       </mesh>
-      <mesh position={[-48, 0.29, 4]}>
-        <boxGeometry args={[0.8, 0.02, 76]} />
+      <mesh position={[-92, 0.29, 7]}>
+        <boxGeometry args={[0.8, 0.02, 130]} />
         <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.4} />
       </mesh>
 
-      {/* East Track (X: 48, Z: -34 to 42, center Z: 4, depth: 76) */}
-      <mesh position={[48, 0.265, 4]} receiveShadow>
-        <boxGeometry args={[1.6, 0.04, 76]} />
+      {/* East Track (X: 92, Z: -58 to 72, center Z: 7, depth: 130) */}
+      <mesh position={[92, 0.265, 7]} receiveShadow>
+        <boxGeometry args={[1.6, 0.04, 130]} />
         <meshStandardMaterial color="#78716C" roughness={0.9} />
       </mesh>
-      <mesh position={[48, 0.29, 4]}>
-        <boxGeometry args={[0.8, 0.02, 76]} />
+      <mesh position={[92, 0.29, 7]}>
+        <boxGeometry args={[0.8, 0.02, 130]} />
         <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.4} />
       </mesh>
 
       {/* --- 2. FOUR THEMED STATIONS --- */}
       {/* Station 1: Rumah Khaulah & Kolam Renang (South, overlooking backyard waterpark) */}
-      <StationPlatform pos={[0, 0, -36.5]} name="🚉 Stasiun Kolam Renang & Rumah 🏡🏊‍♀️" />
+      <StationPlatform pos={[0, 0, -60.5]} name="🚉 Stasiun Kolam Renang & Rumah 🏡🏊‍♀️" />
       {/* Station 2: Kebun & Danau (West) */}
-      <StationPlatform pos={[-51, 0, 15]} name="🚉 Stasiun Kebun & Danau 🐑🏖️" rotY={Math.PI / 2} />
+      <StationPlatform pos={[-94.5, 0, 18]} name="🚉 Stasiun Kebun & Danau 🐑🏖️" rotY={Math.PI / 2} />
       {/* Station 3: TK Karang Tengah (North, near school gate) */}
-      <StationPlatform pos={[0, 0, 45]} name="🚉 Stasiun TK Karang Tengah 🎒🏫" rotY={Math.PI} />
+      <StationPlatform pos={[0, 0, 74.5]} name="🚉 Stasiun TK Karang Tengah 🎒🏫" rotY={Math.PI} />
       {/* Station 4: Karnaval & Kota (East) */}
-      <StationPlatform pos={[51, 0, 15]} name="🚉 Stasiun Karnaval & Kota 🎡🛒" rotY={-Math.PI / 2} />
+      <StationPlatform pos={[94.5, 0, 18]} name="🚉 Stasiun Karnaval & Kota 🎡🛒" rotY={-Math.PI / 2} />
 
       {/* --- 3. ANIMATED TRAIN ON TRACKS --- */}
       <TrainVehicles progress={progressRef.current} />

@@ -120,14 +120,14 @@ export interface GameState {
 
 const CHECKPOINTS: [number, number, number][] = [
   [0, 0.8, -4],      // Checkpoint 0: Halaman Rumah Khaulah bersama Abi & Ummi
-  [0, 0.8, 28],      // Checkpoint 1: Gerbang TK Karang Tengah 1 Atap
-  [0, 6.0, 65],      // Checkpoint 2: Puncak Awan Gula-Gula Skyway
-  [0, 10.0, 95],     // Checkpoint 3: Kastil Bintang Khaulah
-  [-34, 0.8, -2],    // Checkpoint 4: Peternakan & Kebun Hewan
-  [-23, 0.8, 25],    // Checkpoint 5: Danau Bebek & Pantai Pasir
-  [34, 0.8, -2],     // Checkpoint 6: Desa Pertokoan Cilik
-  [34, 0.8, 28],     // Checkpoint 7: Alun-Alun Karnaval & Theme Park
-  [0, 0.8, -18],     // Checkpoint 8: Kolam Renang & Halaman Belakang 🏊‍♀️🏡
+  [0, 0.8, 26],      // Checkpoint 1: Gerbang TK Karang Tengah 1 Atap
+  [0, 5.0, 96],      // Checkpoint 2: Puncak Awan Gula-Gula Skyway
+  [0, 11.0, 138],    // Checkpoint 3: Kastil Bintang Khaulah
+  [-58, 0.8, -4],    // Checkpoint 4: Peternakan & Kebun Hewan
+  [-48, 0.8, 44],    // Checkpoint 5: Danau Bebek & Pantai Pasir
+  [58, 0.8, -4],     // Checkpoint 6: Desa Pertokoan Cilik
+  [52, 0.8, 38],     // Checkpoint 7: Alun-Alun Karnaval & Theme Park
+  [0, 0.8, -20],     // Checkpoint 8: Kolam Renang & Halaman Belakang 🏊‍♀️🏡
 ];
 
 const STORAGE_KEY_TIME_OF_DAY = 'khaulah_time_of_day_state';
@@ -181,7 +181,7 @@ function saveTimeOfDay(timeOfDay: TimeOfDay, timeOfDayTimeLeft: number) {
       );
     }
   } catch (e) {
-    console.warn('Failed to save timeOfDay to localStorage:', e);
+    console.warn('Failed to save timeOfDay from localStorage:', e);
   }
 }
 
@@ -206,7 +206,7 @@ let state: GameState = {
   isBgmActive: false,
   isShiftLock: false,
   respawnTrigger: 0,
-  cameraDistance: 7.5,
+  cameraDistance: 8.5,
   playerFacingAngle: 0,
   isPlayerMoving: false,
   activeRide: 'none',
@@ -216,7 +216,7 @@ let state: GameState = {
   timeOfDay: initialTime.timeOfDay,
   timeOfDayTimeLeft: initialTime.timeOfDayTimeLeft,
   isRidingScooter: false,
-  scooterPos: [3.2, 0.2, -4.0],
+  scooterPos: [3.8, 0.2, -4.0],
   schoolQuest: {
     backpack: false,
     waterBottle: false,
@@ -403,7 +403,7 @@ export const gameStore = {
   },
 
   zoomCamera: (delta: number) => {
-    const nextDist = Math.max(3.0, Math.min(15.0, state.cameraDistance + delta));
+    const nextDist = Math.max(3.0, Math.min(22.0, state.cameraDistance + delta));
     state = { ...state, cameraDistance: nextDist };
     emitChange();
   },

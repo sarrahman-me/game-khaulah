@@ -40,11 +40,11 @@ interface AtmospherePreset {
 const ATMOSPHERE_PRESETS: Record<TimeOfDay, AtmospherePreset> = {
   subuh: {
     bg: '#383660', // Fajar sejuk keunguan/lavender indigo
-    fogNear: 65,
-    fogFar: 195,
+    fogNear: 110,
+    fogFar: 330,
     ambientColor: '#A5B4FC', // Cahaya lembut temaram fajar
     ambientIntensity: 0.65,
-    sunPos: [65, 16, 20], // Matahari terbit rendah di ufuk timur
+    sunPos: [95, 25, 30], // Matahari terbit rendah di ufuk timur
     sunColor: '#FED7AA', // Sinar keemasan lembut fajar
     sunIntensity: 0.95,
     hemiSky: '#818CF8',
@@ -53,11 +53,11 @@ const ATMOSPHERE_PRESETS: Record<TimeOfDay, AtmospherePreset> = {
   },
   siang: {
     bg: '#BAE6FD', // Biru langit cerah ceria
-    fogNear: 85,
-    fogFar: 230,
+    fogNear: 130,
+    fogFar: 370,
     ambientColor: '#FFFFFF',
     ambientIntensity: 0.85,
-    sunPos: [45, 55, 30], // Matahari tinggi hangat
+    sunPos: [65, 80, 45], // Matahari tinggi hangat
     sunColor: '#FFFBEB',
     sunIntensity: 1.4,
     hemiSky: '#E0F2FE',
@@ -66,11 +66,11 @@ const ATMOSPHERE_PRESETS: Record<TimeOfDay, AtmospherePreset> = {
   },
   sore: {
     bg: '#F8AD9D', // Senja jingga keemasan hangat
-    fogNear: 70,
-    fogFar: 200,
+    fogNear: 115,
+    fogFar: 340,
     ambientColor: '#FFE0B2',
     ambientIntensity: 0.85,
-    sunPos: [55, 24, 20], // Matahari terbenam rendah
+    sunPos: [80, 35, 30], // Matahari terbenam rendah
     sunColor: '#FF8800',
     sunIntensity: 1.5,
     hemiSky: '#FFB703',
@@ -79,11 +79,11 @@ const ATMOSPHERE_PRESETS: Record<TimeOfDay, AtmospherePreset> = {
   },
   malam: {
     bg: '#0F172A', // Malam kelam berbintang
-    fogNear: 55,
-    fogFar: 180,
+    fogNear: 95,
+    fogFar: 300,
     ambientColor: '#312E81',
     ambientIntensity: 0.5,
-    sunPos: [20, 45, 15], // Rembulan temaram
+    sunPos: [30, 65, 25], // Rembulan temaram
     sunColor: '#93C5FD',
     sunIntensity: 0.65,
     hemiSky: '#4338CA',
@@ -104,14 +104,16 @@ const FloatingClouds: React.FC = () => {
   });
 
   const cloudPositions: [number, number, number][] = [
-    [-40, 20, 10],
-    [40, 22, 10],
-    [-35, 24, 32],
-    [35, 22, 32],
-    [0, 24, -15],
-    [-20, 22, 50],
-    [20, 24, 60],
-    [0, 28, 90],
+    [-70, 24, 15],
+    [70, 26, 15],
+    [-60, 28, 55],
+    [60, 26, 55],
+    [0, 28, -25],
+    [-35, 25, 75],
+    [35, 28, 85],
+    [0, 32, 120],
+    [-75, 25, -35],
+    [75, 27, -35],
   ];
 
   const cloudColor =
@@ -237,11 +239,11 @@ const AtmosphereController: React.FC = () => {
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-camera-near={0.5}
-        shadow-camera-far={200}
-        shadow-camera-left={-75}
-        shadow-camera-right={75}
-        shadow-camera-top={75}
-        shadow-camera-bottom={-75}
+        shadow-camera-far={320}
+        shadow-camera-left={-120}
+        shadow-camera-right={120}
+        shadow-camera-top={120}
+        shadow-camera-bottom={-120}
         shadow-bias={-0.0004}
       />
       <hemisphereLight ref={hemiRef} args={[preset.hemiSky, preset.hemiGround, preset.hemiIntensity]} />
