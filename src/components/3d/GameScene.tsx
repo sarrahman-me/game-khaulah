@@ -1,4 +1,5 @@
-import React, { useRef, useMemo, useEffect } from 'react';
+import React, { useRef, useMemo, useEffect, Suspense } from 'react';
+import { PhysicsWorld } from './PhysicsWorld';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGameStore, gameStore, TimeOfDay } from '../../state/useGameStore';
@@ -343,6 +344,9 @@ export const GameScene: React.FC = () => {
         <ObbyCourse />
         <AnimalFriends />
         <MagicSpawner />
+        <Suspense fallback={null}>
+          <PhysicsWorld />
+        </Suspense>
         <PlayerKhaulah />
         <PetCompanion />
         <CameraController />

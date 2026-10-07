@@ -165,6 +165,8 @@ export const PlayerKhaulah: React.FC = () => {
   const initialPlayerPos = gameStore.getState().playerPos;
   const pos = useRef(new THREE.Vector3(initialPlayerPos[0], initialPlayerPos[1], initialPlayerPos[2]));
   const velocityY = useRef(0);
+  // Horizontal velocity (m/s) — gives movement real inertia: acceleration, friction & air control
+  const velocityXZ = useRef(new THREE.Vector2(0, 0));
   const isGrounded = useRef(false);
   const moveSpeed = 10.5;
   const jumpVelocity = 11;
@@ -537,6 +539,7 @@ export const PlayerKhaulah: React.FC = () => {
       lastRespawn.current = currentRespawn;
       pos.current.set(0, 0.8, -4);
       velocityY.current = 0;
+      velocityXZ.current.set(0, 0);
       gameStore.savePosition([0, 0.8, -4], true);
     }
 
@@ -548,8 +551,12 @@ export const PlayerKhaulah: React.FC = () => {
       if (target) {
         pos.current.set(target[0], target[1], target[2]);
         velocityY.current = 0;
+        velocityXZ.current.set(0, 0);
         gameStore.savePosition(target, true);
       }
+    }
+    if (activeRide !== 'none' && activeRide !== 'boat') {
+      velocityXZ.current.set(0, 0);
     }
 
     // Check Active Ride State (Perosotan / Ayunan)
@@ -999,11 +1006,21 @@ export const PlayerKhaulah: React.FC = () => {
       facingAngle.current += diff * Math.min(dt * 18, 1);
     }
 
-    // Apply horizontal motion with speed buff and sub-stepped solid collision resolution
+    // Apply horizontal motion with inertia: accelerate toward target velocity, friction when idle
     const playerRadius = 0.45;
     const hSpeed = effectiveMoveSpeed * Math.min(inputLength, 1);
-    const deltaX = moveDirection.x * hSpeed * dt;
-    const deltaZ = moveDirection.z * hSpeed * dt;
+    const targetVX = moveDirection.x * hSpeed;
+    const targetVZ = moveDirection.z * hSpeed;
+    const vel = velocityXZ.current;
+    // Grip: strong on ground, reduced mid-air (air control), sluggish in water (drag)
+    const accelRate = inWater ? 3.5 : isGrounded.current ? (isMoving ? 11 : 14) : (isMoving ? 4.5 : 1.2);
+    const blend = 1 - Math.exp(-accelRate * dt);
+    vel.x += (targetVX - vel.x) * blend;
+    vel.y += (targetVZ - vel.y) * blend;
+    if (!isMoving && vel.lengthSq() < 0.0025) vel.set(0, 0);
+
+    const deltaX = vel.x * dt;
+    const deltaZ = vel.y * dt;
     const moveDist = Math.hypot(deltaX, deltaZ);
 
     if (moveDist > 0.0001) {
@@ -1011,11 +1028,20 @@ export const PlayerKhaulah: React.FC = () => {
       const steps = moveDist > 0.25 ? 3 : moveDist > 0.12 ? 2 : 1;
       const stepX = deltaX / steps;
       const stepZ = deltaZ / steps;
+      const intendedX = pos.current.x + deltaX;
+      const intendedZ = pos.current.z + deltaZ;
 
       for (let s = 0; s < steps; s++) {
         pos.current.x += stepX;
         pos.current.z += stepZ;
         resolveHorizontalCollisions(pos.current, playerRadius, 1.4, 0.25);
+      }
+      // Remove velocity component pushed back by walls (natural wall sliding, no "sticky" momentum)
+      if (dt > 0) {
+        const pushX = (pos.current.x - intendedX) / dt;
+        const pushZ = (pos.current.z - intendedZ) / dt;
+        vel.x += pushX;
+        vel.y += pushZ;
       }
     } else {
       resolveHorizontalCollisions(pos.current, playerRadius, 1.4, 0.25);
@@ -1063,7 +1089,13 @@ export const PlayerKhaulah: React.FC = () => {
       pos.current.x = THREE.MathUtils.clamp(pos.current.x, -74.5, -55.5);
       pos.current.z = THREE.MathUtils.clamp(pos.current.z, 40.5, 55.5);
     } else {
-      velocityY.current -= gravity * dt;
+      // Asymmetric gravity: heavier on the way down, and a short hop when Space is released early
+      const jumpHeld = gameStore.getState().isJumpPressed || keys.current['Space'];
+      let gMul = 1;
+      if (velocityY.current < 0) gMul = inWater ? 0.5 : 1.55;
+      else if (velocityY.current > 0 && !jumpHeld && velocityY.current < jumpVelocity + 0.5) gMul = 2.2;
+      velocityY.current -= gravity * gMul * dt;
+      velocityY.current = Math.max(velocityY.current, -38); // terminal velocity (air drag)
       pos.current.y += velocityY.current * dt;
     }
 
@@ -1083,7 +1115,7 @@ export const PlayerKhaulah: React.FC = () => {
           const platformTop = box.max.y;
           if (playerFeet <= platformTop + 0.4 && playerFeet >= platformTop - 1.4 && velocityY.current <= 0) {
             pos.current.y = platformTop;
-            velocityY.current = trampolineJumpVelocity;
+            velocityY.current = Math.min(32, Math.max(trampolineJumpVelocity, Math.abs(velocityY.current) * 0.92));
             groundedThisFrame = false;
             soundManager.playTrampoline();
             gameStore.setMessage('WUUUSSHH! Trampolin Super Tinggi! 🚀');
@@ -1171,6 +1203,7 @@ export const PlayerKhaulah: React.FC = () => {
     if (pos.current.y < -12) {
       const respawnPoint = gameStore.getLastSafePosition();
       pos.current.set(respawnPoint[0], respawnPoint[1] + 1.2, respawnPoint[2]);
+      velocityXZ.current.set(0, 0);
       velocityY.current = 0;
       soundManager.playFamilyChord();
       gameStore.setMessage('Hati-hati! Khaulah kembali ke tempat aman! 🌸✨');
