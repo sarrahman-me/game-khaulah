@@ -9,7 +9,7 @@ const temp = await mkdtemp(join(tmpdir(), 'khaulah-tests-'));
 try {
   const output = join(temp, 'game.mjs');
   await build({
-    stdin: { contents: "export { gameStore } from './src/state/useGameStore'; export { soundManager } from './src/sound/audioManager'; export { processMagicPrompt } from './src/services/aiService'; export { isGameInputBlocked } from './src/state/gameInput'; export { constrainCameraPosition, addSolidBox, removeSolidCollider } from './src/state/colliders'; export { Vector3 } from 'three';", resolveDir: process.cwd() },
+    stdin: { contents: "export { gameStore } from './src/state/useGameStore'; export { soundManager } from './src/sound/audioManager'; export { processMagicPrompt } from './src/services/aiService'; export { isGameInputBlocked } from './src/state/gameInput'; export { constrainCameraPosition, addSolidBox, removeSolidCollider } from './src/state/colliders'; export { Vector3 } from 'three'; export { getWaterStatus } from './src/state/waterZones'; export { entersSchoolGoal } from './src/state/worldLocations'; export { dailyDate, recordDailyActivity, getDailyMissionProgress } from './src/state/dailyMissions';", resolveDir: process.cwd() },
     bundle: true, platform: 'node', format: 'esm', outfile: output,
     plugins: [{ name: 'confetti-stub', setup(build) {
       build.onResolve({ filter: /^canvas-confetti$/ }, () => ({ path: 'confetti', namespace: 'test' }));
@@ -41,6 +41,45 @@ try {
   assert.equal(store.getState().isRidingScooter, false);
   store.teleportToPreset('pantai');
   assert.equal(store.getState().isInsideHouse, false);
+  for (const preset of ['bukit_pelangi', 'desa_sawah', 'hutan_ajaib', 'lembah_salju', 'masjid']) {
+    store.teleportToPreset(preset);
+    assert.equal(store.getState().isInsideHouse, false, `${preset} must stay outdoors`);
+    assert.equal(store.getState().activeRide, 'none');
+  }
+  assert.ok(store.getState().teleportTarget);
+  store.teleportToPreset('bukit_pelangi');
+  assert.ok(store.getState().teleportTarget[1] > 8.8, 'spawn above the hill surface');
+  store.openMapModal();
+  assert.equal(isGameInputBlocked(store.getState()), true);
+  store.openStickerModal();
+  assert.equal(store.getState().isMapModalOpen, false);
+  store.setPhotoMode(true);
+  assert.equal(store.getState().isStickerModalOpen, false);
+  assert.equal(isGameInputBlocked(store.getState()), true);
+  store.setPhotoMode(false);
+  assert.equal(isGameInputBlocked(store.getState()), false);
+  store.unlockSticker('invalid_sticker');
+  assert.equal(store.getState().unlockedStickers.invalid_sticker, undefined);
+  store.unlockSticker('foto');
+  let stickerNotifications = 0;
+  const stopSticker = store.subscribe(() => stickerNotifications++);
+  store.unlockSticker('foto');
+  stopSticker();
+  assert.equal(stickerNotifications, 0, 'duplicate sticker should not notify');
+  const { dailyDate, entersSchoolGoal, getWaterStatus } = await import(pathToFileURL(output));
+  assert.equal(dailyDate(new Date(2026, 9, 7, 23, 59)), '2026-10-07');
+  assert.equal(dailyDate(new Date(2026, 9, 8, 0, 0)), '2026-10-08');
+  assert.equal(entersSchoolGoal({ x: 16, y: 0.6, z: 47 }, { x: 16, y: 0.6, z: 49 }), true);
+  assert.equal(entersSchoolGoal({ x: 16, y: 0.6, z: 49 }, { x: 16, y: 0.6, z: 47 }), false);
+  assert.equal(entersSchoolGoal({ x: 18, y: 0.6, z: 47 }, { x: 18, y: 0.6, z: 49 }), false);
+  assert.equal(entersSchoolGoal({ x: 16, y: 3, z: 47 }, { x: 16, y: 3, z: 49 }), false);
+  assert.equal(getWaterStatus(-180, 0.16, -20).zone, 'ocean');
+  assert.equal(getWaterStatus(-150, 0.55, -20).inWater, false);
+  assert.equal(getWaterStatus(-105, 0.4, -15).inWater, false);
+  store.setActiveRide('hot_air_balloon');
+  store.dismountRide();
+  assert.equal(store.getState().activeRide, 'none');
+  assert.deepEqual(store.getState().teleportTarget, [53, 0.8, 85]);
   const before = store.getState().teleportTrigger;
   store.teleportPlayerTo([Infinity, 0, 0]);
   assert.equal(store.getState().teleportTrigger, before);
@@ -73,5 +112,37 @@ try {
       assert.equal((await processMagicPrompt(prompt)).action, action, prompt);
     }
   } finally { console.warn = oldWarn; }
-  console.log('PASS: location transitions, input blocking, quest prerequisites, bounded effects, unique IDs, no-op notifications, AI validation and offline spells.');
+  const storage = new Map([
+    ['khaulah_unlocked_stickers', 'null'],
+    ['khaulah_school_quest', '{"completed":true,"backpack":true}'],
+    ['khaulah_daily_missions', '{"date":"1999-01-01","completed":["gol","foto"]}'],
+  ]);
+  globalThis.localStorage = {
+    getItem: (key) => storage.get(key) ?? null,
+    setItem: (key, value) => storage.set(key, value),
+  };
+  globalThis.window = { localStorage: globalThis.localStorage, addEventListener() {} };
+  try {
+    const reloaded = await import(`${pathToFileURL(output)}?storage-test`);
+    reloaded.soundManager.setMuted(true);
+    assert.deepEqual(reloaded.getDailyMissionProgress().completed, []);
+    reloaded.recordDailyActivity('foto');
+    reloaded.recordDailyActivity('foto');
+    reloaded.recordDailyActivity('unknown');
+    assert.deepEqual(reloaded.getDailyMissionProgress().completed, ['foto']);
+    assert.equal(reloaded.gameStore.getState().unlockedStickers.rumah, true);
+    assert.equal(reloaded.gameStore.getState().schoolQuest.completed, false);
+    for (const item of ['backpack', 'waterBottle', 'drawingBook']) reloaded.gameStore.collectQuestItem(item);
+    reloaded.gameStore.completeSchoolQuest();
+    // Simulate a new browser document while preserving only persisted storage.
+    globalThis.window = { localStorage: globalThis.localStorage, addEventListener() {} };
+    const restored = await import(`${pathToFileURL(output)}?school-restored`);
+    assert.deepEqual(restored.getDailyMissionProgress().completed, ['foto']);
+    assert.equal(restored.gameStore.getState().schoolQuest.completed, true);
+    assert.equal(restored.gameStore.getState().unlockedStickers.tk, true);
+  } finally {
+    delete globalThis.localStorage;
+    delete globalThis.window;
+  }
+  console.log('PASS: location transitions, input blocking, quest prerequisites, bounded effects, unique IDs, no-op notifications, goal crossings, ocean zones, safe ride exits, save recovery, daily missions, AI validation and offline spells.');
 } finally { await rm(temp, { recursive: true, force: true }); }

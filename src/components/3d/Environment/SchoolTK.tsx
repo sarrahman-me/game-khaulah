@@ -4,12 +4,24 @@ import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { colliders, addSolidBox, addSolidCylinder, removeSolidCollider, SolidCollider } from '../../../state/colliders';
 import { gameStore } from '../../../state/useGameStore';
+import { SCHOOL_GOAL } from '../../../state/worldLocations';
+import { dynamicPhysicsState } from '../../../state/gameInput';
 
 export const SchoolTK: React.FC = () => {
   const flagRef = useRef<THREE.Group>(null);
   const swing1Ref = useRef<THREE.Group>(null);
   const swing2Ref = useRef<THREE.Group>(null);
   const seesawRef = useRef<THREE.Group>(null);
+
+  const seesawSupports = useRef([-1, 1].map(() => ({ box: new THREE.Box3(), type: 'ground' as const })));
+  useEffect(() => {
+    const supports = seesawSupports.current;
+    colliders.push(...supports);
+    return () => { for (const support of supports) {
+      const index = colliders.indexOf(support);
+      if (index !== -1) colliders.splice(index, 1);
+    } };
+  }, []);
 
   // Register physical colliders for SchoolTK
   useEffect(() => {
@@ -48,6 +60,8 @@ export const SchoolTK: React.FC = () => {
       addSolidCylinder(-3.5, 34, 1.1, 0, 7.0, 'school_flagpole'),
       // Slide base platform structure
       addSolidBox([7.8, 0, 40.8], [10.2, 2.5, 43.2], 'school_slide_base'),
+      addSolidCylinder(14.8, 48, 0.06, 0.2, 2, 'goal_left'),
+      addSolidCylinder(17.2, 48, 0.06, 0.2, 2, 'goal_right'),
       // Swing A-frame legs
       addSolidCylinder(-11.4, 42, 0.35, 0, 3.8, 'school_swing_left'),
       addSolidCylinder(-6.6, 42, 0.35, 0, 3.8, 'school_swing_right'),
@@ -63,7 +77,7 @@ export const SchoolTK: React.FC = () => {
   }, []);
 
   // Animation Loop for Flag, Swing & Seesaw
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const time = state.clock.getElapsedTime();
 
     // 1. Waving Indonesian Flag
@@ -72,11 +86,11 @@ export const SchoolTK: React.FC = () => {
       flagRef.current.rotation.z = Math.cos(time * 4.0) * 0.08;
     }
 
-    // 2. Playful Swings swinging gently
+    // 2. Playful Swings synchronized with player physics
     const activeRide = gameStore.getState().activeRide;
     if (activeRide === 'swing') {
       if (swing2Ref.current) {
-        swing2Ref.current.rotation.x = Math.sin(time * 2.4) * 0.52;
+        swing2Ref.current.rotation.x = dynamicPhysicsState.swingAngle;
       }
       if (swing1Ref.current) {
         swing1Ref.current.rotation.x = Math.sin(time * 1.6 + 0.8) * 0.16;
@@ -90,14 +104,36 @@ export const SchoolTK: React.FC = () => {
       }
     }
 
-    // 3. Seesaw gentle rocking
+    // 3. Seesaw interactive physics: tilts towards player weight when stood on!
+    const playerPos = gameStore.getState().playerPos;
     if (seesawRef.current) {
-      seesawRef.current.rotation.z = Math.sin(time * 1.8) * 0.22;
+      const dxSeesaw = playerPos[0] - 4;
+      const dzSeesaw = playerPos[2] - 48;
+      const onSeesaw = Math.abs(dxSeesaw) < 1.8 && Math.abs(dzSeesaw) < 0.85 && playerPos[1] >= 0.2 && playerPos[1] <= 1.5;
+      let targetTilt = Math.sin(time * 1.2) * 0.06;
+      if (onSeesaw) {
+        if (dxSeesaw < -0.3) {
+          targetTilt = 0.32; // left seat tilts down
+        } else if (dxSeesaw > 0.3) {
+          targetTilt = -0.32; // right seat tilts down
+        }
+      }
+      seesawRef.current.rotation.z = THREE.MathUtils.lerp(
+        seesawRef.current.rotation.z,
+        targetTilt,
+        Math.min(delta * 6.0, 1.0)
+      );
+      const tilt = seesawRef.current.rotation.z;
+      seesawSupports.current.forEach(({ box }, index) => {
+        const side = index === 0 ? -1 : 1;
+        const x = 4 + side * 1.4 * Math.cos(tilt);
+        const top = 0.9 + side * 1.4 * Math.sin(tilt) + 0.21;
+        box.min.set(x - 0.25, top - 0.12, 47.75);
+        box.max.set(x + 0.25, top, 48.25);
+      });
     }
 
     // 4. Proximity Check for Slide & Swing Rides
-    const playerPos = gameStore.getState().playerPos;
-
     // Slide location: [9, 0, 42]
     const distSlideSq = Math.pow(playerPos[0] - 9, 2) + Math.pow(playerPos[2] - 42, 2);
     // Swing location: [-9, 0, 42]
@@ -592,6 +628,35 @@ export const SchoolTK: React.FC = () => {
         <mesh position={[0.7, 0.38, 0.5]}>
           <cylinderGeometry args={[0.18, 0.12, 0.28, 10]} />
           <meshStandardMaterial color="#E63946" />
+        </mesh>
+      </group>
+
+      {/* 7. MINI SOCCER PITCH & GOAL POST (LAPANGAN BOLA TK) */}
+      <group position={SCHOOL_GOAL}>
+        {/* Left post */}
+        <mesh position={[-1.2, 0.9, 0]} castShadow>
+          <cylinderGeometry args={[0.06, 0.06, 1.8, 12]} />
+          <meshStandardMaterial color="#FFFFFF" roughness={0.3} />
+        </mesh>
+        {/* Right post */}
+        <mesh position={[1.2, 0.9, 0]} castShadow>
+          <cylinderGeometry args={[0.06, 0.06, 1.8, 12]} />
+          <meshStandardMaterial color="#FFFFFF" roughness={0.3} />
+        </mesh>
+        {/* Top crossbar */}
+        <mesh position={[0, 1.8, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+          <cylinderGeometry args={[0.06, 0.06, 2.52, 12]} />
+          <meshStandardMaterial color="#FFFFFF" roughness={0.3} />
+        </mesh>
+        {/* Goal Net */}
+        <mesh position={[0, 0.9, 0.6]}>
+          <boxGeometry args={[2.4, 1.75, 1.2]} />
+          <meshStandardMaterial color="#E2E8F0" transparent opacity={0.35} wireframe />
+        </mesh>
+        {/* White Penalty Box Line */}
+        <mesh position={[0, 0.01, -1.5]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[4.2, 3.0]} />
+          <meshBasicMaterial color="#FFFFFF" transparent opacity={0.3} />
         </mesh>
       </group>
     </group>

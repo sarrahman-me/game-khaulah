@@ -20,9 +20,43 @@ export type RideType =
   | 'bed'
   | 'chair_abi'
   | 'barstool'
-  | 'pray';
+  | 'pray'
+  | 'hot_air_balloon'
+  | 'rainbow_slide'
+  | 'snow_sled'
+  | 'mini_tractor';
 
 export type TimeOfDay = 'subuh' | 'siang' | 'sore' | 'malam';
+export type WeatherType = 'cerah' | 'hujan' | 'pelangi' | 'salju';
+export type GraphicsQuality = 'high' | 'medium' | 'battery';
+
+export interface StickerItem {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  category: string;
+}
+
+export const STICKER_CATALOG: StickerItem[] = [
+  { id: 'rumah', title: 'Rumah Bahagia', description: 'Kunjungi Rumah Megah Khaulah', icon: '🏡', category: 'Eksplorasi' },
+  { id: 'tk', title: 'Murid Teladan', description: 'Lengkapi perlengkapan sekolah TK', icon: '🎒', category: 'Misi' },
+  { id: 'skuter', title: 'Ratu Skuter', description: 'Kendarai skuter pink berkeliling pulau', icon: '🛴', category: 'Kendaraan' },
+  { id: 'bebek', title: 'Kapten Danau', description: 'Mendayung perahu bebek di danau', icon: '🦢', category: 'Wahana' },
+  { id: 'ayunan', title: 'Awan Melayang', description: 'Memompa ayunan melambung tinggi', icon: '🎡', category: 'Wahana' },
+  { id: 'gol', title: 'Bintang Lapangan', description: 'Mencetak gol spektakuler di lapangan bola', icon: '⚽', category: 'Olahraga' },
+  { id: 'karnaval', title: 'Pasar Malam Ceria', description: 'Menikmati komidi putar dan bianglala', icon: '🎪', category: 'Wahana' },
+  { id: 'pelangi', title: 'Penakluk Bukit Pelangi', description: 'Meluncur di lereng bukit pelangi', icon: '🌈', category: 'Petualangan' },
+  { id: 'jamur', title: 'Lompatan Peri', description: 'Memantul di jamur raksasa hutan ajaib', icon: '🍄', category: 'Petualangan' },
+  { id: 'salju', title: 'Sahabat Salju', description: 'Membangun boneka manusia salju', icon: '⛄', category: 'Petualangan' },
+  { id: 'pinguin', title: 'Teman Pinguin', description: 'Meluncur di danau es bersama pinguin', icon: '🐧', category: 'Hewan' },
+  { id: 'pantai', title: 'Mercusuar Samudra', description: 'Melihat cahaya lentera mercusuar pantai', icon: '🏝️', category: 'Eksplorasi' },
+  { id: 'sawah', title: 'Petani Cilik Berkah', description: 'Memanen padi emas di desa sawah', icon: '🌾', category: 'Aktivitas' },
+  { id: 'masjid', title: 'Bidadari Shalihah', description: 'Sholat & berdoa di Masjid Indah', icon: '🕌', category: 'Ibadah' },
+  { id: 'balon', title: 'Penjelajah Angkasa', description: 'Terbang melihat seluruh pulau dengan balon udara', icon: '🎈', category: 'Wahana' },
+  { id: 'foto', title: 'Kenangan Indah', description: 'Mengabadikan foto kenangan keluarga', icon: '📸', category: 'Aktivitas' },
+];
+
 
 // Durasi interval waktu (dalam detik) untuk masing-masing fase secara otomatis
 export const TIME_OF_DAY_INTERVALS: Record<TimeOfDay, number> = {
@@ -155,6 +189,16 @@ export interface GameState {
   isInsideHouse: boolean;
   isDoorTransitioning: boolean;
   doorTransitionText: string;
+  // Weather & Atmosphere
+  weather: WeatherType;
+  graphicsQuality: GraphicsQuality;
+  // World Map & Minimap
+  isMapModalOpen: boolean;
+  // Sticker Book Collection
+  isStickerModalOpen: boolean;
+  unlockedStickers: Record<string, boolean>;
+  // Photo Mode
+  isPhotoMode: boolean;
 }
 
 export interface SpawnedMagicItem {
@@ -173,6 +217,9 @@ export interface CharacterChatState {
   avatarBg: string;
 }
 
+
+import { recordDailyActivity } from './dailyMissions';
+import { isHouseInteriorPosition } from './worldLocations';
 
 const STORAGE_KEY_PLAYER_POS = 'khaulah_last_player_position';
 
@@ -295,6 +342,58 @@ function saveTimeOfDay(timeOfDay: TimeOfDay, timeOfDayTimeLeft: number) {
   }
 }
 
+const STORAGE_KEY_STICKERS = 'khaulah_unlocked_stickers';
+const STORAGE_KEY_GRAPHICS = 'khaulah_graphics_quality';
+
+function loadSavedStickers(): Record<string, boolean> {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = localStorage.getItem(STORAGE_KEY_STICKERS);
+      if (raw) {
+        const parsed: unknown = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          return Object.fromEntries(STICKER_CATALOG.map(({ id }) => [id,
+            id === 'rumah' || (parsed as Record<string, unknown>)[id] === true]));
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load stickers:', e);
+  }
+  return { rumah: true };
+}
+
+function loadSavedGraphics(): GraphicsQuality {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = localStorage.getItem(STORAGE_KEY_GRAPHICS);
+      if (raw === 'high' || raw === 'medium' || raw === 'battery') return raw;
+    }
+  } catch (e) {
+    console.warn('Failed to load graphics:', e);
+  }
+  return 'high';
+}
+
+const STORAGE_KEY_SCHOOL = 'khaulah_school_quest';
+function loadSchoolQuest(): GameState['schoolQuest'] {
+  const quest = { backpack: false, waterBottle: false, drawingBook: false, completed: false };
+  try {
+    if (typeof localStorage === 'undefined') return quest;
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY_SCHOOL) || 'null');
+    if (saved && typeof saved === 'object') {
+      quest.backpack = saved.backpack === true;
+      quest.waterBottle = saved.waterBottle === true;
+      quest.drawingBook = saved.drawingBook === true;
+      quest.completed = saved.completed === true && quest.backpack && quest.waterBottle && quest.drawingBook;
+    }
+  } catch { /* Keep safe defaults when storage is unavailable or corrupted. */ }
+  return quest;
+}
+function saveSchoolQuest(quest: GameState['schoolQuest']) {
+  try { if (typeof localStorage !== 'undefined') localStorage.setItem(STORAGE_KEY_SCHOOL, JSON.stringify(quest)); } catch { /* Progress remains playable in memory. */ }
+}
+
 const initialTime = loadSavedTimeOfDay();
 const initialPos = loadSavedPlayerPos();
 
@@ -324,12 +423,7 @@ let state: GameState = {
   timeOfDayTimeLeft: initialTime.timeOfDayTimeLeft,
   isRidingScooter: false,
   scooterPos: [3.8, 0.2, -4.0],
-  schoolQuest: {
-    backpack: false,
-    waterBottle: false,
-    drawingBook: false,
-    completed: false,
-  },
+  schoolQuest: loadSchoolQuest(),
   isMagicModalOpen: false,
   jumpBuffTimeLeft: 0,
   teleportTrigger: 0,
@@ -339,9 +433,15 @@ let state: GameState = {
   characterChatState: null,
   isKhalidFollowing: false,
   khalidPos: [-1.8, 0.2, -1.8],
-  isInsideHouse: initialPos[0] > 100,
+  isInsideHouse: isHouseInteriorPosition(initialPos),
   isDoorTransitioning: false,
   doorTransitionText: '',
+  weather: 'cerah',
+  graphicsQuality: loadSavedGraphics(),
+  isMapModalOpen: false,
+  isStickerModalOpen: false,
+  unlockedStickers: loadSavedStickers(),
+  isPhotoMode: false,
 };
 
 // Sinkronkan tema audio awal sesuai waktu yang tersimpan di localStorage tanpa chime
@@ -390,7 +490,7 @@ export const gameStore = {
       state = { ...state, isInWater: inWater };
       emitChange();
     }
-    savePlayerPos(pos);
+    if (state.activeRide === 'none') savePlayerPos(pos);
   },
 
   setIsInWater: (inWater: boolean) => {
@@ -720,10 +820,12 @@ export const gameStore = {
         soundManager.playSwingRide();
       } else if (ride === 'carousel' || ride === 'ferris') {
         soundManager.playCarnivalTune();
+        gameStore.unlockSticker('karnaval');
       } else if (ride === 'train') {
         soundManager.playTrainWhistle();
       } else if (ride === 'boat') {
         soundManager.playWaterSplash();
+        gameStore.unlockSticker('bebek');
       } else if (ride === 'firetruck') {
         soundManager.playFireSiren();
       } else if (ride === 'sofa') {
@@ -736,6 +838,13 @@ export const gameStore = {
         soundManager.playHighFive();
       } else if (ride === 'pray') {
         soundManager.playFamilyChord();
+      } else if (ride === 'hot_air_balloon') {
+        soundManager.playMagicSpell();
+        gameStore.unlockSticker('balon');
+      } else if (ride === 'rainbow_slide' || ride === 'snow_sled') {
+        soundManager.playSlideWhoosh();
+      } else if (ride === 'mini_tractor') {
+        soundManager.playCarnivalTune();
       }
       state = {
         ...state,
@@ -744,6 +853,18 @@ export const gameStore = {
       };
       emitChange();
     }
+  },
+
+  dismountRide: () => {
+    if (state.activeRide === 'none') return;
+    const exits: Partial<Record<RideType, [number, number, number]>> = {
+      boat: [-56.5, 0.8, 44], carousel: [58, 0.8, 36], ferris: [73, 0.8, 46],
+      flamingo: [4, 0.8, -20], pool_slide: [2.2, 0.8, -28.6], swing: [-7.9, 0.8, 43.8],
+      hot_air_balloon: [53, 0.8, 85], rainbow_slide: [115, 9.2, 110],
+    };
+    const destination = exits[state.activeRide] || [...state.playerPos] as [number, number, number];
+    gameStore.teleportPlayerTo(destination);
+    gameStore.setMessage('Hore! Khaulah turun dari wahana dengan selamat! 🌸');
   },
 
   tickSpeedBuff: (dt: number) => {
@@ -835,7 +956,7 @@ export const gameStore = {
       teleportTrigger: state.teleportTrigger + 1,
       teleportTarget: coords,
       playerPos: coords,
-      isInsideHouse: coords[0] > 100,
+      isInsideHouse: isHouseInteriorPosition(coords),
       activeRide: 'none',
       isRidingScooter: false,
       activeDialog: null,
@@ -856,10 +977,101 @@ export const gameStore = {
       kebun: { coords: [-35, 0.8, -10], name: 'Taman Hewan & Kebun Buah 🐑🍎' },
       waterpark: { coords: [2, 0.8, -25], name: 'Waterpark Halaman Belakang 🌊' },
       obby: { coords: [0, 1.2, 58], name: 'Gerbang Jalur Pelangi ke Langit 🌈⭐' },
+      bukit_pelangi: { coords: [110, 9.2, 100], name: 'Bukit Pelangi Ceria 🌈✨' },
+      hutan_ajaib: { coords: [-95, 1.2, 95], name: 'Hutan Ajaib Jamur Bercahaya 🌲🍄' },
+      lembah_salju: { coords: [0, 1.2, 125], name: 'Lembah Salju & Es Abadi ❄️⛄' },
+      pantai_luas: { coords: [-105, 0.8, -15], name: 'Pantai Samudra & Mercusuar 🌊⛵' },
+      desa_sawah: { coords: [95, 0.8, -35], name: 'Desa Sawah & Kincir Air 🌾🚜' },
+      masjid: { coords: [0, 0.8, -60], name: 'Masjid Indah Baiturrahman 🕌✨' },
+      balon_udara: { coords: [53, 0.8, 85], name: 'Dermaga Balon Udara Fantasi 🎈☁️' },
     };
 
     const target = locations[preset] || locations['rumah'];
     gameStore.teleportPlayerTo(target.coords, target.name);
+  },
+
+  setGraphicsQuality: (quality: GraphicsQuality) => {
+    state = { ...state, graphicsQuality: quality };
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(STORAGE_KEY_GRAPHICS, quality);
+      }
+    } catch (e) {
+      console.warn('Failed to save graphics setting:', e);
+    }
+    emitChange();
+  },
+
+  setWeather: (weather: WeatherType) => {
+    soundManager.playMagicSpell();
+    state = {
+      ...state,
+      weather,
+      bubbleMessage: weather === 'hujan'
+        ? 'Rintik hujan lembut turun menyegarkan bunga-bunga! 🌧️🌸 Payung cantik Khaulah terbuka!'
+        : weather === 'pelangi'
+        ? 'MasyaAllah! Lengkungan pelangi indah muncul di langit! 🌈✨'
+        : weather === 'salju'
+        ? 'Butiran salju lembut berhamburan dari langit! ❄️⛄'
+        : 'Matahari ceria bersinar hangat dan cerah! ☀️🏡',
+    };
+    emitChange();
+  },
+
+  openMapModal: () => {
+    soundManager.playFamilyChord();
+    state = { ...state, isMapModalOpen: true, isStickerModalOpen: false, isPhotoMode: false, joystickVector: { x: 0, y: 0 }, isJumpPressed: false };
+    emitChange();
+  },
+
+  closeMapModal: () => {
+    state = { ...state, isMapModalOpen: false };
+    emitChange();
+  },
+
+  openStickerModal: () => {
+    soundManager.playFamilyChord();
+    state = { ...state, isStickerModalOpen: true, isMapModalOpen: false, isPhotoMode: false, joystickVector: { x: 0, y: 0 }, isJumpPressed: false };
+    emitChange();
+  },
+
+  closeStickerModal: () => {
+    state = { ...state, isStickerModalOpen: false };
+    emitChange();
+  },
+
+  setPhotoMode: (active: boolean) => {
+    soundManager.playHighFive();
+    state = { ...state, isPhotoMode: active, isMapModalOpen: false, isStickerModalOpen: false, joystickVector: { x: 0, y: 0 }, isJumpPressed: false };
+    emitChange();
+  },
+
+  unlockSticker: (id: string) => {
+    recordDailyActivity(id);
+    if (STICKER_CATALOG.some((s) => s.id === id) && !state.unlockedStickers[id]) {
+      const updated = { ...state.unlockedStickers, [id]: true };
+      const stickerInfo = STICKER_CATALOG.find((s) => s.id === id);
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          localStorage.setItem(STORAGE_KEY_STICKERS, JSON.stringify(updated));
+        }
+      } catch (e) {
+        console.warn('Failed to save sticker:', e);
+      }
+      soundManager.playStarCollect();
+      confetti({
+        particleCount: 50,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#FBBF24', '#F472B6', '#60A5FA', '#34D399'],
+      });
+      state = {
+        ...state,
+        unlockedStickers: updated,
+        bubbleMessage: `Hore! Khaulah membuka Stiker Baru: ${stickerInfo?.title || id}! 🌟📖✨`,
+      };
+      emitChange();
+    }
   },
 
   spawnMagicItems: (type: 'balloon' | 'cake' | 'bubble' | 'star', options?: any) => {
@@ -1020,6 +1232,7 @@ export const gameStore = {
   mountScooter: () => {
     soundManager.playBicycleBell();
     confetti({ particleCount: 30, spread: 60, origin: { y: 0.8 } });
+    gameStore.unlockSticker('skuter');
     state = {
       ...state,
       isRidingScooter: true,
@@ -1086,6 +1299,7 @@ export const gameStore = {
       schoolQuest: newQuest,
       bubbleMessage: msg,
     };
+    saveSchoolQuest(state.schoolQuest);
     emitChange();
   },
 
@@ -1098,6 +1312,7 @@ export const gameStore = {
       origin: { y: 0.6 },
       colors: ['#FFD700', '#FF69B4', '#00FFFF', '#FF6347', '#7B68EE'],
     });
+    gameStore.unlockSticker('tk');
 
     state = {
       ...state,
@@ -1108,6 +1323,7 @@ export const gameStore = {
       activeDialog: null,
       bubbleMessage: 'MasyaAllah Khaulah murid teladan! Mendapat Piagam Siswa Teladan dari Ibu Santi! 🏅🎒🌸',
     };
+    saveSchoolQuest(state.schoolQuest);
     emitChange();
   },
 };

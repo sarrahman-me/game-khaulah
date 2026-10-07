@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { gameStore, useGameStore } from '../../state/useGameStore';
-import { isGameInputBlocked, isTypingTarget } from '../../state/gameInput';
+import { isGameInputBlocked, isTypingTarget, dynamicPhysicsState } from '../../state/gameInput';
 import { soundManager } from '../../sound/audioManager';
 import { colliders, resolveHorizontalCollisions } from '../../state/colliders';
 import { SwanBoatModel } from './Environment/SunnyBeachLake';
@@ -141,6 +141,7 @@ export const PlayerKhaulah: React.FC = () => {
   const leftLegRef = useRef<THREE.Group>(null);
   const rightLegRef = useRef<THREE.Group>(null);
   const wingsRef = useRef<THREE.Group>(null);
+  const mouthRef = useRef<THREE.Group>(null);
 
   // Advanced Animation State Refs
   const squashScale = useRef(new THREE.Vector3(1, 1, 1));
@@ -160,6 +161,7 @@ export const PlayerKhaulah: React.FC = () => {
   const isRidingScooter = useGameStore((s) => s.isRidingScooter);
   const activeRide = useGameStore((s) => s.activeRide);
   const timeOfDay = useGameStore((s) => s.timeOfDay);
+  const weather = useGameStore((s) => s.weather);
 
   // Character physical state: start at saved position from localStorage
   const initialPlayerPos = gameStore.getState().playerPos;
@@ -175,6 +177,11 @@ export const PlayerKhaulah: React.FC = () => {
   const facingAngle = useRef(0);
   const slideTimer = useRef(0);
   const poolSlideTimer = useRef(0);
+  const swingAngle = useRef(0);
+  const swingAngularVel = useRef(1.4);
+  const swingPumpMsgShown = useRef(false);
+  const balloonTimer = useRef(0);
+  const rainbowSlideTimer = useRef(0);
 
   // Water interaction state refs
   const wasInWater = useRef(false);
@@ -188,6 +195,7 @@ export const PlayerKhaulah: React.FC = () => {
   const keys = useRef<{ [key: string]: boolean }>({});
   const coyoteTimer = useRef(0);
   const jumpBufferTimer = useRef(0);
+  const wasJumpRequested = useRef(false);
   const lastRespawn = useRef(0);
   const lastTeleport = useRef(0);
 
@@ -195,7 +203,16 @@ export const PlayerKhaulah: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isTypingTarget(e.target) || isGameInputBlocked(gameStore.getState())) return;
+      if (isTypingTarget(e.target)) return;
+      const modalState = gameStore.getState();
+      if (e.code === 'Escape' || (e.code === 'KeyC' && modalState.isPhotoMode) ||
+          (e.code === 'KeyP' && modalState.isMapModalOpen) || (e.code === 'KeyB' && modalState.isStickerModalOpen)) {
+        if (modalState.isPhotoMode) gameStore.setPhotoMode(false);
+        if (modalState.isMapModalOpen) gameStore.closeMapModal();
+        if (modalState.isStickerModalOpen) gameStore.closeStickerModal();
+        return;
+      }
+      if (isGameInputBlocked(modalState)) return;
       if (['Space', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault();
       if (e.repeat) return;
 
@@ -211,6 +228,16 @@ export const PlayerKhaulah: React.FC = () => {
         } else {
           gameStore.openMagicModal();
         }
+      } else if (e.code === 'KeyP') {
+        const isOpen = gameStore.getState().isMapModalOpen;
+        if (isOpen) gameStore.closeMapModal();
+        else gameStore.openMapModal();
+      } else if (e.code === 'KeyB') {
+        const isOpen = gameStore.getState().isStickerModalOpen;
+        if (isOpen) gameStore.closeStickerModal();
+        else gameStore.openStickerModal();
+      } else if (e.code === 'KeyC') {
+        gameStore.setPhotoMode(true);
       } else if (e.code === 'KeyH') {
         const ride = gameStore.getState().activeRide;
         if (ride === 'train') {
@@ -228,21 +255,7 @@ export const PlayerKhaulah: React.FC = () => {
       } else if (e.code === 'KeyE') {
         const ride = gameStore.getState().activeRide;
         if (ride !== 'none') {
-          gameStore.setActiveRide('none');
-          if (ride === 'boat') {
-            pos.current.set(-56.5, 0.38, 44.0);
-          } else if (ride === 'carousel') {
-            pos.current.set(58, 0.4, 36);
-          } else if (ride === 'ferris') {
-            pos.current.set(73, 0.4, 46);
-          } else if (ride === 'flamingo') {
-            pos.current.set(4, 0.4, -20);
-          } else if (ride === 'pool_slide') {
-            pos.current.set(2.2, 0.4, -28.6);
-          } else if (ride === 'swing') {
-            pos.current.set(-7.9, 0.4, 43.8);
-          }
-          gameStore.setMessage('Hore! Khaulah selesai bermain wahana! ✨');
+          gameStore.dismountRide();
           return;
         }
 
@@ -253,7 +266,11 @@ export const PlayerKhaulah: React.FC = () => {
 
         const near = gameStore.getState().nearbyInteractable;
         if (near) {
-          if (near.id === 'house_front_door') {
+          if (near.id === 'hot_air_balloon') {
+            gameStore.setActiveRide('hot_air_balloon');
+          } else if (near.id === 'pelangi_telescope') {
+            gameStore.setMessage('MasyaAllah, indahnya pemandangan pulau dari puncak! 🔭🌈');
+          } else if (near.id === 'house_front_door') {
             gameStore.enterHouse('front');
           } else if (near.id === 'house_back_door') {
             gameStore.enterHouse('back');
@@ -487,6 +504,7 @@ export const PlayerKhaulah: React.FC = () => {
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
+    if (gameStore.getState().isPhotoMode) return;
     const dt = Math.min(delta, 0.1);
 
     // Speed Buff & Scooter Speed Tick
@@ -610,33 +628,132 @@ export const PlayerKhaulah: React.FC = () => {
     }
 
     if (activeRide === 'swing') {
-      const time = state.clock.getElapsedTime();
-      const swingAngle = Math.sin(time * 2.4) * 0.52;
+      const g = 14.0;
       const L = 2.6;
-      const seatY = 3.7 - L * Math.cos(swingAngle);
-      const seatZ = 42.0 - L * Math.sin(swingAngle);
+      // Pendulum restoring torque
+      const accel = -(g / L) * Math.sin(swingAngle.current);
+      swingAngularVel.current += accel * dt;
+
+      // Player pumping input (W/Up to pump, S/Down to brake)
+      const inputY = gameStore.getState().joystickVector.y;
+      const isPressingForward = keys.current['KeyW'] || keys.current['ArrowUp'] || inputY < -0.3;
+      const isPressingBack = keys.current['KeyS'] || keys.current['ArrowDown'] || inputY > 0.3;
+
+      if (isPressingForward) {
+        // Pump energy in phase with current swinging motion
+        if (Math.abs(swingAngularVel.current) > 0.08) {
+          swingAngularVel.current += Math.sign(swingAngularVel.current) * 2.8 * dt;
+        } else {
+          swingAngularVel.current += 1.2 * dt;
+        }
+      } else if (isPressingBack) {
+        // Brake / drag feet
+        swingAngularVel.current *= Math.max(0, 1 - 2.8 * dt);
+      }
+
+      // Air resistance / natural damping
+      swingAngularVel.current *= Math.max(0, 1 - 0.22 * dt);
+      swingAngle.current += swingAngularVel.current * dt;
+      swingAngle.current = THREE.MathUtils.clamp(swingAngle.current, -1.25, 1.25);
+
+      if (Math.abs(swingAngle.current) > 0.85 && !swingPumpMsgShown.current) {
+        swingPumpMsgShown.current = true;
+        gameStore.unlockSticker('ayunan');
+        gameStore.setMessage('WUUUSSH! Ayunan Khaulah Melambung Tinggi Sekali! 🎡✨');
+      }
+
+      // Synchronize physical angle to visual chains in SchoolTK
+      dynamicPhysicsState.swingAngle = swingAngle.current;
+
+      const currentAngle = swingAngle.current;
+      const seatY = 3.7 - L * Math.cos(currentAngle);
+      const seatZ = 42.0 - L * Math.sin(currentAngle);
 
       pos.current.set(-7.9, seatY - 0.42, seatZ);
       facingAngle.current = 0;
 
-      // Body dynamic lean: bersandar ke belakang saat ayunan melambung ke depan, condong ke depan saat mengayun ke belakang
+      // Body dynamic lean
       if (modelRef.current) {
-        modelRef.current.rotation.x = swingAngle * 0.75;
+        modelRef.current.rotation.x = currentAngle * 0.82;
       }
 
       // Pose duduk memegang rantai ayunan & menendang kaki ke depan saat melambung
-      if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.75 + swingAngle * 0.2; leftArmRef.current.rotation.z = -0.18; }
-      if (rightArmRef.current) { rightArmRef.current.rotation.x = -0.75 + swingAngle * 0.2; rightArmRef.current.rotation.z = 0.18; }
-      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.38 + swingAngle * 0.45;
-      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.38 + swingAngle * 0.45;
+      const legKick = Math.sin(currentAngle) * 0.55;
+      if (leftArmRef.current) { leftArmRef.current.rotation.x = -0.75 + currentAngle * 0.2; leftArmRef.current.rotation.z = -0.18; }
+      if (rightArmRef.current) { rightArmRef.current.rotation.x = -0.75 + currentAngle * 0.2; rightArmRef.current.rotation.z = 0.18; }
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.38 + legKick;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.38 + legKick;
       if (skirtRef.current) skirtRef.current.rotation.x = -Math.PI * 0.32;
-      if (headRef.current) headRef.current.rotation.x = -swingAngle * 0.35;
+      if (headRef.current) headRef.current.rotation.x = -currentAngle * 0.35;
 
       if (keys.current['Space'] || gameStore.getState().isJumpPressed) {
         gameStore.setActiveRide('none');
         velocityY.current = 7.5;
         pos.current.z += 1.3;
+        dynamicPhysicsState.swingAngle = 0;
+        swingPumpMsgShown.current = false;
         gameStore.setMessage('Hoppp! Khaulah melompat turun dari ayunan! 🎡✨');
+      }
+
+      groupRef.current.position.copy(pos.current);
+      groupRef.current.rotation.y = facingAngle.current;
+      gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, false);
+      return;
+    }
+
+    if (activeRide !== 'hot_air_balloon') balloonTimer.current = 0;
+    if (activeRide !== 'rainbow_slide') rainbowSlideTimer.current = 0;
+
+    // Hot Air Balloon Scenic Island Tour
+    if (activeRide === 'hot_air_balloon') {
+      balloonTimer.current += dt * 0.22;
+      const t = balloonTimer.current;
+      const flightX = 50 + Math.sin(t) * 85;
+      const flightZ = 85 + (Math.cos(t) - 1) * 75;
+      const flightY = 24.0 + Math.sin(t * 1.5) * 3.5;
+
+      pos.current.set(flightX, flightY, flightZ);
+      facingAngle.current = t + Math.PI / 2;
+
+      // Waving hands excitedly at the view
+      if (leftArmRef.current) leftArmRef.current.rotation.x = -Math.PI * 0.75 + Math.sin(t * 6) * 0.2;
+      if (rightArmRef.current) rightArmRef.current.rotation.x = -Math.PI * 0.75 - Math.sin(t * 6) * 0.2;
+
+      if (keys.current['Space'] || gameStore.getState().isJumpPressed) {
+        gameStore.setActiveRide('none');
+        velocityY.current = 4.0;
+        pos.current.set(53, 0.8, 85);
+        balloonTimer.current = 0;
+        gameStore.setMessage('Alhamdulillah! Balon Udara mendarat dengan selamat! 🎈🌸✨');
+      }
+
+      groupRef.current.position.copy(pos.current);
+      groupRef.current.rotation.y = facingAngle.current;
+      gameStore.setPlayerMotion([pos.current.x, pos.current.y, pos.current.z], facingAngle.current, false);
+      return;
+    }
+
+    // Rainbow Hill Grass Slide
+    if (activeRide === 'rainbow_slide') {
+      rainbowSlideTimer.current += dt * 0.7;
+      const t = Math.min(1.0, rainbowSlideTimer.current);
+      const slideX = 115;
+      const slideY = 8.8 - t * 8.4;
+      const slideZ = 115 + t * 30;
+      pos.current.set(slideX, slideY, slideZ);
+      facingAngle.current = 0;
+
+      if (leftArmRef.current) leftArmRef.current.rotation.x = -Math.PI * 0.7;
+      if (rightArmRef.current) rightArmRef.current.rotation.x = -Math.PI * 0.7;
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI * 0.45;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI * 0.45;
+
+      if (t >= 1.0) {
+        gameStore.setActiveRide('none');
+        velocityY.current = 6.0;
+        rainbowSlideTimer.current = 0;
+        gameStore.unlockSticker('pelangi');
+        gameStore.setMessage('WUUUSSH! Serunya meluncur di Bukit Pelangi! 🌈🛝✨');
       }
 
       groupRef.current.position.copy(pos.current);
@@ -1008,12 +1125,19 @@ export const PlayerKhaulah: React.FC = () => {
 
     // Apply horizontal motion with inertia: accelerate toward target velocity, friction when idle
     const playerRadius = 0.45;
-    const hSpeed = effectiveMoveSpeed * Math.min(inputLength, 1);
+    const hSpeed = effectiveMoveSpeed;
     const targetVX = moveDirection.x * hSpeed;
     const targetVZ = moveDirection.z * hSpeed;
     const vel = velocityXZ.current;
-    // Grip: strong on ground, reduced mid-air (air control), sluggish in water (drag)
-    const accelRate = inWater ? 3.5 : isGrounded.current ? (isMoving ? 11 : 14) : (isMoving ? 4.5 : 1.2);
+    // Grip: strong on ground, reduced mid-air (air control), sluggish in water (drag), smooth glide on boat/scooter
+    const onIce = pos.current.x >= -12 && pos.current.x <= 12 && pos.current.z >= 120 && pos.current.z <= 144;
+    const accelRate = onIce && isGrounded.current ? (isMoving ? 2.5 : 0.65) : activeRide === 'boat'
+      ? (isMoving ? 3.2 : 1.8)
+      : inWater
+      ? 3.5
+      : isGrounded.current
+      ? (isMoving ? (ridingScooter ? 14 : 11) : (ridingScooter ? 7.5 : 14))
+      : (isMoving ? 4.5 : 1.2);
     const blend = 1 - Math.exp(-accelRate * dt);
     vel.x += (targetVX - vel.x) * blend;
     vel.y += (targetVZ - vel.y) * blend;
@@ -1056,11 +1180,13 @@ export const PlayerKhaulah: React.FC = () => {
       coyoteTimer.current = Math.max(0, coyoteTimer.current - dt);
     }
 
-    if (jumpRequested) {
+    if (jumpRequested && !wasJumpRequested.current) {
       jumpBufferTimer.current = 0.15;
     } else {
       jumpBufferTimer.current = Math.max(0, jumpBufferTimer.current - dt);
     }
+
+    wasJumpRequested.current = !!jumpRequested;
 
     if (jumpBufferTimer.current > 0 && (isGrounded.current || coyoteTimer.current > 0)) {
       const hasJumpBuff = gameStore.getState().jumpBuffTimeLeft > 0;
@@ -1082,12 +1208,17 @@ export const PlayerKhaulah: React.FC = () => {
     let groundedThisFrame = false;
 
     if (activeRide === 'boat') {
-      pos.current.y = 0.20 + Math.sin(state.clock.getElapsedTime() * 2.5) * 0.03;
+      const time = state.clock.getElapsedTime();
+      const boatSpeed = vel.length();
+      const waveBob = Math.sin(time * 2.4 + pos.current.x * 0.15) * 0.032;
+      pos.current.y = 0.20 + (boatSpeed > 0.4 ? 0.025 : 0) + waveBob;
       velocityY.current = 0;
       groundedThisFrame = true;
-      // Clamp boat inside lake water boundary so it never glides onto land or clips through trees
-      pos.current.x = THREE.MathUtils.clamp(pos.current.x, -74.5, -55.5);
-      pos.current.z = THREE.MathUtils.clamp(pos.current.z, 40.5, 55.5);
+      // Soft boundary dampening inside lake water boundary
+      if (pos.current.x < -74.0) { pos.current.x = -74.0; vel.x = Math.max(0, vel.x * 0.4); }
+      if (pos.current.x > -55.8) { pos.current.x = -55.8; vel.x = Math.min(0, vel.x * 0.4); }
+      if (pos.current.z < 40.5) { pos.current.z = 40.5; vel.y = Math.max(0, vel.y * 0.4); }
+      if (pos.current.z > 55.5) { pos.current.z = 55.5; vel.y = Math.min(0, vel.y * 0.4); }
     } else {
       // Asymmetric gravity: heavier on the way down, and a short hop when Space is released early
       const jumpHeld = gameStore.getState().isJumpPressed || keys.current['Space'];
@@ -1247,10 +1378,21 @@ export const PlayerKhaulah: React.FC = () => {
     if (rightEyeRef.current) {
       rightEyeRef.current.scale.y = currentEyeScaleY.current;
     }
+    if (mouthRef.current) {
+      const isHappyAction = !isGrounded.current || activeEmote !== 'none';
+      const targetScaleY = isHappyAction ? 1.35 : 1.0;
+      const targetScaleX = isHappyAction ? 1.2 : 1.0;
+      mouthRef.current.scale.x = THREE.MathUtils.lerp(mouthRef.current.scale.x, targetScaleX, dt * 10);
+      mouthRef.current.scale.y = THREE.MathUtils.lerp(mouthRef.current.scale.y, targetScaleY, dt * 10);
+    }
 
     // Body Leaning & Banking
-    const targetForwardLean = inWater
+    const targetForwardLean = activeRide === 'boat'
+      ? (0.04 + Math.min(vel.length() / 15, 0.12))
+      : inWater
       ? (isMoving ? 0.22 : 0.04)
+      : isRidingScooter
+      ? (isMoving ? 0.22 : 0.06)
       : (isMoving && isGrounded.current ? 0.09 : 0);
     currentForwardLean.current = THREE.MathUtils.lerp(
       currentForwardLean.current,
@@ -1258,7 +1400,13 @@ export const PlayerKhaulah: React.FC = () => {
       Math.min(dt * 10, 1.0)
     );
 
-    const targetBank = isMoving ? -moveX * 0.12 : 0;
+    const targetBank = activeRide === 'boat'
+      ? THREE.MathUtils.clamp(-moveX * 0.16, -0.22, 0.22)
+      : isRidingScooter && isMoving
+      ? THREE.MathUtils.clamp(-moveX * 0.32, -0.35, 0.35)
+      : isMoving
+      ? -moveX * 0.12
+      : 0;
     currentBankAngle.current = THREE.MathUtils.lerp(
       currentBankAngle.current,
       targetBank,
@@ -1433,7 +1581,15 @@ export const PlayerKhaulah: React.FC = () => {
     } else if (isMoving && isGrounded.current) {
       const walkCycle = Math.sin(time * 14);
       if (leftArmRef.current) leftArmRef.current.rotation.x = walkCycle * 0.65;
-      if (rightArmRef.current) rightArmRef.current.rotation.x = -walkCycle * 0.65;
+      if (rightArmRef.current) {
+        if (weather === 'hujan' && !isRidingScooter && activeRide === 'none') {
+          rightArmRef.current.rotation.x = -Math.PI * 0.45;
+          rightArmRef.current.rotation.z = 0.18;
+        } else {
+          rightArmRef.current.rotation.x = -walkCycle * 0.65;
+          rightArmRef.current.rotation.z = 0;
+        }
+      }
       if (leftLegRef.current) leftLegRef.current.rotation.x = -walkCycle * 0.75;
       if (rightLegRef.current) rightLegRef.current.rotation.x = walkCycle * 0.75;
       if (headRef.current) headRef.current.rotation.y = Math.sin(time * 7) * 0.06;
@@ -1508,8 +1664,13 @@ export const PlayerKhaulah: React.FC = () => {
         leftArmRef.current.rotation.z = 0.04;
       }
       if (rightArmRef.current) {
-        rightArmRef.current.rotation.x = -idle * 0.05;
-        rightArmRef.current.rotation.z = -0.04;
+        if (weather === 'hujan' && !isRidingScooter && activeRide === 'none') {
+          rightArmRef.current.rotation.x = -Math.PI * 0.45;
+          rightArmRef.current.rotation.z = 0.18;
+        } else {
+          rightArmRef.current.rotation.x = -idle * 0.05;
+          rightArmRef.current.rotation.z = -0.04;
+        }
       }
       if (leftLegRef.current) leftLegRef.current.rotation.x = 0;
       if (rightLegRef.current) rightLegRef.current.rotation.x = 0;
@@ -1658,7 +1819,7 @@ export const PlayerKhaulah: React.FC = () => {
           </mesh>
 
           {/* SENYUM MANIS CERIA KHAULAH */}
-          <group position={[0, -0.08, 0.325]}>
+          <group ref={mouthRef} position={[0, -0.08, 0.325]}>
             {/* Curved Smile Line */}
             <mesh position={[0, 0, 0]}>
               <torusGeometry args={[0.055, 0.012, 8, 16, Math.PI]} />
@@ -1900,6 +2061,24 @@ export const PlayerKhaulah: React.FC = () => {
             <sphereGeometry args={[0.03, 8, 8]} />
             <meshStandardMaterial color="#F5CEAB" roughness={0.4} />
           </mesh>
+
+          {/* Payung Cantik Khaulah Saat Hujan */}
+          {weather === 'hujan' && !isRidingScooter && activeRide === 'none' && (
+            <group position={[0, -0.05, 0]} rotation={[0.4, 0, 0]}>
+              <mesh position={[0, 0.45, 0]}>
+                <cylinderGeometry args={[0.015, 0.015, 0.95, 8]} />
+                <meshStandardMaterial color="#FBBF24" metalness={0.4} />
+              </mesh>
+              <mesh position={[0, 0.92, 0]}>
+                <coneGeometry args={[0.72, 0.35, 14, 1, true]} />
+                <meshStandardMaterial color="#F472B6" side={THREE.DoubleSide} roughness={0.3} />
+              </mesh>
+              <mesh position={[0, 1.12, 0]}>
+                <sphereGeometry args={[0.035, 8, 8]} />
+                <meshStandardMaterial color="#FBBF24" />
+              </mesh>
+            </group>
+          )}
         </group>
       </group>
 

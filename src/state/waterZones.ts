@@ -1,7 +1,7 @@
 export interface WaterStatus {
   inWater: boolean;
   surfaceY: number;
-  zone: 'river' | 'pool' | 'lake' | 'none';
+  zone: 'river' | 'pool' | 'lake' | 'ocean' | 'none';
 }
 
 /**
@@ -9,6 +9,11 @@ export interface WaterStatus {
  * and returns the water surface height and zone name.
  */
 export function getWaterStatus(x: number, y: number, z: number): WaterStatus {
+  // Ocean beside the western beach; the raised pier remains walkable.
+  if (x >= -215 && x <= -145 && z >= -65 && z <= 25 && y < 0.22) {
+    return { inWater: true, surfaceY: 0.16, zone: 'ocean' };
+  }
+
   // 1. Backyard Waterpark Swimming Pool (Expanded & Centered behind house)
   if (x >= -8.0 && x <= 8.0 && z >= -37.0 && z <= -25.0) {
     // Marble deck coping borders around pool are at Y = 0.36, water surface at 0.28

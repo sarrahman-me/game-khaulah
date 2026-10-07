@@ -15,11 +15,19 @@ import {
   Sunset,
   Moon,
   Bell,
+  Map,
+  BookOpen,
+  Camera,
+  Gauge,
 } from 'lucide-react';
 import { MagicWandModal } from './MagicWandModal';
 import { CharacterChatModal } from './CharacterChatModal';
 import { WishlistModal } from './WishlistModal';
+import { MapModal } from './MapModal';
+import { StickerBookModal } from './StickerBookModal';
+import { PhotoModeModal } from './PhotoModeModal';
 import { FAMILY_SCHEDULE } from '../3d/Environment/FamilyMembers';
+import { STICKER_CATALOG, WeatherType, GraphicsQuality } from '../../state/useGameStore';
 
 export const HUD: React.FC = () => {
   const bubbleMessage = useGameStore((s) => s.bubbleMessage);
@@ -38,11 +46,47 @@ export const HUD: React.FC = () => {
   const isInsideHouse = useGameStore((s) => s.isInsideHouse);
   const isDoorTransitioning = useGameStore((s) => s.isDoorTransitioning);
   const doorTransitionText = useGameStore((s) => s.doorTransitionText);
+  const weather = useGameStore((s) => s.weather);
+  const graphicsQuality = useGameStore((s) => s.graphicsQuality);
+  const isPhotoMode = useGameStore((s) => s.isPhotoMode);
+  const unlockedStickers = useGameStore((s) => s.unlockedStickers);
+  const playerPos = useGameStore((s) => s.playerPos);
+  const playerFacingAngle = useGameStore((s) => s.playerFacingAngle);
+
+  const unlockedStickerCount = STICKER_CATALOG.filter((s) => unlockedStickers[s.id]).length;
+
+  const handleToggleWeather = () => {
+    const cycle: Record<WeatherType, WeatherType> = {
+      cerah: 'hujan',
+      hujan: 'pelangi',
+      pelangi: 'salju',
+      salju: 'cerah',
+    };
+    gameStore.setWeather(cycle[weather] || 'cerah');
+  };
+
+  const handleToggleGraphics = () => {
+    const next: Record<GraphicsQuality, GraphicsQuality> = {
+      high: 'medium',
+      medium: 'battery',
+      battery: 'high',
+    };
+    gameStore.setGraphicsQuality(next[graphicsQuality] || 'high');
+  };
+
+  // Minimap position calculation (X: -130 to 130, Z: -80 to 145)
+  const minimapX = Math.max(8, Math.min(92, ((playerPos[0] + 215) / 360) * 84 + 8));
+  const minimapY = Math.max(8, Math.min(92, ((playerPos[2] + 90) / 250) * 84 + 8));
+  const playerHeadingDeg = (playerFacingAngle * 180) / Math.PI;
 
   const handleInteract = () => {
     if (!nearbyInteractable) return;
     const id = nearbyInteractable.id;
-    if (id === 'house_front_door') {
+    if (id === 'hot_air_balloon') {
+      gameStore.setActiveRide('hot_air_balloon');
+    } else if (id === 'pelangi_telescope') {
+      gameStore.setMessage('MasyaAllah, indahnya pemandangan pulau dari puncak! 🔭🌈');
+    } else if (id === 'house_front_door') {
       gameStore.enterHouse('front');
     } else if (id === 'house_back_door') {
       gameStore.enterHouse('back');
@@ -242,6 +286,10 @@ export const HUD: React.FC = () => {
     }
   };
 
+  if (isPhotoMode) {
+    return <PhotoModeModal />;
+  }
+
   return (
     <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between p-4 sm:p-6 select-none">
       {/* Roblox Shift Lock Center Reticle */}
@@ -355,12 +403,94 @@ export const HUD: React.FC = () => {
           )}
         </div>
 
-        {/* Right: Menu & Audio Controls */}
-        <div className="flex items-center gap-2 pointer-events-auto">
+        {/* Right: Menu, Navigation & Controls */}
+        <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto flex-wrap justify-end">
+          {/* Circular Island Minimap Radar */}
+          <button
+            onClick={() => gameStore.openMapModal()}
+            title="Klik untuk membuka Peta Lengkap Pulau [P] 🗺️"
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white/95 p-0.5 shadow-md border-2 border-white hover:border-pink-300 relative overflow-hidden active:scale-95 transition-all flex items-center justify-center cursor-pointer shrink-0"
+          >
+            <svg viewBox="0 0 100 100" className="w-full h-full rounded-xl overflow-hidden">
+              <rect width="100" height="100" fill="#BAE6FD" />
+              {/* Island contour */}
+              <ellipse cx="50" cy="50" rx="42" ry="40" fill="#86EFAC" />
+              <ellipse cx="50" cy="50" rx="34" ry="32" fill="#BBF7D0" />
+              {/* Lake */}
+              <ellipse cx="44" cy="54" rx="12" ry="7" fill="#38BDF8" />
+              {/* Landmark dots */}
+              <circle cx="50" cy="46" r="3" fill="#3B82F6" />
+              <circle cx="50" cy="62" r="3" fill="#10B981" />
+              <circle cx="34" cy="62" r="2.5" fill="#F59E0B" />
+              <circle cx="68" cy="62" r="2.5" fill="#EC4899" />
+              <circle cx="82" cy="78" r="2.5" fill="#A855F7" />
+              <circle cx="18" cy="78" r="2.5" fill="#14B8A6" />
+              <circle cx="50" cy="88" r="2.5" fill="#67E8F9" />
+              <circle cx="50" cy="24" r="2.5" fill="#0D9488" />
+              {/* Player marker */}
+              <g transform={`translate(${minimapX}, ${minimapY}) rotate(${playerHeadingDeg})`}>
+                <circle r="5" fill="#F43F5E" opacity="0.4" />
+                <path d="M 0 -6 L 3 3 L 0 1.5 L -3 3 Z" fill="#E11D48" stroke="#FFFFFF" strokeWidth="0.8" />
+              </g>
+            </svg>
+            <div className="absolute bottom-0.5 inset-x-0 text-center">
+              <span className="text-[8px] font-bubble font-bold bg-white/90 text-purple-950 px-1 py-0.2 rounded-full shadow-xs">
+                PETA
+              </span>
+            </div>
+          </button>
+
+          {/* World Map Button */}
+          <button
+            onClick={() => gameStore.openMapModal()}
+            title="Buka Peta Pulau Lengkap & Teleport 🗺️"
+            className="w-11 h-11 rounded-2xl bg-white/90 hover:bg-white text-indigo-700 flex items-center justify-center border-2 border-white shadow-md active:scale-90 transition-transform"
+          >
+            <Map className="w-5 h-5 text-indigo-600" />
+          </button>
+
+          {/* Sticker Book Button */}
+          <button
+            onClick={() => gameStore.openStickerModal()}
+            title={`Buku Album Stiker Khaulah (${unlockedStickerCount}/16 Terkumpul) 📖✨`}
+            className="h-11 px-2.5 sm:px-3 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white flex items-center gap-1.5 border-2 border-white shadow-md active:scale-95 transition-transform"
+          >
+            <BookOpen className="w-4 h-4 text-yellow-200" />
+            <span className="text-xs font-bubble font-bold">{unlockedStickerCount}/16</span>
+          </button>
+
+          {/* Polaroid Photo Mode Button */}
+          <button
+            onClick={() => gameStore.setPhotoMode(true)}
+            title="Mode Foto Polaroid 📸 — Abadikan kenangan seru Khaulah!"
+            className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-400 to-pink-500 text-white flex items-center justify-center border-2 border-white shadow-md active:scale-90 transition-transform hover:scale-105"
+          >
+            <Camera className="w-5 h-5" />
+          </button>
+
+          {/* Weather Toggle Button */}
+          <button
+            onClick={handleToggleWeather}
+            title={`Ganti Cuaca: Sekarang ${weather.toUpperCase()} (Klik untuk ganti: Cerah ➔ Hujan ➔ Pelangi ➔ Salju) 🌦️`}
+            className="h-11 px-2.5 rounded-2xl bg-white/90 hover:bg-white text-sky-700 flex items-center gap-1 border-2 border-white shadow-md active:scale-90 transition-transform text-xs font-bubble font-bold"
+          >
+            {weather === 'hujan' ? '🌧️' : weather === 'pelangi' ? '🌈' : weather === 'salju' ? '❄️' : '☀️'}
+            <span className="hidden lg:inline capitalize">{weather}</span>
+          </button>
+
+          {/* Graphics Quality Toggle Button */}
+          <button
+            onClick={handleToggleGraphics}
+            title={`Kualitas Grafis: ${graphicsQuality === 'high' ? 'Tinggi' : graphicsQuality === 'medium' ? 'Seimbang' : 'Hemat Baterai'} ⚙️`}
+            className="w-11 h-11 rounded-2xl bg-white/90 hover:bg-white text-gray-700 flex items-center justify-center border-2 border-white shadow-md active:scale-90 transition-transform text-xs font-bold"
+          >
+            <Gauge className="w-4 h-4 text-purple-600" />
+          </button>
+
           {/* Time of Day Indicator (Otomatis: Subuh ➔ Siang ➔ Sore ➔ Malam) */}
           <div
             title={`Waktu Otomatis: ${TIME_OF_DAY_CONFIG[timeOfDay].name} (${Math.ceil(timeOfDayTimeLeft)}s tersisa) — Siklus berganti otomatis: Subuh ➔ Siang ➔ Sore ➔ Malam`}
-            className={`h-11 px-3 rounded-2xl flex items-center gap-2 border-2 border-white shadow-md select-none transition-all duration-300 ${
+            className={`h-11 px-2.5 sm:px-3 rounded-2xl flex items-center gap-1.5 sm:gap-2 border-2 border-white shadow-md select-none transition-all duration-300 ${
               timeOfDay === 'subuh'
                 ? 'bg-gradient-to-r from-indigo-900 to-purple-900 text-indigo-100'
                 : timeOfDay === 'siang'
@@ -371,19 +501,19 @@ export const HUD: React.FC = () => {
             }`}
           >
             {timeOfDay === 'subuh' ? (
-              <Sunrise className="w-5 h-5 text-indigo-200" />
+              <Sunrise className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-200" />
             ) : timeOfDay === 'siang' ? (
-              <Sun className="w-5 h-5 text-amber-600 fill-amber-400" />
+              <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 fill-amber-400" />
             ) : timeOfDay === 'sore' ? (
-              <Sunset className="w-5 h-5 text-yellow-200" />
+              <Sunset className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-200" />
             ) : (
-              <Moon className="w-5 h-5 fill-yellow-300" />
+              <Moon className="w-4 h-4 sm:w-5 sm:h-5 fill-yellow-300" />
             )}
             <div className="flex flex-col text-left leading-none pr-0.5">
-              <span className="text-[11px] font-bubble font-bold">
+              <span className="text-[10px] sm:text-[11px] font-bubble font-bold">
                 {TIME_OF_DAY_CONFIG[timeOfDay].badgeLabel}
               </span>
-              <span className="text-[10px] font-mono font-semibold opacity-85 mt-0.5">
+              <span className="text-[9px] sm:text-[10px] font-mono font-semibold opacity-85 mt-0.5">
                 {Math.ceil(timeOfDayTimeLeft)}s
               </span>
             </div>
@@ -420,7 +550,7 @@ export const HUD: React.FC = () => {
             className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-amber-400 text-white font-bubble font-bold text-sm border-2 border-white shadow-lg flex items-center gap-1.5 active:scale-95 transition-transform animate-pulse-gentle hover:scale-105"
           >
             <Sparkles className="w-4 h-4 text-yellow-200 fill-yellow-200" />
-            <span className="hidden sm:inline">Tongkat Ajaib [M]</span>
+            <span className="hidden sm:inline">Tongkat [M]</span>
             <span className="sm:hidden">🪄</span>
           </button>
 
@@ -493,11 +623,15 @@ export const HUD: React.FC = () => {
               </button>
             )}
             <button
-              onClick={() => gameStore.setActiveRide('none')}
+              onClick={() => gameStore.dismountRide()}
               className="bg-rose-500 hover:bg-rose-600 text-white px-5 sm:px-6 py-2.5 rounded-full font-bubble font-bold text-xs sm:text-sm border-2 border-white shadow-xl flex items-center gap-1.5 active:scale-90 transition-transform"
             >
               <span>
-                {activeRide === 'swing'
+                {activeRide === 'hot_air_balloon'
+                  ? '🎈 Mendaratkan Balon [SPASI / E]'
+                  : activeRide === 'rainbow_slide'
+                  ? '🌈 Turun dari Seluncuran [E]'
+                  : activeRide === 'swing'
                   ? 'Turun dari Ayunan [SPASI / E]'
                   : activeRide === 'carousel'
                   ? '🎠 Turun Komedi Putar [E]'
@@ -651,6 +785,12 @@ export const HUD: React.FC = () => {
 
       {/* Secret Wishlist Modal (Buku Impian Khaulah untuk Abi) */}
       <WishlistModal />
+
+      {/* Interactive Island Map Modal */}
+      <MapModal />
+
+      {/* Collectible Sticker Album Modal */}
+      <StickerBookModal />
     </div>
   );
 };

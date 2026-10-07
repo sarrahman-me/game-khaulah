@@ -1,11 +1,12 @@
 import React, { useRef, useMemo, useEffect, Suspense } from 'react';
-import { PhysicsWorld } from './PhysicsWorld';
+const PhysicsWorld = React.lazy(() => import('./PhysicsWorld').then((module) => ({ default: module.PhysicsWorld })));
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGameStore, gameStore, TimeOfDay } from '../../state/useGameStore';
 import { PlayerKhaulah } from './PlayerKhaulah';
 import { PetCompanion } from './PetCompanion';
 import { CameraController } from './CameraController';
+import { ExpandedGround } from './Environment/ExpandedGround';
 import { GroundIsland } from './Environment/GroundIsland';
 import { RumahKhaulah } from './Environment/RumahKhaulah';
 import { BackyardWaterpark } from './Environment/BackyardWaterpark';
@@ -24,6 +25,27 @@ import { CarnivalThemePark } from './Environment/CarnivalThemePark';
 import { VillageTrain } from './Environment/VillageTrain';
 import { StreetLamps } from './Environment/StreetLamps';
 import { MagicSpawner } from './Environment/MagicSpawner';
+import { Sky, Stars } from '@react-three/drei';
+import { LushWindGrass } from './Environment/LushWindGrass';
+import { WeatherEffects } from './Environment/WeatherEffects';
+import { BukitPelangi } from './Environment/BukitPelangi';
+import { HutanAjaib } from './Environment/HutanAjaib';
+import { LembahSalju } from './Environment/LembahSalju';
+import { PantaiLautLuas } from './Environment/PantaiLautLuas';
+import { DesaSawah } from './Environment/DesaSawah';
+import { MasjidDesa } from './Environment/MasjidDesa';
+import { BalonUdara } from './Environment/BalonUdara';
+
+import { registerPhotoCapture } from '../../services/photoCapture';
+
+const PhotoCaptureController: React.FC = () => {
+  const { gl, scene, camera } = useThree();
+  useEffect(() => registerPhotoCapture(() => {
+    gl.render(scene, camera);
+    return gl.domElement;
+  }), [gl, scene, camera]);
+  return null;
+};
 
 interface AtmospherePreset {
   bg: string;
@@ -313,16 +335,51 @@ const AtmosphereController: React.FC = () => {
 };
 
 export const GameScene: React.FC = () => {
+  const graphicsQuality = useGameStore((s) => s.graphicsQuality);
+  const timeOfDay = useGameStore((s) => s.timeOfDay);
+
+  const dpr: [number, number] =
+    graphicsQuality === 'high' ? [1, 1.75] : graphicsQuality === 'medium' ? [1, 1.3] : [1, 1.0];
+  const grassCount =
+    graphicsQuality === 'high' ? 2400 : graphicsQuality === 'medium' ? 1400 : 700;
+
   return (
     <div className="w-full h-full absolute inset-0 touch-none select-none">
       <Canvas
-        shadows
+        data-game-canvas="true"
+        shadows={graphicsQuality !== 'battery'}
         camera={{ position: [0, 5, -8], fov: 60 }}
-        gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
-        dpr={[1, 1.5]} // Silky smooth 60-120fps on MacBook M2 retina display without thermal throttling
+        gl={{
+          antialias: true,
+          alpha: false,
+          powerPreference: 'high-performance',
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.05,
+        }}
+        dpr={dpr}
       >
         {/* Dynamic Atmosphere according to Time of Day with smooth lerp */}
         <AtmosphereController />
+
+        {/* Dynamic Physical Sky and Stars */}
+        {timeOfDay !== 'malam' ? (
+          <Sky
+            distance={450000}
+            sunPosition={ATMOSPHERE_PRESETS[timeOfDay].sunPos}
+            turbidity={timeOfDay === 'sore' ? 8 : timeOfDay === 'subuh' ? 6 : 3}
+            rayleigh={timeOfDay === 'sore' ? 4.0 : timeOfDay === 'subuh' ? 1.8 : 0.5}
+            mieCoefficient={0.005}
+            mieDirectionalG={0.8}
+          />
+        ) : (
+          <Stars radius={180} depth={50} count={2800} factor={4} saturation={0} fade speed={1.2} />
+        )}
+
+        {/* Dynamic Weather System */}
+        <WeatherEffects />
+
+        {/* Instanced Swaying Grass Field */}
+        <LushWindGrass count={grassCount} />
 
         {/* 3D World Elements */}
         <FloatingClouds />
@@ -330,6 +387,7 @@ export const GameScene: React.FC = () => {
         <NightFireflies />
         <StreetLamps />
         <GroundIsland />
+        <ExpandedGround />
         <RumahKhaulah />
         <BackyardWaterpark />
         <FamilyMembers />
@@ -344,12 +402,20 @@ export const GameScene: React.FC = () => {
         <ObbyCourse />
         <AnimalFriends />
         <MagicSpawner />
+        <BukitPelangi />
+        <HutanAjaib />
+        <LembahSalju />
+        <PantaiLautLuas />
+        <DesaSawah />
+        <MasjidDesa />
+        <BalonUdara />
         <Suspense fallback={null}>
           <PhysicsWorld />
         </Suspense>
         <PlayerKhaulah />
         <PetCompanion />
         <CameraController />
+        <PhotoCaptureController />
       </Canvas>
     </div>
   );

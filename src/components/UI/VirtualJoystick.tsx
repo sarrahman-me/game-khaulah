@@ -238,6 +238,21 @@ export const VirtualJoystick: React.FC = () => {
         </div>
         <span className="text-white/30">•</span>
         <div className="flex items-center gap-1.5">
+          <kbd className="px-2 py-0.5 bg-sky-500/80 rounded font-mono text-[11px] font-bold text-white">P</kbd>
+          <span className="text-white/80">Peta</span>
+        </div>
+        <span className="text-white/30">•</span>
+        <div className="flex items-center gap-1.5">
+          <kbd className="px-2 py-0.5 bg-yellow-500/80 rounded font-mono text-[11px] font-bold text-white">B</kbd>
+          <span className="text-white/80">Stiker</span>
+        </div>
+        <span className="text-white/30">•</span>
+        <div className="flex items-center gap-1.5">
+          <kbd className="px-2 py-0.5 bg-purple-500/80 rounded font-mono text-[11px] font-bold text-white">C</kbd>
+          <span className="text-white/80">Foto</span>
+        </div>
+        <span className="text-white/30">•</span>
+        <div className="flex items-center gap-1.5">
           <kbd className="px-2 py-0.5 bg-rose-500/80 rounded font-mono text-[11px] font-bold text-white">R</kbd>
           <span className="text-white/80">Reset</span>
         </div>

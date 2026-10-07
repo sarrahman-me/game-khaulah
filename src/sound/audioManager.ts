@@ -152,7 +152,7 @@ class SoundEngine {
   }
 
   // Animal friendly squeak/happy sound
-  public playAnimalSound(type: 'duck' | 'cat' | 'bunny' | 'panda' | 'sheep' | 'horse') {
+  public playAnimalSound(type: 'duck' | 'cat' | 'bunny' | 'panda' | 'sheep' | 'horse' | 'penguin' | 'deer' | string) {
     if (this.isMuted) return;
     this.initCtx();
     if (!this.ctx) return;
@@ -207,6 +207,28 @@ class SoundEngine {
       gain.connect(this.ctx.destination);
       osc.start(now);
       osc.stop(now + 0.38);
+    } else if (type === 'penguin') {
+      // Cheerful penguin peep: chirpy slide
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.exponentialRampToValueAtTime(900, now + 0.12);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.18);
+    } else if (type === 'deer') {
+      // Gentle forest deer call: soft flute note
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.linearRampToValueAtTime(490, now + 0.2);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
     } else {
       // Bunny / Panda: cute high pop
       osc.type = 'sine';

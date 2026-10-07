@@ -182,6 +182,7 @@ export const CameraController: React.FC = () => {
   }, [gl, isShiftLock]);
 
   useFrame((_, delta) => {
+    if (gameStore.getState().isPhotoMode) return;
     const dt = Math.min(delta, 0.1);
     if (isGameInputBlocked(gameStore.getState())) arrowKeys.current = {};
     const motion = gameStore.getState();
