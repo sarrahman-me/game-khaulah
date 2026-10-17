@@ -54,6 +54,7 @@ export const HUD: React.FC = () => {
   const playerPos = useGameStore((s) => s.playerPos);
   const playerFacingAngle = useGameStore((s) => s.playerFacingAngle);
   const sandboxObjects = useGameStore((s) => s.sandboxObjects);
+  const sandboxRidingId = useGameStore((s) => s.sandboxRidingId);
 
   const [isSpeakingDialog, setIsSpeakingDialog] = React.useState(false);
 
@@ -92,7 +93,15 @@ export const HUD: React.FC = () => {
   const handleInteract = () => {
     if (!nearbyInteractable) return;
     const id = nearbyInteractable.id;
-    if (id === 'hot_air_balloon') {
+    if (id.startsWith('sandbox_ride_')) {
+      gameStore.mountSandboxRide(id.replace('sandbox_ride_', ''));
+    } else if (id.startsWith('sandbox_eat_')) {
+      gameStore.eatSandboxItem(id.replace('sandbox_eat_', ''));
+    } else if (id.startsWith('sandbox_pet_')) {
+      gameStore.petSandboxItem(id.replace('sandbox_pet_', ''));
+    } else if (id.startsWith('sandbox_music_')) {
+      gameStore.playSandboxMusical(id.replace('sandbox_music_', ''));
+    } else if (id === 'hot_air_balloon') {
       gameStore.setActiveRide('hot_air_balloon');
     } else if (id === 'pelangi_telescope') {
       gameStore.setMessage('MasyaAllah, indahnya pemandangan pulau dari puncak! 🔭🌈');
@@ -691,8 +700,21 @@ export const HUD: React.FC = () => {
           </div>
         )}
 
+        {/* Sandbox Ride Dismount Button */}
+        {sandboxRidingId && (
+          <div className="pointer-events-auto">
+            <button
+              onClick={() => gameStore.dismountSandboxRide()}
+              className="bg-gradient-to-r from-rose-500 via-pink-600 to-purple-600 text-white font-bubble font-bold text-sm sm:text-base px-6 py-2.5 rounded-full border-2 border-white shadow-xl active:scale-95 transition-all flex items-center gap-2 animate-bounce-slow"
+            >
+              <span>🚗</span>
+              <span>Turun dari Wahana [SPASI / E]</span>
+            </button>
+          </div>
+        )}
+
         {/* Nearby Interactable Action Button */}
-        {nearbyInteractable && activeRide === 'none' && !activeDialog && !isRidingScooter && (
+        {nearbyInteractable && activeRide === 'none' && !activeDialog && !isRidingScooter && !sandboxRidingId && (
           <button
             onClick={handleInteract}
             className="pointer-events-auto bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 text-white px-6 py-3 rounded-full font-bubble font-bold text-sm sm:text-base border-3 border-white shadow-2xl active:scale-95 transition-transform flex items-center gap-2 animate-bounce-slow"

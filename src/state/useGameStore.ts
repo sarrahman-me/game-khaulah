@@ -199,8 +199,9 @@ export interface GameState {
   unlockedStickers: Record<string, boolean>;
   // Photo Mode
   isPhotoMode: boolean;
-  // Realtime AI Sandbox objects
+  // Realtime AI Sandbox objects & Interaction
   sandboxObjects: SandboxObject[];
+  sandboxRidingId: string | null;
 }
 
 export type SandboxShape =
@@ -236,17 +237,105 @@ export type SandboxBehavior =
   | 'follow'
   | 'trampoline';
 
+export type SandboxInteractionType =
+  | 'kickable'
+  | 'rideable'
+  | 'edible'
+  | 'trampoline'
+  | 'companion'
+  | 'musical'
+  | 'solid';
+
+export function inferInteractionType(title: string, behavior?: string): SandboxInteractionType {
+  const t = title.toLowerCase();
+  if (
+    t.includes('bola') ||
+    t.includes('semangka') ||
+    t.includes('dadu') ||
+    t.includes('balok') ||
+    t.includes('bowling') ||
+    t.includes('tendang') ||
+    t.includes('sepak') ||
+    t.includes('basket')
+  ) {
+    return 'kickable';
+  }
+  if (
+    t.includes('mobil') ||
+    t.includes('karpet') ||
+    t.includes('roket') ||
+    t.includes('pesawat') ||
+    t.includes('kuda') ||
+    t.includes('sepeda') ||
+    t.includes('skuter') ||
+    t.includes('tumpangi') ||
+    t.includes('kendarai') ||
+    t.includes('naik')
+  ) {
+    return 'rideable';
+  }
+  if (
+    t.includes('es krim') ||
+    t.includes('kue') ||
+    t.includes('donat') ||
+    t.includes('permen') ||
+    t.includes('stroberi') ||
+    t.includes('apel') ||
+    t.includes('susu') ||
+    t.includes('jus') ||
+    t.includes('makan') ||
+    t.includes('camilan') ||
+    t.includes('roti') ||
+    t.includes('cokelat')
+  ) {
+    return 'edible';
+  }
+  if (
+    t.includes('trampolin') ||
+    t.includes('jamur') ||
+    t.includes('pegas') ||
+    t.includes('pantul') ||
+    behavior === 'trampoline'
+  ) {
+    return 'trampoline';
+  }
+  if (
+    t.includes('piano') ||
+    t.includes('drum') ||
+    t.includes('lonceng') ||
+    t.includes('bel') ||
+    t.includes('sirine') ||
+    t.includes('musik')
+  ) {
+    return 'musical';
+  }
+  if (
+    t.includes('dino') ||
+    t.includes('robot') ||
+    t.includes('kucing') ||
+    t.includes('anjing') ||
+    t.includes('kelinci') ||
+    t.includes('peri') ||
+    t.includes('alien') ||
+    behavior === 'follow'
+  ) {
+    return 'companion';
+  }
+  return 'solid';
+}
+
 export interface SandboxObject {
   id: string;
   name: string;
   title: string;
   speech?: string;
+  interactionType: SandboxInteractionType;
   behavior: SandboxBehavior;
   scale: number;
   position: [number, number, number];
   rotation?: [number, number, number];
   parts: SandboxPart[];
-  physics?: 'none' | 'solid' | 'bouncy';
+  physics?: 'none' | 'solid' | 'bouncy' | 'dynamic_ball' | 'dynamic_box';
   createdAt: number;
   lifespan?: number;
 }
@@ -493,6 +582,7 @@ let state: GameState = {
   unlockedStickers: loadSavedStickers(),
   isPhotoMode: false,
   sandboxObjects: [],
+  sandboxRidingId: null,
 };
 
 // Sinkronkan tema audio awal sesuai waktu yang tersimpan di localStorage tanpa chime
@@ -1224,9 +1314,10 @@ export const gameStore = {
   spawnSandboxObject: (creation: {
     title: string;
     behavior?: SandboxBehavior;
+    interactionType?: SandboxInteractionType;
     scale?: number;
     parts: SandboxPart[];
-    physics?: 'none' | 'solid' | 'bouncy';
+    physics?: 'none' | 'solid' | 'bouncy' | 'dynamic_ball' | 'dynamic_box';
     position?: [number, number, number];
     speech?: string;
   }) => {
@@ -1240,18 +1331,20 @@ export const gameStore = {
       playerPos[2] + Math.cos(facing) * spawnDist,
     ];
     const now = Date.now();
+    const interactionType = creation.interactionType || inferInteractionType(creation.title, creation.behavior);
     const newObj: SandboxObject = {
       id: `sandbox_${now}_${Math.random().toString(36).substring(2, 7)}`,
       name: (creation.title || 'kreasi').toLowerCase().replace(/\s+/g, '_'),
       title: creation.title || 'Kreasi Ajaib Khaulah',
       speech: creation.speech,
-      behavior: creation.behavior || 'bounce',
+      interactionType,
+      behavior: creation.behavior || (interactionType === 'companion' ? 'follow' : interactionType === 'trampoline' ? 'trampoline' : 'bounce'),
       scale: typeof creation.scale === 'number' && Number.isFinite(creation.scale)
         ? Math.max(0.3, Math.min(3.0, creation.scale))
         : 1.0,
       position: creation.position || defaultPos,
       parts: Array.isArray(creation.parts) ? creation.parts : [],
-      physics: creation.physics || 'solid',
+      physics: creation.physics || (interactionType === 'kickable' ? 'dynamic_ball' : 'solid'),
       createdAt: now,
       lifespan: 300000,
     };
@@ -1263,11 +1356,86 @@ export const gameStore = {
     emitChange();
   },
 
-  removeSandboxObject: (id: string) => {
-    if (!state.sandboxObjects.some((obj) => obj.id === id)) return;
+  mountSandboxRide: (id: string) => {
+    const obj = state.sandboxObjects.find((o) => o.id === id);
+    if (!obj) return;
+    soundManager.playDoorOpen();
     soundManager.playMagicSpell();
     state = {
       ...state,
+      sandboxRidingId: id,
+      nearbyInteractable: null,
+      bubbleMessage: `Horeee! Khaulah menaiki ${obj.title}! Ayo jelajahi seluruh pulau! 🚗💨✨`,
+    };
+    emitChange();
+  },
+
+  dismountSandboxRide: () => {
+    if (!state.sandboxRidingId) return;
+    soundManager.playSlideWhoosh();
+    state = {
+      ...state,
+      sandboxRidingId: null,
+      bubbleMessage: 'Khaulah turun dari wahana dengan selamat! 🌸',
+    };
+    emitChange();
+  },
+
+  eatSandboxItem: (id: string) => {
+    const obj = state.sandboxObjects.find((o) => o.id === id);
+    if (!obj) return;
+    soundManager.playSnackBuff();
+    confetti({
+      particleCount: 50,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#FF69B4', '#F43F5E', '#FBBF24', '#38BDF8'],
+    });
+    state = {
+      ...state,
+      speedBuffTimeLeft: Math.max(state.speedBuffTimeLeft, 25),
+      jumpBuffTimeLeft: Math.max(state.jumpBuffTimeLeft, 15),
+      nearbyInteractable: null,
+      bubbleMessage: `Nyam nyam nyam! ${obj.title} enak dan manis sekali! Tenaga Khaulah bertambah lari kilat! 🍓⚡😋`,
+    };
+    gameStore.removeSandboxObject(id);
+  },
+
+  petSandboxItem: (id: string) => {
+    const obj = state.sandboxObjects.find((o) => o.id === id);
+    if (!obj) return;
+    soundManager.playHighFive();
+    confetti({
+      particleCount: 30,
+      spread: 60,
+      origin: { y: 0.6 },
+      colors: ['#EC4899', '#A855F7', '#FDE047', '#10B981'],
+    });
+    state = {
+      ...state,
+      bubbleMessage: `${obj.title}: "Terima kasih Khaulah sayang! Aku senang sekali jadi sahabat terbaikmu!" 💖🐾✨`,
+    };
+    emitChange();
+  },
+
+  playSandboxMusical: (id: string) => {
+    const obj = state.sandboxObjects.find((o) => o.id === id);
+    if (!obj) return;
+    soundManager.playFamilyChord();
+    state = {
+      ...state,
+      bubbleMessage: `🎶 Ting-tung-ting! ${obj.title} mengalunkan nada musik yang ceria dan merdu! ✨`,
+    };
+    emitChange();
+  },
+
+  removeSandboxObject: (id: string) => {
+    if (!state.sandboxObjects.some((obj) => obj.id === id)) return;
+    soundManager.playMagicSpell();
+    const nextRidingId = state.sandboxRidingId === id ? null : state.sandboxRidingId;
+    state = {
+      ...state,
+      sandboxRidingId: nextRidingId,
       sandboxObjects: state.sandboxObjects.filter((obj) => obj.id !== id),
     };
     emitChange();
@@ -1276,7 +1444,7 @@ export const gameStore = {
   clearSandboxObjects: () => {
     if (state.sandboxObjects.length === 0) return;
     soundManager.playMagicSpell();
-    state = { ...state, sandboxObjects: [] };
+    state = { ...state, sandboxObjects: [], sandboxRidingId: null };
     emitChange();
   },
 

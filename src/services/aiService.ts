@@ -1,6 +1,7 @@
 // AI Service for Dunia Bahagia Khaulah 3D
 // Connected to local endpoint via /ai-proxy or direct http://localhost:20128/v1
-import type { SandboxPart, SandboxBehavior } from '../state/useGameStore';
+import { inferInteractionType } from '../state/useGameStore';
+import type { SandboxPart, SandboxBehavior, SandboxInteractionType } from '../state/useGameStore';
 
 export interface MagicActionResult {
   speech: string;
@@ -27,9 +28,10 @@ export interface MagicActionResult {
   sandboxCreation?: {
     title: string;
     behavior?: SandboxBehavior;
+    interactionType?: SandboxInteractionType;
     scale?: number;
     parts: SandboxPart[];
-    physics?: 'none' | 'solid' | 'bouncy';
+    physics?: 'none' | 'solid' | 'bouncy' | 'dynamic_ball' | 'dynamic_box';
     speech?: string;
   };
   wishlistTitle?: string;
@@ -200,14 +202,14 @@ function fallbackMagicInterpreter(input: string): MagicActionResult {
       actionParam: 'tk',
     };
   }
-  if (q.includes('pantai') || q.includes('danau') || q.includes('bebek') || q.includes('laut')) {
+  if ((q.includes('pantai') || q.includes('danau') || q.includes('bebek') || q.includes('laut')) && !q.includes('buat') && !q.includes('bikin')) {
     return {
       speech: 'Swuuush! Semilir angin pantai dan danau bebek menyambut Khaulah! 🏖️🦢🌊',
       action: 'teleport',
       actionParam: 'pantai',
     };
   }
-  if (q.includes('rumah') || q.includes('pulang') || q.includes('teras')) {
+  if ((q.includes('rumah') || q.includes('pulang') || q.includes('teras')) && !q.includes('buat') && !q.includes('bikin')) {
     return {
       speech: 'Selamat datang kembali di rumah tercinta Khaulah! Abi dan Ummi menunggu! 🏡👨‍👩‍👧‍👦',
       action: 'teleport',
@@ -221,21 +223,29 @@ function fallbackMagicInterpreter(input: string): MagicActionResult {
       actionParam: 'karnaval',
     };
   }
-  if (q.includes('kebun') || q.includes('hewan') || q.includes('kelinci') || q.includes('domba')) {
+  if ((q.includes('kebun') || q.includes('hewan') || q.includes('kelinci') || q.includes('domba')) && !q.includes('buat') && !q.includes('bikin') && !q.includes('boneka')) {
     return {
       speech: 'Khaulah sampai di Taman Hewan & Kebun Buah Ceria! Mbaa~ kelinci dan domba melompat riang! 🐑🥕🍎',
       action: 'teleport',
       actionParam: 'kebun',
     };
   }
-  if (q.includes('waterpark') || q.includes('kolam') || q.includes('renang')) {
+  if ((q.includes('waterpark') || q.includes('kolam') || q.includes('renang')) && !q.includes('buat') && !q.includes('bikin')) {
     return {
       speech: 'Byuuuuur! Khaulah sampai di Waterpark Halaman Belakang! Ayo meluncur! 🌊🛝',
       action: 'teleport',
       actionParam: 'waterpark',
     };
   }
-  if (q.includes('obby') || q.includes('istana bintang') || q.includes('langit') || q.includes('pelangi')) {
+  if (
+    q.includes('obby') ||
+    q.includes('istana bintang') ||
+    ((q.includes('langit') || q.includes('pelangi')) &&
+      !q.includes('buat') &&
+      !q.includes('bikin') &&
+      !q.includes('bola') &&
+      !q.includes('mobil'))
+  ) {
     return {
       speech: 'Wuuush! Khaulah melesat ke Jalur Pelangi & Istana Bintang di Langit! 🌈⭐🏰',
       action: 'teleport',
@@ -350,10 +360,85 @@ export function createFallbackSandboxCreation(
 ): NonNullable<MagicActionResult['sandboxCreation']> {
   const p = typeOrPrompt.toLowerCase();
 
+  // 1. Kickable Physics Ball / Dice / Watermelon
+  if (
+    p.includes('bola') ||
+    p.includes('sepak') ||
+    p.includes('basket') ||
+    p.includes('tendang') ||
+    p.includes('semangka') ||
+    p.includes('dadu')
+  ) {
+    return {
+      title: customTitle || 'Bola Sepak Bintang Pelangi',
+      interactionType: 'kickable',
+      behavior: 'idle',
+      scale: 1.0,
+      physics: 'dynamic_ball',
+      parts: [
+        { shape: 'sphere', args: [0.38, 16, 16], pos: [0, 0, 0], color: '#FFFFFF' },
+        { shape: 'dodecahedron', args: [0.22, 0], pos: [0, 0, 0], color: '#111827', emissive: '#10B981', emissiveIntensity: 0.4 },
+        { shape: 'sphere', args: [0.09, 8, 8], pos: [0, 0.32, 0], color: '#FBBF24', emissive: '#FDE047' },
+      ],
+    };
+  }
+
+  // 2. Rideable Cartoon Vehicle / Flying Carpet / Rocket
+  if (
+    p.includes('mobil') ||
+    p.includes('karpet') ||
+    p.includes('roket') ||
+    p.includes('pesawat') ||
+    p.includes('kuda') ||
+    p.includes('sepeda') ||
+    p.includes('kendarai') ||
+    p.includes('tumpangi')
+  ) {
+    return {
+      title: customTitle || 'Mobil Fantasi Bintang Khaulah',
+      interactionType: 'rideable',
+      behavior: 'idle',
+      scale: 1.2,
+      physics: 'solid',
+      parts: [
+        { shape: 'box', args: [0.85, 0.35, 1.4], pos: [0, 0.3, 0], color: '#EC4899' },
+        { shape: 'box', args: [0.7, 0.35, 0.7], pos: [0, 0.65, -0.1], color: '#BAE6FD', opacity: 0.8 },
+        { shape: 'cylinder', args: [0.18, 0.18, 0.12, 12], pos: [-0.48, 0.18, 0.45], rot: [0, 0, Math.PI / 2], color: '#1F2937' },
+        { shape: 'cylinder', args: [0.18, 0.18, 0.12, 12], pos: [0.48, 0.18, 0.45], rot: [0, 0, Math.PI / 2], color: '#1F2937' },
+        { shape: 'cylinder', args: [0.18, 0.18, 0.12, 12], pos: [-0.48, 0.18, -0.45], rot: [0, 0, Math.PI / 2], color: '#1F2937' },
+        { shape: 'cylinder', args: [0.18, 0.18, 0.12, 12], pos: [0.48, 0.18, -0.45], rot: [0, 0, Math.PI / 2], color: '#1F2937' },
+        { shape: 'sphere', args: [0.08, 8, 8], pos: [-0.25, 0.32, 0.72], color: '#FDE047', emissive: '#FDE047' },
+        { shape: 'sphere', args: [0.08, 8, 8], pos: [0.25, 0.32, 0.72], color: '#FDE047', emissive: '#FDE047' },
+        { shape: 'cone', args: [0.1, 0.25, 8], pos: [0, 0.95, -0.2], color: '#FBBF24', emissive: '#FDE047' },
+      ],
+    };
+  }
+
+  // 3. Musical Floor Piano / Drum
+  if (p.includes('piano') || p.includes('drum') || p.includes('musik') || p.includes('lonceng')) {
+    return {
+      title: customTitle || 'Piano Lantai Pelangi',
+      interactionType: 'musical',
+      behavior: 'idle',
+      scale: 1.2,
+      physics: 'solid',
+      parts: [
+        { shape: 'box', args: [1.6, 0.12, 0.8], pos: [0, 0.06, 0], color: '#111827' },
+        { shape: 'box', args: [0.25, 0.14, 0.7], pos: [-0.6, 0.08, 0], color: '#EF4444', emissive: '#F87171' },
+        { shape: 'box', args: [0.25, 0.14, 0.7], pos: [-0.3, 0.08, 0], color: '#F59E0B', emissive: '#FBBF24' },
+        { shape: 'box', args: [0.25, 0.14, 0.7], pos: [0, 0.08, 0], color: '#10B981', emissive: '#34D399' },
+        { shape: 'box', args: [0.25, 0.14, 0.7], pos: [0.3, 0.08, 0], color: '#3B82F6', emissive: '#60A5FA' },
+        { shape: 'box', args: [0.25, 0.14, 0.7], pos: [0.6, 0.08, 0], color: '#8B5CF6', emissive: '#A78BFA' },
+      ],
+    };
+  }
+
+  // 4. Living Companions
   if (p.includes('dino') || p.includes('trex') || p.includes('t-rex')) {
     return {
       title: customTitle || 'Dinosaurus T-Rex Ungu Ceria',
-      behavior: 'bounce',
+      interactionType: 'companion',
+      behavior: 'follow',
       scale: 1.2,
       physics: 'solid',
       parts: [
@@ -376,7 +461,8 @@ export function createFallbackSandboxCreation(
   if (p.includes('robot') || p.includes('mecha')) {
     return {
       title: customTitle || 'Robot Cilik Sahabat Khaulah',
-      behavior: 'spin',
+      interactionType: 'companion',
+      behavior: 'follow',
       scale: 1.1,
       physics: 'solid',
       parts: [
@@ -394,9 +480,10 @@ export function createFallbackSandboxCreation(
     };
   }
 
-  if (p.includes('ufo') || p.includes('alien') || p.includes('piring terbang') || p.includes('roket')) {
+  if (p.includes('ufo') || p.includes('alien') || p.includes('piring terbang')) {
     return {
       title: customTitle || 'Piring Terbang Bintang UFO',
+      interactionType: 'rideable',
       behavior: 'float',
       scale: 1.2,
       physics: 'solid',
@@ -413,9 +500,11 @@ export function createFallbackSandboxCreation(
     };
   }
 
+  // 5. Bouncy Trampolines
   if (p.includes('trampolin') || p.includes('pantul') || p.includes('jamur')) {
     return {
       title: customTitle || 'Jamur Trampolin Ajaib Pelangi',
+      interactionType: 'trampoline',
       behavior: 'trampoline',
       scale: 1.3,
       physics: 'bouncy',
@@ -430,9 +519,11 @@ export function createFallbackSandboxCreation(
     };
   }
 
-  if (p.includes('es krim') || p.includes('donat') || p.includes('permen') || p.includes('lolipop')) {
+  // 6. Edible treats
+  if (p.includes('es krim') || p.includes('donat') || p.includes('permen') || p.includes('lolipop') || p.includes('kue')) {
     return {
       title: customTitle || 'Es Krim Stroberi Pelangi Raksasa',
+      interactionType: 'edible',
       behavior: 'spin',
       scale: 1.3,
       physics: 'solid',
@@ -446,9 +537,11 @@ export function createFallbackSandboxCreation(
     };
   }
 
+  // 7. Castles
   if (p.includes('istana') || p.includes('kastil') || p.includes('benteng')) {
     return {
       title: customTitle || 'Istana Bintang Kristal Pelangi',
+      interactionType: 'solid',
       behavior: 'idle',
       scale: 1.2,
       physics: 'solid',
@@ -467,8 +560,10 @@ export function createFallbackSandboxCreation(
   }
 
   // Generic magical crystal creation for any custom wish
+  const title = customTitle || 'Kristal Bintang Ajaib Khaulah';
   return {
-    title: customTitle || 'Kristal Bintang Ajaib Khaulah',
+    title,
+    interactionType: inferInteractionType(title),
     behavior: 'bounce',
     scale: 1.1,
     physics: 'solid',
@@ -566,9 +661,10 @@ FORMAT JSON OUTPUT WAJIB:
   "actionParam": "parameter_action (jika ada, kalau tidak null)",
   "sandboxCreation": {
     "title": "Nama Objek Ceria (misal: 'Dinosaurus T-Rex Ungu')",
+    "interactionType": "kickable" | "rideable" | "edible" | "trampoline" | "companion" | "musical" | "solid",
     "behavior": "bounce" | "float" | "spin" | "orbit" | "follow" | "trampoline" | "idle",
     "scale": 1.2,
-    "physics": "solid" | "bouncy",
+    "physics": "solid" | "bouncy" | "dynamic_ball" | "dynamic_box",
     "parts": [
       {
         "shape": "sphere" | "box" | "cylinder" | "cone" | "torus" | "capsule" | "dodecahedron",

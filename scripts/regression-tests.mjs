@@ -124,8 +124,36 @@ try {
     const dinoResult = await processMagicPrompt('buatkan dinosaurus');
     assert.ok(dinoResult.sandboxCreation);
     assert.ok(dinoResult.sandboxCreation.parts.length >= 3);
+    assert.equal(dinoResult.sandboxCreation.interactionType, 'companion');
     store.spawnSandboxObject(dinoResult.sandboxCreation);
     assert.equal(store.getState().sandboxObjects.length, 1);
+
+    const ballResult = await processMagicPrompt('buatkan bola sepak pelangi');
+    assert.ok(ballResult.sandboxCreation);
+    assert.equal(ballResult.sandboxCreation.interactionType, 'kickable');
+    store.spawnSandboxObject(ballResult.sandboxCreation);
+
+    const carResult = await processMagicPrompt('buatkan mobil kartun');
+    assert.ok(carResult.sandboxCreation);
+    assert.equal(carResult.sandboxCreation.interactionType, 'rideable');
+    store.spawnSandboxObject(carResult.sandboxCreation);
+
+    const currentCar = store.getState().sandboxObjects.find(o => o.interactionType === 'rideable');
+    assert.ok(currentCar);
+    store.mountSandboxRide(currentCar.id);
+    assert.equal(store.getState().sandboxRidingId, currentCar.id);
+    store.dismountSandboxRide();
+    assert.equal(store.getState().sandboxRidingId, null);
+
+    const iceCreamResult = await processMagicPrompt('buatkan es krim stroberi');
+    assert.equal(iceCreamResult.sandboxCreation.interactionType, 'edible');
+    store.spawnSandboxObject(iceCreamResult.sandboxCreation);
+    const iceObj = store.getState().sandboxObjects.find(o => o.interactionType === 'edible');
+    assert.ok(iceObj);
+    store.eatSandboxItem(iceObj.id);
+    assert.equal(store.getState().sandboxObjects.some(o => o.id === iceObj.id), false);
+    assert.ok(store.getState().speedBuffTimeLeft > 0);
+
     store.clearSandboxObjects();
     assert.equal(store.getState().sandboxObjects.length, 0);
   } finally { console.warn = oldWarn; }

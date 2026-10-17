@@ -266,9 +266,22 @@ export const PlayerKhaulah: React.FC = () => {
           return;
         }
 
+        if (gameStore.getState().sandboxRidingId) {
+          gameStore.dismountSandboxRide();
+          return;
+        }
+
         const near = gameStore.getState().nearbyInteractable;
         if (near) {
-          if (near.id === 'hot_air_balloon') {
+          if (near.id.startsWith('sandbox_ride_')) {
+            gameStore.mountSandboxRide(near.id.replace('sandbox_ride_', ''));
+          } else if (near.id.startsWith('sandbox_eat_')) {
+            gameStore.eatSandboxItem(near.id.replace('sandbox_eat_', ''));
+          } else if (near.id.startsWith('sandbox_pet_')) {
+            gameStore.petSandboxItem(near.id.replace('sandbox_pet_', ''));
+          } else if (near.id.startsWith('sandbox_music_')) {
+            gameStore.playSandboxMusical(near.id.replace('sandbox_music_', ''));
+          } else if (near.id === 'hot_air_balloon') {
             gameStore.setActiveRide('hot_air_balloon');
           } else if (near.id === 'pelangi_telescope') {
             gameStore.setMessage('MasyaAllah, indahnya pemandangan pulau dari puncak! 🔭🌈');
@@ -539,8 +552,9 @@ export const PlayerKhaulah: React.FC = () => {
     }
     wasInWater.current = inWater;
 
+    const sandboxRidingId = gameStore.getState().sandboxRidingId;
     let effectiveMoveSpeed = moveSpeed;
-    if (ridingScooter) {
+    if (ridingScooter || sandboxRidingId) {
       effectiveMoveSpeed = speedBuff > 0 ? 26.0 : 20.0;
     } else if (activeRide === 'firetruck') {
       effectiveMoveSpeed = speedBuff > 0 ? 25.0 : 19.0;

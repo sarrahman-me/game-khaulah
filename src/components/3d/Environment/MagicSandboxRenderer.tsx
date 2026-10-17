@@ -6,7 +6,7 @@ import { useGameStore, gameStore, SandboxObject, SandboxPart } from '../../../st
 import { soundManager } from '../../../sound/audioManager';
 
 // Safe renderer for individual geometric part with fallbacks
-const RenderSandboxPart: React.FC<{ part: SandboxPart }> = ({ part }) => {
+export const RenderSandboxPart: React.FC<{ part: SandboxPart }> = ({ part }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const color = part.color || '#F472B6';
   const emissive = part.emissive || '#000000';
@@ -92,13 +92,14 @@ const RenderSandboxPart: React.FC<{ part: SandboxPart }> = ({ part }) => {
   );
 };
 
-// Single Animated Sandbox Entity
+// Single Animated Sandbox Entity (Non-kickable)
 const SingleSandboxEntity: React.FC<{ item: SandboxObject }> = ({ item }) => {
   const groupRef = useRef<THREE.Group>(null);
   const currentPos = useRef(new THREE.Vector3(...item.position));
   const squishAnim = useRef(0);
   const lastBounce = useRef(0);
-  const greetingCooldown = useRef(0);
+  const wasNear = useRef(false);
+
   const seed = useMemo(() => {
     let hash = 0;
     for (let i = 0; i < item.id.length; i++) hash += item.id.charCodeAt(i);
@@ -118,6 +119,21 @@ const SingleSandboxEntity: React.FC<{ item: SandboxObject }> = ({ item }) => {
     if (!groupRef.current) return;
     const t = state.clock.getElapsedTime();
     const playerPos = gameStore.getState().playerPos;
+    const sandboxRidingId = gameStore.getState().sandboxRidingId;
+    const isMounted = sandboxRidingId === item.id;
+
+    // 1. Vehicle Mount Handling (Khaulah is driving this object!)
+    if (isMounted) {
+      const facing = gameStore.getState().playerFacingAngle;
+      groupRef.current.position.set(
+        playerPos[0],
+        Math.max(0.08, playerPos[1] - 0.05),
+        playerPos[2]
+      );
+      groupRef.current.rotation.y = facing;
+      groupRef.current.scale.set(item.scale, item.scale, item.scale);
+      return;
+    }
 
     // Squish animation recovery
     if (squishAnim.current > 0) {
@@ -132,7 +148,7 @@ const SingleSandboxEntity: React.FC<{ item: SandboxObject }> = ({ item }) => {
       baseScale * (1 + squishFactor * 0.35)
     );
 
-    // Behavior animations
+    // 2. Behavior animations
     switch (item.behavior) {
       case 'bounce': {
         const hop = Math.abs(Math.sin(t * 3.6 + seed));
@@ -197,7 +213,7 @@ const SingleSandboxEntity: React.FC<{ item: SandboxObject }> = ({ item }) => {
           if (Date.now() - lastBounce.current > 900) {
             lastBounce.current = Date.now();
             squishAnim.current = 1.0;
-            gameStore.addJumpBuff(8);
+            gameStore.addJumpBuff(12);
             soundManager.playTrampoline();
           }
         }
@@ -214,17 +230,84 @@ const SingleSandboxEntity: React.FC<{ item: SandboxObject }> = ({ item }) => {
       }
     }
 
-    // Nearby interaction check with player
+    // 3. Dynamic Nearby Interaction Context
     const distToPlayer = Math.hypot(
       playerPos[0] - groupRef.current.position.x,
       playerPos[2] - groupRef.current.position.z
     );
-    if (distToPlayer < 2.0 && Date.now() - greetingCooldown.current > 7000) {
-      greetingCooldown.current = Date.now();
-      soundManager.playMagicSpell();
-      gameStore.setMessage(`${item.title}: "Halo Khaulah bidadari shalihah! Senang bermain bersamamu!" ✨💖`);
+
+    if (distToPlayer < 2.2 && !isMounted) {
+      wasNear.current = true;
+      let promptText = `Kagumi ${item.title} ✨`;
+      let actionId = `sandbox_look_${item.id}`;
+
+      if (item.interactionType === 'rideable') {
+        promptText = `Naiki ${item.title} 🚗`;
+        actionId = `sandbox_ride_${item.id}`;
+      } else if (item.interactionType === 'edible') {
+        promptText = `Makan ${item.title} 😋`;
+        actionId = `sandbox_eat_${item.id}`;
+      } else if (item.interactionType === 'companion') {
+        promptText = `Elus & Sapa ${item.title} 💖`;
+        actionId = `sandbox_pet_${item.id}`;
+      } else if (item.interactionType === 'musical') {
+        promptText = `Mainkan ${item.title} 🎶`;
+        actionId = `sandbox_music_${item.id}`;
+      } else if (item.interactionType === 'trampoline') {
+        promptText = `Lompat di ${item.title} 🦘`;
+        actionId = `sandbox_bounce_${item.id}`;
+      }
+
+      const curInteractable = gameStore.getState().nearbyInteractable;
+      if (!curInteractable || curInteractable.id !== actionId) {
+        gameStore.setNearbyInteractable({
+          id: actionId,
+          title: item.title,
+          prompt: promptText,
+        });
+      }
+    } else if (distToPlayer >= 2.6 && wasNear.current) {
+      wasNear.current = false;
+      const curInteractable = gameStore.getState().nearbyInteractable;
+      if (curInteractable && curInteractable.id.endsWith(item.id)) {
+        gameStore.setNearbyInteractable(null);
+      }
     }
   });
+
+  const getTagColor = () => {
+    switch (item.interactionType) {
+      case 'rideable':
+        return '#EC4899';
+      case 'edible':
+        return '#F59E0B';
+      case 'companion':
+        return '#8B5CF6';
+      case 'musical':
+        return '#3B82F6';
+      case 'trampoline':
+        return '#EF4444';
+      default:
+        return '#7C3AED';
+    }
+  };
+
+  const getTagIcon = () => {
+    switch (item.interactionType) {
+      case 'rideable':
+        return '🚗';
+      case 'edible':
+        return '😋';
+      case 'companion':
+        return '💖';
+      case 'musical':
+        return '🎶';
+      case 'trampoline':
+        return '🦘';
+      default:
+        return '✨';
+    }
+  };
 
   return (
     <group ref={groupRef} position={item.position}>
@@ -242,11 +325,11 @@ const SingleSandboxEntity: React.FC<{ item: SandboxObject }> = ({ item }) => {
         <RenderSandboxPart key={`${item.id}_part_${idx}`} part={part} />
       ))}
 
-      {/* Floating 3D Title Banner */}
+      {/* Floating 3D Title Banner with Interaction Icon */}
       <Billboard position={[0, maxPartHeight * item.scale + 0.35, 0]}>
         <mesh>
           <planeGeometry args={[Math.max(1.5, item.title.length * 0.11), 0.36]} />
-          <meshBasicMaterial color="#7C3AED" transparent opacity={0.88} />
+          <meshBasicMaterial color={getTagColor()} transparent opacity={0.88} />
         </mesh>
         <Text
           position={[0, 0, 0.02]}
@@ -255,7 +338,7 @@ const SingleSandboxEntity: React.FC<{ item: SandboxObject }> = ({ item }) => {
           anchorX="center"
           anchorY="middle"
         >
-          {`✨ ${item.title}`}
+          {`${getTagIcon()} ${item.title}`}
         </Text>
       </Billboard>
     </group>
@@ -265,11 +348,17 @@ const SingleSandboxEntity: React.FC<{ item: SandboxObject }> = ({ item }) => {
 export const MagicSandboxRenderer: React.FC = () => {
   const sandboxObjects = useGameStore((s) => s.sandboxObjects);
 
-  if (!sandboxObjects || sandboxObjects.length === 0) return null;
+  // Kickable objects are handled by Rapier physics in PhysicsWorld
+  const nonKickableObjects = useMemo(
+    () => (sandboxObjects || []).filter((obj) => obj.interactionType !== 'kickable'),
+    [sandboxObjects]
+  );
+
+  if (!nonKickableObjects || nonKickableObjects.length === 0) return null;
 
   return (
     <group>
-      {sandboxObjects.map((obj) => (
+      {nonKickableObjects.map((obj) => (
         <SingleSandboxEntity key={obj.id} item={obj} />
       ))}
     </group>

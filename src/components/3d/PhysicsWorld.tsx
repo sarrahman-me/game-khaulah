@@ -11,10 +11,12 @@ import {
 } from '@react-three/rapier';
 import * as THREE from 'three';
 import { colliders, solidColliders } from '../../state/colliders';
-import { gameStore, useGameStore } from '../../state/useGameStore';
+import { gameStore, useGameStore, SandboxObject } from '../../state/useGameStore';
 import { soundManager } from '../../sound/audioManager';
 import { entersSchoolGoal } from '../../state/worldLocations';
 import confetti from 'canvas-confetti';
+import { Billboard, Text } from '@react-three/drei';
+import { RenderSandboxPart } from './Environment/MagicSandboxRenderer';
 
 /**
  * Real rigid-body physics layer (Rapier).
@@ -223,12 +225,111 @@ const Crate: React.FC<PropProps & { size?: number }> = ({ position, size = 0.8 }
   </RigidBody>
 );
 
+const SingleSandboxPhysicsBody: React.FC<{ item: SandboxObject }> = ({ item }) => {
+  const bodyRef = useRef<RapierRigidBody>(null);
+  const lastSound = useRef(0);
+  const goalCooldown = useRef(0);
+  const previous = useRef({ x: item.position[0], y: item.position[1], z: item.position[2] });
+  const isBall = !item.title.toLowerCase().includes('balok') && !item.title.toLowerCase().includes('dadu') && !item.title.toLowerCase().includes('peti');
+  const radius = Math.max(0.25, (item.scale || 1.0) * 0.38);
+
+  useFrame((_, delta) => {
+    if (goalCooldown.current > 0) goalCooldown.current -= delta;
+    if (!bodyRef.current) return;
+    const p = bodyRef.current.translation();
+
+    // Out of bounds recovery (if pushed or kicked off island)
+    if (p.y < -8) {
+      const playerPos = gameStore.getState().playerPos;
+      bodyRef.current.setTranslation({ x: playerPos[0], y: playerPos[1] + 1.2, z: playerPos[2] }, true);
+      bodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      bodyRef.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      Object.assign(previous.current, { x: playerPos[0], y: playerPos[1] + 1.2, z: playerPos[2] });
+      return;
+    }
+
+    // Check school soccer goal!
+    const scored = goalCooldown.current <= 0 && entersSchoolGoal(previous.current, p);
+    Object.assign(previous.current, p);
+    if (scored) {
+      goalCooldown.current = 5.0;
+      soundManager.playStarCollect();
+      confetti({
+        particleCount: 75,
+        spread: 100,
+        origin: { y: 0.6 },
+        colors: ['#10B981', '#F59E0B', '#3B82F6', '#EC4899'],
+      });
+      gameStore.setMessage(`GOOOOOL! ⚽🎉🥅 Tendangan spektakuler Khaulah memasukkan ${item.title} ke gawang!`);
+      gameStore.unlockSticker('gol');
+      bodyRef.current.setLinvel({ x: (Math.random() - 0.5) * 2, y: 4.0, z: -4 }, true);
+    }
+  });
+
+  return (
+    <RigidBody
+      ref={bodyRef}
+      position={item.position}
+      colliders={false}
+      restitution={0.82}
+      friction={0.45}
+      linearDamping={0.35}
+      angularDamping={0.4}
+      mass={0.4}
+      ccd
+      onCollisionEnter={({ other }) => {
+        const now = performance.now();
+        if (other.rigidBodyObject && now - lastSound.current > 200 && other.rigidBody?.bodyType() === 2) {
+          lastSound.current = now;
+          soundManager.playJump();
+        }
+      }}
+    >
+      {isBall ? (
+        <BallCollider args={[radius]} />
+      ) : (
+        <CuboidCollider args={[radius, radius, radius]} />
+      )}
+      {item.parts.map((part, idx) => (
+        <RenderSandboxPart key={`${item.id}_phys_part_${idx}`} part={part} />
+      ))}
+      <Billboard position={[0, radius + 0.45, 0]}>
+        <mesh>
+          <planeGeometry args={[Math.max(1.4, item.title.length * 0.1), 0.32]} />
+          <meshBasicMaterial color="#10B981" transparent opacity={0.88} />
+        </mesh>
+        <Text position={[0, 0, 0.02]} fontSize={0.12} color="#FFFBEB" anchorX="center" anchorY="middle">
+          {`⚽ ${item.title}`}
+        </Text>
+      </Billboard>
+    </RigidBody>
+  );
+};
+
+const SandboxPhysicsProps: React.FC = () => {
+  const sandboxObjects = useGameStore((s) => s.sandboxObjects);
+  const kickableObjects = useMemo(
+    () => (sandboxObjects || []).filter((obj) => obj.interactionType === 'kickable'),
+    [sandboxObjects]
+  );
+
+  return (
+    <>
+      {kickableObjects.map((obj) => (
+        <SingleSandboxPhysicsBody key={obj.id} item={obj} />
+      ))}
+    </>
+  );
+};
+
 export const PhysicsWorld: React.FC = () => {
   const paused = useGameStore((s) => s.isPhotoMode || s.isWelcomeOpen);
   return (
     <Physics paused={paused} gravity={[0, -19.6, 0]} timeStep={1 / 60}>
       <StaticWorld />
       <PlayerProxy />
+      {/* Dynamic Sandbox Kickable Items */}
+      <SandboxPhysicsProps />
       {/* Halaman rumah: bola sepak Adek Khalid */}
       <SoccerBall position={[3, 2, -8]} />
       <SoccerBall position={[-4, 2, -6]} />
