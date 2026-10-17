@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import confetti from 'canvas-confetti';
 import { useGameStore, gameStore } from '../../state/useGameStore';
 import { soundManager } from '../../sound/audioManager';
 import {
@@ -59,7 +60,14 @@ const QUICK_SPELLS: QuickSpell[] = [
   { icon: '🦘', label: 'Lompat Setinggi Awan', prompt: 'Bikin Khaulah bisa melompat setinggi awan di langit!', category: 'kekuatan', color: 'from-sky-400 to-blue-600 text-white', badge: '+25s' },
   { icon: '🎆', label: 'Pesta Kembang Api', prompt: 'Rayakan dengan pesta kembang api dan konfeti meriah!', category: 'kekuatan', color: 'from-violet-600 to-rose-500 text-white' },
 
-  // Benda Ajaib
+  // Benda Ajaib & Realtime Sandbox AI
+  { icon: '🦖', label: 'Dinosaurus T-Rex Cilik', prompt: 'Tongkat ajaib, buatkan dinosaurus T-Rex lucu yang bisa lompat-lompat!', category: 'benda', color: 'from-purple-600 to-indigo-600 text-white font-bold', badge: 'AI Sandbox' },
+  { icon: '🤖', label: 'Robot Cilik Sahabat', prompt: 'Tongkat ajaib, buatkan robot cilik ramah yang bisa berputar ceria!', category: 'benda', color: 'from-sky-500 to-blue-600 text-white font-bold', badge: 'AI Sandbox' },
+  { icon: '🛸', label: 'Piring Terbang UFO', prompt: 'Tongkat ajaib, buatkan UFO piring terbang yang melayang di langit!', category: 'benda', color: 'from-pink-500 to-rose-600 text-white font-bold', badge: 'AI Sandbox' },
+  { icon: '🍄', label: 'Jamur Trampolin Pelangi', prompt: 'Tongkat ajaib, buatkan jamur trampolin ajaib yang memantul!', category: 'benda', color: 'from-red-500 to-amber-500 text-white font-bold', badge: 'AI Sandbox' },
+  { icon: '🍦', label: 'Es Krim Pelangi Raksasa', prompt: 'Tongkat ajaib, buatkan es krim stroberi pelangi raksasa manis!', category: 'benda', color: 'from-pink-400 to-amber-400 text-purple-950 font-bold', badge: 'AI Sandbox' },
+  { icon: '🏰', label: 'Istana Kristal Bintang', prompt: 'Tongkat ajaib, buatkan istana kristal bintang megah!', category: 'benda', color: 'from-violet-500 to-fuchsia-600 text-white font-bold', badge: 'AI Sandbox' },
+  { icon: '🧹', label: 'Sapu Bersih Mainan', prompt: 'Tongkat ajaib, sapu dan bersihkan semua mainan ajaib!', category: 'benda', color: 'from-emerald-500 to-teal-600 text-white font-bold', badge: 'Rapi' },
   { icon: '🎈', label: 'Hujan Balon Warna-Warni', prompt: 'Munculkan banyak balon warna-warni turun dari langit!', category: 'benda', color: 'from-rose-400 to-pink-500 text-white' },
   { icon: '🎂', label: 'Kue Ulang Tahun Manis', prompt: 'Aku mau kue ulang tahun raksasa dengan lilin menyala!', category: 'benda', color: 'from-pink-400 to-purple-400 text-white' },
   { icon: '🧼', label: 'Gelembung Sabun Ajaib', prompt: 'Bikin banyak gelembung sabun berkilauan melayang!', category: 'benda', color: 'from-teal-400 to-cyan-500 text-white' },
@@ -185,6 +193,20 @@ export const MagicWandModal: React.FC = () => {
       else if (param === 'bell') gameStore.ringBell();
     } else if (act === 'khalid_follow') {
       gameStore.setKhalidFollow(param !== false);
+    } else if (act === 'spawn_sandbox') {
+      if (res.sandboxCreation) {
+        gameStore.spawnSandboxObject(res.sandboxCreation);
+        soundManager.playMagicSpell();
+        confetti({
+          particleCount: 50,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ['#FF69B4', '#FBBF24', '#A855F7', '#38BDF8', '#10B981'],
+        });
+      }
+    } else if (act === 'clear_sandbox') {
+      gameStore.clearSandboxObjects();
+      soundManager.playMagicSpell();
     }
   };
 

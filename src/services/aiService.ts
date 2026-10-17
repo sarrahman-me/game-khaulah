@@ -1,5 +1,6 @@
 // AI Service for Dunia Bahagia Khaulah 3D
 // Connected to local endpoint via /ai-proxy or direct http://localhost:20128/v1
+import type { SandboxPart, SandboxBehavior } from '../state/useGameStore';
 
 export interface MagicActionResult {
   speech: string;
@@ -18,9 +19,19 @@ export interface MagicActionResult {
     | 'play_sound'
     | 'riddle'
     | 'khalid_follow'
+    | 'spawn_sandbox'
+    | 'clear_sandbox'
     | 'wishlist'
     | 'chat_only';
   actionParam?: any;
+  sandboxCreation?: {
+    title: string;
+    behavior?: SandboxBehavior;
+    scale?: number;
+    parts: SandboxPart[];
+    physics?: 'none' | 'solid' | 'bouncy';
+    speech?: string;
+  };
   wishlistTitle?: string;
   isWishRecorded?: boolean;
 }
@@ -182,7 +193,7 @@ function fallbackMagicInterpreter(input: string): MagicActionResult {
       actionParam: { count: 12 },
     };
   }
-  if (q.includes('sekolah') || q.includes('tk') || q.includes('guru') || q.includes('santi')) {
+  if (q.includes('sekolah') || /\btk\b/.test(q) || q.includes('guru') || q.includes('santi')) {
     return {
       speech: 'Wuuush! Khaulah tiba di gerbang TK Karang Tengah 1 Atap! Selamat belajar sayang! 🎒🏫',
       action: 'teleport',
@@ -301,16 +312,176 @@ function fallbackMagicInterpreter(input: string): MagicActionResult {
     };
   }
 
-  // If complex wish
+  // Clear Sandbox items
+  if (
+    q.includes('bersih') ||
+    q.includes('sapu') ||
+    (q.includes('hapus') && q.includes('mainan')) ||
+    (q.includes('hilang') && q.includes('mainan'))
+  ) {
+    return {
+      speech: 'Wuuush! Tongkat ajaib menyapu bersih mainan fantasi! Halaman kembali rapi dan siap untuk keajaiban baru! 🧹✨',
+      action: 'clear_sandbox',
+    };
+  }
+
+  // Explicit Wishlist Request
+  if (q.includes('buku impian') || q.includes('catat') || q.includes('simpan ide')) {
+    return {
+      speech: `Wah, ide "${input}" dicatat dengan rapi di Buku Impian Khaulah agar selalu diingat! ✨📖`,
+      action: 'wishlist',
+      wishlistTitle: input,
+      isWishRecorded: true,
+    };
+  }
+
+  // Real-time AI Sandbox Creations
+  const sandbox = createFallbackSandboxCreation(input);
   return {
-    speech: `Wah, mantra "${input}" hebat sekali! Ide kreatif Khaulah sudah dicatat di Buku Impian Khaulah supaya Abi bisa wujudkan nanti! ✨📖`,
-    action: 'wishlist',
-    wishlistTitle: input,
-    isWishRecorded: true,
+    speech: `Simsalabim! Mantra "${input}" seketika diwujudkan menjadi ${sandbox.title} tepat di depan Khaulah! Ayo main bersama! ✨🪄`,
+    action: 'spawn_sandbox',
+    sandboxCreation: sandbox,
   };
 }
 
-function validateMagicResult(parsed: any): void {
+export function createFallbackSandboxCreation(
+  typeOrPrompt: string,
+  customTitle?: string
+): NonNullable<MagicActionResult['sandboxCreation']> {
+  const p = typeOrPrompt.toLowerCase();
+
+  if (p.includes('dino') || p.includes('trex') || p.includes('t-rex')) {
+    return {
+      title: customTitle || 'Dinosaurus T-Rex Ungu Ceria',
+      behavior: 'bounce',
+      scale: 1.2,
+      physics: 'solid',
+      parts: [
+        { shape: 'sphere', args: [0.55, 16, 16], pos: [0, 0.75, 0], color: '#9333EA' },
+        { shape: 'box', args: [0.45, 0.4, 0.65], pos: [0, 1.25, 0.3], color: '#7E22CE' },
+        { shape: 'box', args: [0.35, 0.25, 0.3], pos: [0, 1.15, 0.65], color: '#A855F7' },
+        { shape: 'sphere', args: [0.07, 8, 8], pos: [-0.2, 1.35, 0.5], color: '#FFFFFF' },
+        { shape: 'sphere', args: [0.035, 8, 8], pos: [-0.2, 1.35, 0.56], color: '#000000' },
+        { shape: 'sphere', args: [0.07, 8, 8], pos: [0.2, 1.35, 0.5], color: '#FFFFFF' },
+        { shape: 'sphere', args: [0.035, 8, 8], pos: [0.2, 1.35, 0.56], color: '#000000' },
+        { shape: 'cone', args: [0.08, 0.2, 6], pos: [0, 1.3, -0.1], rot: [-0.4, 0, 0], color: '#FBBF24' },
+        { shape: 'cone', args: [0.09, 0.22, 6], pos: [0, 0.95, -0.4], rot: [-0.5, 0, 0], color: '#FBBF24' },
+        { shape: 'cone', args: [0.2, 0.8, 8], pos: [0, 0.55, -0.65], rot: [-0.7, 0, 0], color: '#A855F7' },
+        { shape: 'cylinder', args: [0.12, 0.12, 0.5, 8], pos: [-0.28, 0.25, 0], color: '#6B21A8' },
+        { shape: 'cylinder', args: [0.12, 0.12, 0.5, 8], pos: [0.28, 0.25, 0], color: '#6B21A8' },
+      ],
+    };
+  }
+
+  if (p.includes('robot') || p.includes('mecha')) {
+    return {
+      title: customTitle || 'Robot Cilik Sahabat Khaulah',
+      behavior: 'spin',
+      scale: 1.1,
+      physics: 'solid',
+      parts: [
+        { shape: 'box', args: [0.6, 0.7, 0.4], pos: [0, 0.75, 0], color: '#38BDF8' },
+        { shape: 'box', args: [0.4, 0.3, 0.05], pos: [0, 0.8, 0.21], color: '#F43F5E', emissive: '#FB7185' },
+        { shape: 'box', args: [0.5, 0.45, 0.45], pos: [0, 1.35, 0], color: '#0EA5E9' },
+        { shape: 'cylinder', args: [0.02, 0.02, 0.3, 6], pos: [0, 1.7, 0], color: '#FBBF24' },
+        { shape: 'sphere', args: [0.08, 8, 8], pos: [0, 1.88, 0], color: '#FDE047', emissive: '#FDE047' },
+        { shape: 'box', args: [0.38, 0.12, 0.05], pos: [0, 1.35, 0.23], color: '#10B981', emissive: '#34D399' },
+        { shape: 'cylinder', args: [0.07, 0.07, 0.5, 8], pos: [-0.42, 0.75, 0], color: '#0284C7' },
+        { shape: 'cylinder', args: [0.07, 0.07, 0.5, 8], pos: [0.42, 0.75, 0], color: '#0284C7' },
+        { shape: 'cylinder', args: [0.09, 0.09, 0.4, 8], pos: [-0.18, 0.2, 0], color: '#0369A1' },
+        { shape: 'cylinder', args: [0.09, 0.09, 0.4, 8], pos: [0.18, 0.2, 0], color: '#0369A1' },
+      ],
+    };
+  }
+
+  if (p.includes('ufo') || p.includes('alien') || p.includes('piring terbang') || p.includes('roket')) {
+    return {
+      title: customTitle || 'Piring Terbang Bintang UFO',
+      behavior: 'float',
+      scale: 1.2,
+      physics: 'solid',
+      parts: [
+        { shape: 'torus', args: [0.8, 0.25, 12, 24], pos: [0, 0.8, 0], rot: [Math.PI / 2, 0, 0], color: '#EC4899' },
+        { shape: 'cylinder', args: [0.75, 0.75, 0.2, 24], pos: [0, 0.8, 0], color: '#F472B6' },
+        { shape: 'sphere', args: [0.45, 16, 16], pos: [0, 0.95, 0], color: '#BAE6FD', opacity: 0.7, roughness: 0.1 },
+        { shape: 'sphere', args: [0.1, 8, 8], pos: [0, 1.25, 0], color: '#10B981', emissive: '#34D399' },
+        { shape: 'sphere', args: [0.08, 8, 8], pos: [0.85, 0.8, 0], color: '#FDE047', emissive: '#FDE047' },
+        { shape: 'sphere', args: [0.08, 8, 8], pos: [-0.85, 0.8, 0], color: '#FDE047', emissive: '#FDE047' },
+        { shape: 'sphere', args: [0.08, 8, 8], pos: [0, 0.8, 0.85], color: '#38BDF8', emissive: '#38BDF8' },
+        { shape: 'sphere', args: [0.08, 8, 8], pos: [0, 0.8, -0.85], color: '#38BDF8', emissive: '#38BDF8' },
+      ],
+    };
+  }
+
+  if (p.includes('trampolin') || p.includes('pantul') || p.includes('jamur')) {
+    return {
+      title: customTitle || 'Jamur Trampolin Ajaib Pelangi',
+      behavior: 'trampoline',
+      scale: 1.3,
+      physics: 'bouncy',
+      parts: [
+        { shape: 'cylinder', args: [0.28, 0.38, 0.7, 16], pos: [0, 0.35, 0], color: '#FFFBEB' },
+        { shape: 'sphere', args: [0.95, 16, 16], pos: [0, 0.8, 0], scale: [1, 0.45, 1], color: '#EF4444' },
+        { shape: 'sphere', args: [0.15, 8, 8], pos: [0, 1.02, 0], scale: [1, 0.3, 1], color: '#FFFFFF' },
+        { shape: 'sphere', args: [0.12, 8, 8], pos: [0.5, 0.9, 0.3], scale: [1, 0.3, 1], color: '#FFFFFF' },
+        { shape: 'sphere', args: [0.12, 8, 8], pos: [-0.5, 0.9, -0.3], scale: [1, 0.3, 1], color: '#FFFFFF' },
+        { shape: 'sphere', args: [0.12, 8, 8], pos: [-0.4, 0.9, 0.4], scale: [1, 0.3, 1], color: '#FFFFFF' },
+      ],
+    };
+  }
+
+  if (p.includes('es krim') || p.includes('donat') || p.includes('permen') || p.includes('lolipop')) {
+    return {
+      title: customTitle || 'Es Krim Stroberi Pelangi Raksasa',
+      behavior: 'spin',
+      scale: 1.3,
+      physics: 'solid',
+      parts: [
+        { shape: 'cone', args: [0.45, 1.1, 16], pos: [0, 0.55, 0], rot: [Math.PI, 0, 0], color: '#D97706' },
+        { shape: 'sphere', args: [0.5, 16, 16], pos: [0, 1.25, 0], color: '#F472B6' },
+        { shape: 'sphere', args: [0.38, 16, 16], pos: [0, 1.65, 0], color: '#38BDF8' },
+        { shape: 'sphere', args: [0.12, 10, 10], pos: [0, 1.95, 0], color: '#E11D48', emissive: '#E11D48' },
+        { shape: 'cylinder', args: [0.015, 0.015, 0.15, 6], pos: [0.03, 2.05, 0], rot: [0, 0, -0.4], color: '#15803D' },
+      ],
+    };
+  }
+
+  if (p.includes('istana') || p.includes('kastil') || p.includes('benteng')) {
+    return {
+      title: customTitle || 'Istana Bintang Kristal Pelangi',
+      behavior: 'idle',
+      scale: 1.2,
+      physics: 'solid',
+      parts: [
+        { shape: 'box', args: [1.2, 0.9, 1.0], pos: [0, 0.45, 0], color: '#C084FC' },
+        { shape: 'box', args: [0.35, 0.5, 0.1], pos: [0, 0.25, 0.52], color: '#FDE047' },
+        { shape: 'cylinder', args: [0.22, 0.25, 1.3, 12], pos: [-0.65, 0.65, 0.5], color: '#A855F7' },
+        { shape: 'cone', args: [0.32, 0.6, 12], pos: [-0.65, 1.6, 0.5], color: '#38BDF8' },
+        { shape: 'cylinder', args: [0.22, 0.25, 1.3, 12], pos: [0.65, 0.65, 0.5], color: '#A855F7' },
+        { shape: 'cone', args: [0.32, 0.6, 12], pos: [0.65, 1.6, 0.5], color: '#38BDF8' },
+        { shape: 'cylinder', args: [0.28, 0.3, 1.6, 12], pos: [0, 0.8, -0.1], color: '#9333EA' },
+        { shape: 'cone', args: [0.4, 0.8, 12], pos: [0, 1.95, -0.1], color: '#F472B6' },
+        { shape: 'dodecahedron', args: [0.15, 0], pos: [0, 2.4, -0.1], color: '#FBBF24', emissive: '#FDE047' },
+      ],
+    };
+  }
+
+  // Generic magical crystal creation for any custom wish
+  return {
+    title: customTitle || 'Kristal Bintang Ajaib Khaulah',
+    behavior: 'bounce',
+    scale: 1.1,
+    physics: 'solid',
+    parts: [
+      { shape: 'cylinder', args: [0.55, 0.65, 0.25, 16], pos: [0, 0.12, 0], color: '#9333EA' },
+      { shape: 'dodecahedron', args: [0.45, 0], pos: [0, 0.65, 0], color: '#EC4899', emissive: '#F472B6' },
+      { shape: 'torus', args: [0.65, 0.06, 12, 24], pos: [0, 0.65, 0], rot: [0.8, 0.4, 0], color: '#FDE047', emissive: '#FDE047' },
+      { shape: 'sphere', args: [0.1, 8, 8], pos: [0, 1.15, 0], color: '#FBBF24', emissive: '#FDE047' },
+    ],
+  };
+}
+
+function validateMagicResult(parsed: any, promptInput = ''): void {
   if (!parsed || typeof parsed.speech !== 'string' || !parsed.speech.trim()) throw new Error('Balasan AI tidak valid.');
   const enums: Record<string, readonly string[]> = {
     set_time: ['subuh', 'siang', 'sore', 'malam'],
@@ -319,13 +490,37 @@ function validateMagicResult(parsed: any): void {
     set_pet: ['none', 'puppy', 'kitten', 'fairy'],
     play_sound: ['fire_siren', 'train', 'bell'],
   };
-  const actions = [...Object.keys(enums), 'speed_buff', 'super_jump', 'spawn_balloons', 'spawn_cake', 'spawn_bubbles', 'spawn_stars', 'celebrate', 'riddle', 'khalid_follow', 'wishlist', 'chat_only'];
-  if (!actions.includes(parsed.action) || (enums[parsed.action] && !enums[parsed.action].includes(parsed.actionParam))) throw new Error('Aksi AI tidak valid.');
+  const actions = [
+    ...Object.keys(enums),
+    'speed_buff',
+    'super_jump',
+    'spawn_balloons',
+    'spawn_cake',
+    'spawn_bubbles',
+    'spawn_stars',
+    'celebrate',
+    'riddle',
+    'khalid_follow',
+    'spawn_sandbox',
+    'clear_sandbox',
+    'wishlist',
+    'chat_only',
+  ];
+  if (!actions.includes(parsed.action) || (enums[parsed.action] && !enums[parsed.action].includes(parsed.actionParam))) {
+    throw new Error('Aksi AI tidak valid.');
+  }
   if (parsed.action === 'speed_buff' || parsed.action === 'super_jump') {
     parsed.actionParam = typeof parsed.actionParam === 'number' && Number.isFinite(parsed.actionParam)
       ? Math.max(1, Math.min(120, parsed.actionParam)) : 25;
   }
   if (parsed.action === 'khalid_follow' && typeof parsed.actionParam !== 'boolean') throw new Error('Parameter pengikut tidak valid.');
+
+  // Validate sandboxCreation
+  if (parsed.action === 'spawn_sandbox') {
+    if (!parsed.sandboxCreation || typeof parsed.sandboxCreation !== 'object' || !Array.isArray(parsed.sandboxCreation.parts) || parsed.sandboxCreation.parts.length === 0) {
+      parsed.sandboxCreation = createFallbackSandboxCreation(promptInput || parsed.speech);
+    }
+  }
 }
 
 export async function processMagicPrompt(prompt: string): Promise<MagicActionResult> {
@@ -345,10 +540,10 @@ Khaulah berbicara kepadamu lewat Tongkat Suara Ajaib.
 Tugasmu:
 1. Memahami ucapan/mantra Khaulah dan membalasnya dengan 1-2 kalimat bahasa Indonesia yang sangat manis, hangat, antusias, dan ceria.
 2. Memilih aksi game yang paling cocok dari daftar berikut:
-   - "set_time": Ubah waktu. actionParam salah satu dari: "subuh", "siang", "sore", "malam".
-   - "speed_buff": Lari super cepat / kekuatan kilat. actionParam: 25 (durasi detik).
+   - "set_time": Ubah waktu. actionParam: "subuh", "siang", "sore", "malam".
+   - "speed_buff": Lari super cepat / kekuatan kilat. actionParam: 25.
    - "super_jump": Lompat super tinggi setinggi awan. actionParam: 25.
-   - "teleport": Pindah tempat seketika. actionParam salah satu dari: "rumah", "tk", "pantai", "karnaval", "kebun", "waterpark", "obby".
+   - "teleport": Pindah tempat seketika. actionParam: "rumah", "tk", "pantai", "karnaval", "kebun", "waterpark", "obby".
    - "set_accessory": Pasang hiasan. actionParam: "princess_crown", "fairy_wings", "bunny_ears", "cat_ears", "star_halo", "none".
    - "set_pet": Ganti hewan teman. actionParam: "kitten", "puppy", "fairy", "none".
    - "spawn_balloons": Munculkan hujan balon di sekeliling pemain. actionParam: {"count": 16, "color": "rainbow"}.
@@ -358,16 +553,34 @@ Tugasmu:
    - "celebrate": Pesta konfeti & kembang api meriah.
    - "play_sound": Bunyikan suara khas ("fire_siren", "train", "bell").
    - "riddle": Memberikan tebak-tebakan anak lucu yang seru.
-   - "khalid_follow": Ajak Adek Khalid berlari mengekor dan ikut berpetualang bareng Khaulah. actionParam: true (ikut) atau false (istirahat).
-   - "wishlist": Jika Khaulah meminta hal baru di luar aset yang ada (seperti dinosaurus, istana es, mobil terbang, kolam susu cokelat, roket luar angkasa), katakan dengan gembira bahwa mantranya telah disimpan di Buku Impian Khaulah agar Abi bisa membuatnya nanti!
-   - "chat_only": Hanya obrolan/cerita santai.
+   - "khalid_follow": Ajak Adek Khalid berlari mengekor dan ikut berpetualang. actionParam: true / false.
+   - "clear_sandbox": Jika Khaulah minta membersihkan, menyapu, atau menghilangkan mainan/objek ajaib di halaman.
+   - "spawn_sandbox": KEMAMPUAN PALING AJAIB! Jika Khaulah meminta objek fantasi, mainan baru, makhluk unik, dinosaurus, robot, piring terbang, kendaraan, makanan raksasa, bangunan mini, trampolin jamur, dll yang TIDAK ADA di aksi bawaan, CIPTAKAN SECARA REALTIME! Sertakan "sandboxCreation" berisi 3-10 bentuk primitif 3D yang membentuk objek tersebut.
+   - "wishlist": Hanya jika Khaulah minta dicatat di buku impian atau minta fitur software kompleks.
+   - "chat_only": Obrolan santai biasa.
 
-PENTING: Selalu jawab dalam format JSON valid persis seperti ini:
+FORMAT JSON OUTPUT WAJIB:
 {
   "speech": "Balasan hangat ceria 1-2 kalimat untuk Khaulah",
   "action": "nama_action",
-  "actionParam": "parameter_action",
-  "wishlistTitle": "Nama ide (hanya jika action adalah wishlist, kalau tidak isi null)"
+  "actionParam": "parameter_action (jika ada, kalau tidak null)",
+  "sandboxCreation": {
+    "title": "Nama Objek Ceria (misal: 'Dinosaurus T-Rex Ungu')",
+    "behavior": "bounce" | "float" | "spin" | "orbit" | "follow" | "trampoline" | "idle",
+    "scale": 1.2,
+    "physics": "solid" | "bouncy",
+    "parts": [
+      {
+        "shape": "sphere" | "box" | "cylinder" | "cone" | "torus" | "capsule" | "dodecahedron",
+        "args": [0.6, 16, 16],
+        "pos": [0, 0.8, 0],
+        "rot": [0, 0, 0],
+        "color": "#HEX_COLOR",
+        "emissive": "#HEX_GLOW (opsional)"
+      }
+    ]
+  },
+  "wishlistTitle": null
 }
 `;
 
@@ -380,12 +593,13 @@ PENTING: Selalu jawab dalam format JSON valid persis seperti ini:
     // Clean JSON markdown blocks if any
     const cleanedJson = raw.replace(/```json/g, '').replace(/```/g, '').trim();
     const parsed = JSON.parse(cleanedJson);
-    validateMagicResult(parsed);
+    validateMagicResult(parsed, cleanPrompt);
 
     const result: MagicActionResult = {
       speech: parsed.speech || 'Mantra ajaib Khaulah sudah terwujud! ✨',
       action: parsed.action || 'chat_only',
       actionParam: parsed.actionParam,
+      sandboxCreation: parsed.sandboxCreation || undefined,
       wishlistTitle: parsed.wishlistTitle || undefined,
       isWishRecorded: parsed.action === 'wishlist',
     };

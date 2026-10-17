@@ -53,6 +53,7 @@ export const HUD: React.FC = () => {
   const unlockedStickers = useGameStore((s) => s.unlockedStickers);
   const playerPos = useGameStore((s) => s.playerPos);
   const playerFacingAngle = useGameStore((s) => s.playerFacingAngle);
+  const sandboxObjects = useGameStore((s) => s.sandboxObjects);
 
   const [isSpeakingDialog, setIsSpeakingDialog] = React.useState(false);
 
@@ -564,6 +565,24 @@ export const HUD: React.FC = () => {
             <span className="sm:hidden font-bubble">Ajaib</span>
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 border border-white absolute -top-1 -right-1 animate-ping" />
           </button>
+
+          {/* Quick Clear Sandbox Objects Button (Only visible when magic toys are spawned) */}
+          {sandboxObjects && sandboxObjects.length > 0 && (
+            <button
+              onClick={() => {
+                gameStore.clearSandboxObjects();
+                gameStore.setMessage('Hore! Halaman sudah bersih dan rapi kembali! 🧹✨');
+              }}
+              title="Sapu & Bersihkan Mainan Ajaib Sandbox"
+              className="px-3 py-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bubble font-bold text-xs border-2 border-white shadow-lg flex items-center gap-1.5 active:scale-95 transition-all animate-bounce-slow"
+            >
+              <span>🧹</span>
+              <span className="hidden sm:inline">Sapu Mainan</span>
+              <span className="px-1.5 py-0.2 bg-white/30 rounded-full text-[10px]">
+                {sandboxObjects.length}
+              </span>
+            </button>
+          )}
 
           {/* Wardrobe / Closet Button */}
           <button

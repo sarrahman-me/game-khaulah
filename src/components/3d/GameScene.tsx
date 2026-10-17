@@ -25,6 +25,7 @@ import { CarnivalThemePark } from './Environment/CarnivalThemePark';
 import { VillageTrain } from './Environment/VillageTrain';
 import { StreetLamps } from './Environment/StreetLamps';
 import { MagicSpawner } from './Environment/MagicSpawner';
+import { MagicSandboxRenderer } from './Environment/MagicSandboxRenderer';
 import { Sky, Stars } from '@react-three/drei';
 import { LushWindGrass } from './Environment/LushWindGrass';
 import { WeatherEffects } from './Environment/WeatherEffects';
@@ -402,6 +403,7 @@ export const GameScene: React.FC = () => {
         <ObbyCourse />
         <AnimalFriends />
         <MagicSpawner />
+        <MagicSandboxRenderer />
         <BukitPelangi />
         <HutanAjaib />
         <LembahSalju />

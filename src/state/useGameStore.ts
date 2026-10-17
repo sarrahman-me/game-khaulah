@@ -199,6 +199,56 @@ export interface GameState {
   unlockedStickers: Record<string, boolean>;
   // Photo Mode
   isPhotoMode: boolean;
+  // Realtime AI Sandbox objects
+  sandboxObjects: SandboxObject[];
+}
+
+export type SandboxShape =
+  | 'sphere'
+  | 'box'
+  | 'cylinder'
+  | 'cone'
+  | 'torus'
+  | 'capsule'
+  | 'ring'
+  | 'dodecahedron';
+
+export interface SandboxPart {
+  shape: SandboxShape;
+  args?: number[];
+  pos: [number, number, number];
+  rot?: [number, number, number];
+  scale?: [number, number, number] | number;
+  color: string;
+  emissive?: string;
+  emissiveIntensity?: number;
+  roughness?: number;
+  metalness?: number;
+  opacity?: number;
+}
+
+export type SandboxBehavior =
+  | 'idle'
+  | 'bounce'
+  | 'float'
+  | 'spin'
+  | 'orbit'
+  | 'follow'
+  | 'trampoline';
+
+export interface SandboxObject {
+  id: string;
+  name: string;
+  title: string;
+  speech?: string;
+  behavior: SandboxBehavior;
+  scale: number;
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  parts: SandboxPart[];
+  physics?: 'none' | 'solid' | 'bouncy';
+  createdAt: number;
+  lifespan?: number;
 }
 
 export interface SpawnedMagicItem {
@@ -442,6 +492,7 @@ let state: GameState = {
   isStickerModalOpen: false,
   unlockedStickers: loadSavedStickers(),
   isPhotoMode: false,
+  sandboxObjects: [],
 };
 
 // Sinkronkan tema audio awal sesuai waktu yang tersimpan di localStorage tanpa chime
@@ -1167,6 +1218,65 @@ export const gameStore = {
 
   clearSpawnedItems: () => {
     state = { ...state, spawnedItems: [] };
+    emitChange();
+  },
+
+  spawnSandboxObject: (creation: {
+    title: string;
+    behavior?: SandboxBehavior;
+    scale?: number;
+    parts: SandboxPart[];
+    physics?: 'none' | 'solid' | 'bouncy';
+    position?: [number, number, number];
+    speech?: string;
+  }) => {
+    soundManager.playMagicSpell();
+    const playerPos = state.playerPos;
+    const facing = state.playerFacingAngle;
+    const spawnDist = 2.4;
+    const defaultPos: [number, number, number] = [
+      playerPos[0] + Math.sin(facing) * spawnDist,
+      Math.max(0.2, playerPos[1]),
+      playerPos[2] + Math.cos(facing) * spawnDist,
+    ];
+    const now = Date.now();
+    const newObj: SandboxObject = {
+      id: `sandbox_${now}_${Math.random().toString(36).substring(2, 7)}`,
+      name: (creation.title || 'kreasi').toLowerCase().replace(/\s+/g, '_'),
+      title: creation.title || 'Kreasi Ajaib Khaulah',
+      speech: creation.speech,
+      behavior: creation.behavior || 'bounce',
+      scale: typeof creation.scale === 'number' && Number.isFinite(creation.scale)
+        ? Math.max(0.3, Math.min(3.0, creation.scale))
+        : 1.0,
+      position: creation.position || defaultPos,
+      parts: Array.isArray(creation.parts) ? creation.parts : [],
+      physics: creation.physics || 'solid',
+      createdAt: now,
+      lifespan: 300000,
+    };
+
+    state = {
+      ...state,
+      sandboxObjects: [...state.sandboxObjects, newObj].slice(-10),
+    };
+    emitChange();
+  },
+
+  removeSandboxObject: (id: string) => {
+    if (!state.sandboxObjects.some((obj) => obj.id === id)) return;
+    soundManager.playMagicSpell();
+    state = {
+      ...state,
+      sandboxObjects: state.sandboxObjects.filter((obj) => obj.id !== id),
+    };
+    emitChange();
+  },
+
+  clearSandboxObjects: () => {
+    if (state.sandboxObjects.length === 0) return;
+    soundManager.playMagicSpell();
+    state = { ...state, sandboxObjects: [] };
     emitChange();
   },
 

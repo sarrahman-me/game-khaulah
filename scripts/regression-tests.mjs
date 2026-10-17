@@ -108,9 +108,26 @@ try {
   try {
     assert.equal((await processMagicPrompt('jadikan siang')).actionParam, 'siang');
     globalThis.fetch = async () => { throw new Error('offline'); };
-    for (const [prompt, action] of [['pasar malam', 'teleport'], ['telinga kelinci', 'set_accessory'], ['hujan balon', 'spawn_balloons'], ['gelembung', 'spawn_bubbles'], ['hujan bintang', 'spawn_stars'], ['kue ulang tahun', 'spawn_cake']]) {
+    for (const [prompt, action] of [
+      ['pasar malam', 'teleport'],
+      ['telinga kelinci', 'set_accessory'],
+      ['hujan balon', 'spawn_balloons'],
+      ['gelembung', 'spawn_bubbles'],
+      ['hujan bintang', 'spawn_stars'],
+      ['kue ulang tahun', 'spawn_cake'],
+      ['dinosaurus lucu', 'spawn_sandbox'],
+      ['robot cilik', 'spawn_sandbox'],
+      ['sapu mainan', 'clear_sandbox'],
+    ]) {
       assert.equal((await processMagicPrompt(prompt)).action, action, prompt);
     }
+    const dinoResult = await processMagicPrompt('buatkan dinosaurus');
+    assert.ok(dinoResult.sandboxCreation);
+    assert.ok(dinoResult.sandboxCreation.parts.length >= 3);
+    store.spawnSandboxObject(dinoResult.sandboxCreation);
+    assert.equal(store.getState().sandboxObjects.length, 1);
+    store.clearSandboxObjects();
+    assert.equal(store.getState().sandboxObjects.length, 0);
   } finally { console.warn = oldWarn; }
   const storage = new Map([
     ['khaulah_unlocked_stickers', 'null'],
