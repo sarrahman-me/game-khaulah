@@ -35,17 +35,26 @@ export interface WishlistItem {
 
 const STORAGE_WISHLIST_KEY = 'khaulah_magic_wishlist';
 
+export const AI_MODEL_NAME = 'ag/gemini-3.8-flash-low';
+export const DEFAULT_AI_KEY = 'sk-4cab929cfbc506c0-qcqx76-caf94a9c';
+export const AI_API_KEY =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_AI_API_KEY) ||
+  DEFAULT_AI_KEY;
+export const AI_API_URL =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_AI_API_URL) ||
+  'http://localhost:20128/v1';
+
 async function callChatCompletion(messages: Array<{ role: string; content: string }>, jsonFormat = true): Promise<string> {
-  const endpoints = ['/ai-proxy/chat/completions'];
+  const endpoints = ['/ai-proxy/chat/completions', `${AI_API_URL}/chat/completions`];
 
   let lastError: any = null;
 
   for (const url of endpoints) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), 9000);
     try {
       const payload: any = {
-        model: 'ag/gemini-3.7-flash-low',
+        model: AI_MODEL_NAME,
         messages,
         stream: false,
       };
@@ -54,12 +63,17 @@ async function callChatCompletion(messages: Array<{ role: string; content: strin
         payload.response_format = { type: 'json_object' };
       }
 
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (AI_API_KEY) {
+        headers['Authorization'] = `Bearer ${AI_API_KEY}`;
+      }
+
       const res = await fetch(url, {
         method: 'POST',
         signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(payload),
       });
 
@@ -454,50 +468,283 @@ export async function chatWithCharacter(
   }
 }
 
-// Text-to-Speech (TTS) Engine
-let currentUtterance: SpeechSynthesisUtterance | null = null;
+// Text-to-Speech (TTS) Engine: 9Router Edge-TTS
+export type VoiceGender = 'female' | 'male';
 
-export function speakText(text: string, onEnd?: () => void) {
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) { onEnd?.(); return; }
+export const TTS_VOICES = {
+  female: 'edge-tts/id-ID-GadisNeural',
+  male: 'edge-tts/id-ID-ArdiNeural',
+} as const;
+
+export const TTS_VOICE_NAMES = {
+  [TTS_VOICES.female]: 'Gadis (Perempuan)',
+  [TTS_VOICES.male]: 'Ardi (Laki-laki)',
+} as const;
+
+export function resolveCharacterGender(characterIdOrSpeaker?: string): VoiceGender {
+  if (!characterIdOrSpeaker) return 'female';
+  const s = characterIdOrSpeaker.toLowerCase();
+  if (
+    s.includes('khalid') ||
+    s.includes('abi') ||
+    s.includes('faqih') ||
+    s.includes('ayah') ||
+    s.includes('tani') ||
+    s.includes('ardi') ||
+    s === 'male' ||
+    s === 'laki-laki' ||
+    s === 'laki'
+  ) {
+    return 'male';
+  }
+  return 'female';
+}
+
+export function cleanTextForSpeech(text: string): string {
+  return text
+    // Remove markdown formatting
+    .replace(/[*_~`#>[\]()]/g, '')
+    // Remove emoji symbols which edge-tts may describe literally or stumble on
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '')
+    // Normalize spaces
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+let currentAudio: HTMLAudioElement | null = null;
+let currentUtterance: SpeechSynthesisUtterance | null = null;
+const audioCache = new Map<string, Blob>();
+let isCurrentlySpeaking = false;
+let currentSpeakingVoice: string = TTS_VOICES.female;
+const ttsListeners = new Set<(speaking: boolean, voice: string) => void>();
+
+function notifyTTSState(speaking: boolean, voice: string) {
+  isCurrentlySpeaking = speaking;
+  currentSpeakingVoice = voice;
+  for (const listener of ttsListeners) {
+    try {
+      listener(speaking, voice);
+    } catch {}
+  }
+}
+
+export function subscribeTTSState(listener: (speaking: boolean, voice: string) => void): () => void {
+  ttsListeners.add(listener);
+  listener(isCurrentlySpeaking, currentSpeakingVoice);
+  return () => {
+    ttsListeners.delete(listener);
+  };
+}
+
+export function isSpeaking(): boolean {
+  return isCurrentlySpeaking;
+}
+
+export function getCurrentSpeakingVoice(): string {
+  return currentSpeakingVoice;
+}
+
+async function fetchTTSAudio(cleanText: string, model: string): Promise<Blob> {
+  const cacheKey = `${model}:::${cleanText}`;
+  if (audioCache.has(cacheKey)) {
+    return audioCache.get(cacheKey)!;
+  }
+
+  const endpoints = ['/ai-proxy/audio/speech', `${AI_API_URL}/audio/speech`];
+  let lastError: any = null;
+
+  for (const url of endpoints) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 9000);
+    try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (AI_API_KEY) {
+        headers['Authorization'] = `Bearer ${AI_API_KEY}`;
+      }
+
+      const res = await fetch(url, {
+        method: 'POST',
+        signal: controller.signal,
+        headers,
+        body: JSON.stringify({
+          model,
+          input: cleanText,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`TTS HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      const blob = await res.blob();
+      if (blob && blob.size > 0) {
+        if (audioCache.size > 50) {
+          const first = audioCache.keys().next().value;
+          if (first) audioCache.delete(first);
+        }
+        audioCache.set(cacheKey, blob);
+        return blob;
+      }
+    } catch (err) {
+      lastError = err;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  throw lastError || new Error('Gagal menghubungi TTS endpoint 9Router.');
+}
+
+function fallbackWebSpeech(clean: string, gender: VoiceGender, onEnd?: () => void) {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    notifyTTSState(false, gender === 'male' ? TTS_VOICES.male : TTS_VOICES.female);
+    onEnd?.();
+    return;
+  }
 
   try {
-    window.speechSynthesis.cancel(); // Stop previous speech
-
-    const clean = text.replace(/[*_~`]/g, '').trim();
-    if (!clean) { onEnd?.(); return; }
-
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(clean);
     utterance.lang = 'id-ID';
-    utterance.rate = 1.05; // Slightly lively
-    utterance.pitch = 1.25; // Cheerful friendly tone
+    if (gender === 'male') {
+      utterance.pitch = 0.95;
+      utterance.rate = 1.0;
+    } else {
+      utterance.pitch = 1.25;
+      utterance.rate = 1.05;
+    }
 
-    // Prefer Indonesian voice
     const voices = window.speechSynthesis.getVoices();
     const idVoice = voices.find(
       (v) => v.lang.toLowerCase().startsWith('id') || v.lang.toLowerCase().includes('id-id')
     );
-    if (idVoice) {
-      utterance.voice = idVoice;
-    }
+    if (idVoice) utterance.voice = idVoice;
 
-    if (onEnd) {
-      utterance.onend = onEnd;
-      utterance.onerror = onEnd;
-    }
+    const voiceName = gender === 'male' ? TTS_VOICES.male : TTS_VOICES.female;
+    notifyTTSState(true, voiceName);
+
+    utterance.onend = () => {
+      notifyTTSState(false, voiceName);
+      currentUtterance = null;
+      onEnd?.();
+    };
+    utterance.onerror = () => {
+      notifyTTSState(false, voiceName);
+      currentUtterance = null;
+      onEnd?.();
+    };
 
     currentUtterance = utterance;
     window.speechSynthesis.speak(utterance);
   } catch (err) {
-    console.warn('TTS error:', err);
-    if (onEnd) onEnd();
+    console.warn('Fallback WebSpeech error:', err);
+    notifyTTSState(false, gender === 'male' ? TTS_VOICES.male : TTS_VOICES.female);
+    onEnd?.();
+  }
+}
+
+export interface SpeakOptions {
+  gender?: VoiceGender;
+  voice?: string;
+  characterId?: string;
+  speakerName?: string;
+  onStart?: () => void;
+  onEnd?: () => void;
+}
+
+export async function speakText(
+  text: string,
+  optionsOrOnEnd?: (() => void) | SpeakOptions,
+  legacyGender?: VoiceGender
+): Promise<void> {
+  if (typeof window === 'undefined') return;
+
+  let onEnd: (() => void) | undefined;
+  let onStart: (() => void) | undefined;
+  let gender: VoiceGender = 'female';
+  let explicitVoice: string | undefined;
+
+  if (typeof optionsOrOnEnd === 'function') {
+    onEnd = optionsOrOnEnd;
+    gender = legacyGender || 'female';
+  } else if (optionsOrOnEnd && typeof optionsOrOnEnd === 'object') {
+    onEnd = optionsOrOnEnd.onEnd;
+    onStart = optionsOrOnEnd.onStart;
+    explicitVoice = optionsOrOnEnd.voice;
+    if (optionsOrOnEnd.characterId) {
+      gender = resolveCharacterGender(optionsOrOnEnd.characterId);
+    } else if (optionsOrOnEnd.speakerName) {
+      gender = resolveCharacterGender(optionsOrOnEnd.speakerName);
+    } else if (optionsOrOnEnd.gender) {
+      gender = optionsOrOnEnd.gender;
+    }
+  }
+
+  stopSpeaking();
+
+  const clean = cleanTextForSpeech(text);
+  if (!clean) {
+    onEnd?.();
+    return;
+  }
+
+  const selectedVoiceModel =
+    explicitVoice || (gender === 'male' ? TTS_VOICES.male : TTS_VOICES.female);
+
+  try {
+    const blob = await fetchTTSAudio(clean, selectedVoiceModel);
+    const audioUrl = URL.createObjectURL(blob);
+    const audio = new Audio(audioUrl);
+    currentAudio = audio;
+
+    const cleanup = () => {
+      if (currentAudio === audio) {
+        currentAudio = null;
+        notifyTTSState(false, selectedVoiceModel);
+      }
+      try {
+        URL.revokeObjectURL(audioUrl);
+      } catch {}
+    };
+
+    audio.onended = () => {
+      cleanup();
+      onEnd?.();
+    };
+
+    audio.onerror = () => {
+      cleanup();
+      fallbackWebSpeech(clean, gender, onEnd);
+    };
+
+    notifyTTSState(true, selectedVoiceModel);
+    onStart?.();
+    await audio.play();
+  } catch (err) {
+    console.warn('9Router Edge-TTS fallback:', err);
+    fallbackWebSpeech(clean, gender, onEnd);
   }
 }
 
 export function stopSpeaking() {
+  if (currentAudio) {
+    try {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    } catch {}
+    currentAudio = null;
+  }
+
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
+    try {
+      window.speechSynthesis.cancel();
+    } catch {}
     currentUtterance = null;
   }
+
+  notifyTTSState(false, currentSpeakingVoice);
 }
 
 // Speech-to-Text (STT) Recognition

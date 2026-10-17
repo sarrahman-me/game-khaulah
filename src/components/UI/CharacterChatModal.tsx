@@ -7,12 +7,15 @@ import {
   stopSpeaking,
   isSpeechRecognitionAvailable,
   createSpeechRecognizer,
+  resolveCharacterGender,
+  subscribeTTSState,
 } from '../../services/aiService';
 import {
   X,
   Mic,
   Send,
   Volume2,
+  VolumeX,
   Sparkles,
   MessageCircle,
 } from 'lucide-react';
@@ -29,9 +32,17 @@ export const CharacterChatModal: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isSpeakingNow, setIsSpeakingNow] = useState(false);
   const requestVersion = useRef(0);
   const recognizerRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const unsub = subscribeTTSState((speaking) => {
+      setIsSpeakingNow(speaking);
+    });
+    return unsub;
+  }, []);
 
   // Suggested questions based on character
   const getSuggestions = (charId: string): string[] => {
@@ -100,7 +111,7 @@ export const CharacterChatModal: React.FC = () => {
       }
 
       setMessages([{ id: 'init', sender: 'character', text: initialGreeting }]);
-      speakText(initialGreeting);
+      speakText(initialGreeting, { characterId: chatState.characterId });
     }
   }, [chatState]);
 
@@ -145,7 +156,7 @@ export const CharacterChatModal: React.FC = () => {
       };
 
       setMessages((prev) => [...prev, charMsg]);
-      speakText(reply);
+      speakText(reply, { characterId: chatState.characterId });
     } catch (e) {
       console.warn('Chat error:', e);
     } finally {
@@ -207,23 +218,41 @@ export const CharacterChatModal: React.FC = () => {
               <h2 className="text-lg sm:text-xl font-bubble font-bold text-white drop-shadow">
                 Ngobrol Bareng {chatState.characterName} ✨
               </h2>
-              <span className="text-[11px] bg-white/20 px-2.5 py-0.5 rounded-full font-semibold">
-                {chatState.role}
-              </span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-[10px] bg-white/20 px-2.5 py-0.5 rounded-full font-semibold">
+                  {chatState.role}
+                </span>
+                <span className="text-[10px] bg-yellow-400 text-amber-950 font-bold px-2 py-0.5 rounded-full shadow-xs">
+                  {resolveCharacterGender(chatState.characterId) === 'male'
+                    ? 'Suara: Ardi 👦'
+                    : 'Suara: Gadis 🧕'}
+                </span>
+              </div>
             </div>
           </div>
 
-          <button
-            onClick={() => gameStore.closeCharacterChat()}
-            className="w-9 h-9 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center border-2 border-white shadow active:scale-90 transition-transform"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {isSpeakingNow && (
+              <button
+                onClick={() => stopSpeaking()}
+                title="Hentikan Suara"
+                className="w-9 h-9 rounded-2xl bg-amber-400 hover:bg-amber-500 text-amber-950 flex items-center justify-center border-2 border-white shadow active:scale-90 transition-transform"
+              >
+                <VolumeX className="w-5 h-5" />
+              </button>
+            )}
+            <button
+              onClick={() => gameStore.closeCharacterChat()}
+              className="w-9 h-9 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center border-2 border-white shadow active:scale-90 transition-transform"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Chat History Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-          {messages.map((m) => (
+          {messages.map((m, idx) => (
             <div
               key={m.id}
               className={`flex items-start gap-2 ${
@@ -247,12 +276,30 @@ export const CharacterChatModal: React.FC = () => {
                     {m.sender === 'khaulah' ? 'Khaulah 🌸' : chatState.characterName}
                   </span>
                   {m.sender === 'character' && (
-                    <button
-                      onClick={() => speakText(m.text)}
-                      className="opacity-60 hover:opacity-100 p-0.5"
-                    >
-                      <Volume2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      {isSpeakingNow && idx === messages.length - 1 && (
+                        <span className="flex items-center gap-0.5 px-1 py-0.5 bg-purple-100 rounded text-purple-700 text-[10px]">
+                          <span className="w-1 h-2 bg-purple-600 rounded-full animate-pulse" />
+                          <span className="w-1 h-3 bg-pink-500 rounded-full animate-bounce" />
+                          <span className="w-1 h-1.5 bg-purple-600 rounded-full animate-pulse" />
+                        </span>
+                      )}
+                      <button
+                        onClick={() =>
+                          isSpeakingNow
+                            ? stopSpeaking()
+                            : speakText(m.text, { characterId: chatState.characterId })
+                        }
+                        title={isSpeakingNow ? 'Hentikan Suara' : 'Dengarkan Suara'}
+                        className="opacity-70 hover:opacity-100 p-0.5 text-purple-700"
+                      >
+                        {isSpeakingNow && idx === messages.length - 1 ? (
+                          <VolumeX className="w-3.5 h-3.5 text-rose-500" />
+                        ) : (
+                          <Volume2 className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
                   )}
                 </div>
                 {m.text}

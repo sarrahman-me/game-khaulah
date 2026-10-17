@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { gameStore, useGameStore } from '../../state/useGameStore';
 import { isGameInputBlocked, isTypingTarget, dynamicPhysicsState } from '../../state/gameInput';
@@ -162,6 +163,7 @@ export const PlayerKhaulah: React.FC = () => {
   const activeRide = useGameStore((s) => s.activeRide);
   const timeOfDay = useGameStore((s) => s.timeOfDay);
   const weather = useGameStore((s) => s.weather);
+  const isMagicModalOpen = useGameStore((s) => s.isMagicModalOpen);
 
   // Character physical state: start at saved position from localStorage
   const initialPlayerPos = gameStore.getState().playerPos;
@@ -2077,6 +2079,26 @@ export const PlayerKhaulah: React.FC = () => {
                 <sphereGeometry args={[0.035, 8, 8]} />
                 <meshStandardMaterial color="#FBBF24" />
               </mesh>
+            </group>
+          )}
+
+          {/* Tongkat Suara Ajaib Khaulah saat Modal Terbuka */}
+          {isMagicModalOpen && !isRidingScooter && activeRide === 'none' && (
+            <group position={[0, -0.05, 0.05]} rotation={[0.4, 0, 0]}>
+              {/* Golden Wand Shaft */}
+              <mesh position={[0, 0.25, 0]} castShadow>
+                <cylinderGeometry args={[0.015, 0.012, 0.55, 8]} />
+                <meshStandardMaterial color="#FBBF24" metalness={0.7} roughness={0.2} />
+              </mesh>
+              {/* Magic Wand Star Tip */}
+              <group position={[0, 0.54, 0]}>
+                <mesh>
+                  <octahedronGeometry args={[0.075, 0]} />
+                  <meshStandardMaterial color="#FDE047" emissive="#F59E0B" emissiveIntensity={0.8} />
+                </mesh>
+                <pointLight color="#FDE047" intensity={1.5} distance={2.5} />
+                <Sparkles count={10} scale={0.4} size={2.5} speed={1.5} color="#FEF08A" />
+              </group>
             </group>
           )}
         </group>

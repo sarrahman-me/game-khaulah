@@ -28,6 +28,7 @@ import { StickerBookModal } from './StickerBookModal';
 import { PhotoModeModal } from './PhotoModeModal';
 import { FAMILY_SCHEDULE } from '../3d/Environment/FamilyMembers';
 import { STICKER_CATALOG, WeatherType, GraphicsQuality } from '../../state/useGameStore';
+import { speakText, stopSpeaking, resolveCharacterGender, subscribeTTSState } from '../../services/aiService';
 
 export const HUD: React.FC = () => {
   const bubbleMessage = useGameStore((s) => s.bubbleMessage);
@@ -52,6 +53,14 @@ export const HUD: React.FC = () => {
   const unlockedStickers = useGameStore((s) => s.unlockedStickers);
   const playerPos = useGameStore((s) => s.playerPos);
   const playerFacingAngle = useGameStore((s) => s.playerFacingAngle);
+
+  const [isSpeakingDialog, setIsSpeakingDialog] = React.useState(false);
+
+  React.useEffect(() => {
+    return subscribeTTSState((speaking) => {
+      setIsSpeakingDialog(speaking);
+    });
+  }, []);
 
   const unlockedStickerCount = STICKER_CATALOG.filter((s) => unlockedStickers[s.id]).length;
 
@@ -547,11 +556,13 @@ export const HUD: React.FC = () => {
           <button
             onClick={() => gameStore.openMagicModal()}
             title="Tongkat Suara Ajaib Khaulah [M] — Ucapkan mantra apa saja!"
-            className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-amber-400 text-white font-bubble font-bold text-sm border-2 border-white shadow-lg flex items-center gap-1.5 active:scale-95 transition-transform animate-pulse-gentle hover:scale-105"
+            className="relative px-4 py-2 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-amber-400 hover:from-purple-500 hover:via-pink-400 hover:to-amber-300 text-white font-bubble font-bold text-sm border-2 border-yellow-200 shadow-xl flex items-center gap-2 active:scale-95 transition-all animate-pulse-gentle hover:scale-105 hover:shadow-purple-300/60"
           >
+            <span className="text-base animate-bounce-slow">🪄</span>
             <Sparkles className="w-4 h-4 text-yellow-200 fill-yellow-200" />
-            <span className="hidden sm:inline">Tongkat [M]</span>
-            <span className="sm:hidden">🪄</span>
+            <span className="hidden sm:inline font-bubble tracking-wide">Tongkat Ajaib [M]</span>
+            <span className="sm:hidden font-bubble">Ajaib</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 border border-white absolute -top-1 -right-1 animate-ping" />
           </button>
 
           {/* Wardrobe / Closet Button */}
@@ -717,11 +728,52 @@ export const HUD: React.FC = () => {
               "{activeDialog.text}"
             </p>
 
+            {/* Listen Audio Voice Button */}
+            <div className="w-full mt-2.5 flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (isSpeakingDialog) {
+                    stopSpeaking();
+                  } else {
+                    speakText(activeDialog.text, {
+                      speakerName: activeDialog.speaker,
+                    });
+                  }
+                }}
+                className={`w-full py-2.5 px-3 rounded-2xl border border-purple-200 font-bubble text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xs active:scale-95 transition-all ${
+                  isSpeakingDialog
+                    ? 'bg-amber-400 text-amber-950 animate-pulse border-amber-300'
+                    : 'bg-white hover:bg-pink-50 text-purple-900'
+                }`}
+              >
+                {isSpeakingDialog ? (
+                  <>
+                    <VolumeX className="w-4 h-4 text-rose-600" />
+                    <span>Hentikan Suara ⏹️</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-4 h-4 text-pink-500" />
+                    <span>
+                      Dengarkan Suara (
+                      {resolveCharacterGender(activeDialog.speaker) === 'male'
+                        ? 'Ardi 👦'
+                        : 'Gadis 🧕'}
+                      ) 🔊
+                    </span>
+                  </>
+                )}
+              </button>
+            </div>
+
             {/* Special Action Button */}
             {activeDialog.actionText && activeDialog.actionType && (
               <button
-                onClick={() => gameStore.executeDialogAction(activeDialog.actionType!)}
-                className="w-full mt-4 py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white font-bubble font-bold text-base shadow-lg hover:shadow-xl border-2 border-white active:scale-95 transition-all flex items-center justify-center gap-2"
+                onClick={() => {
+                  stopSpeaking();
+                  gameStore.executeDialogAction(activeDialog.actionType!);
+                }}
+                className="w-full mt-3 py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white font-bubble font-bold text-base shadow-lg hover:shadow-xl border-2 border-white active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 <span>{activeDialog.actionText}</span>
               </button>
@@ -730,6 +782,7 @@ export const HUD: React.FC = () => {
             {/* Freeform AI Voice Chat Button */}
             <button
               onClick={() => {
+                stopSpeaking();
                 let charId = 'other';
                 if (activeDialog.speaker.includes('Khalid')) charId = 'khalid';
                 else if (activeDialog.speaker.includes('Abi')) charId = 'abi';
@@ -752,7 +805,10 @@ export const HUD: React.FC = () => {
 
             {/* Dismiss Button */}
             <button
-              onClick={() => gameStore.closeDialog()}
+              onClick={() => {
+                stopSpeaking();
+                gameStore.closeDialog();
+              }}
               className="mt-3 text-xs text-gray-500 hover:text-gray-700 font-semibold"
             >
               Lanjut Bermain ✨
